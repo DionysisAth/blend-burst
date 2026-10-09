@@ -109,12 +109,17 @@ jobs:
           disable-animations: true
           script: |
             bash ci/android_smoke_test.sh blend-burst.apk smoke-results
+            adb logcat -c
+            sh -c 'adb logcat -v time > smoke-results/integration-logcat.txt 2>&1 &'
             flutter test integration_test/app_test.dart -d emulator-5554 --reporter expanded
-      - name: Diagnose runner memory
+      - name: Diagnose
         if: failure()
         run: |
           free -m
           sudo dmesg | grep -i -E "out of memory|killed process|oom" | tail -20 || true
+          echo "--- last device log lines before the failure ---"
+          tail -120 smoke-results/integration-logcat.txt || true
+          ls /tmp/android-runner/ 2>/dev/null || true
       - name: Upload screenshots and logs
         if: always()
         uses: actions/upload-artifact@v4

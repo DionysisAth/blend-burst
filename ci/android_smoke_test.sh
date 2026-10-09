@@ -40,6 +40,62 @@ check_alive "after launch"
 adb exec-out screencap -p > "$OUT/01-launch.png"
 adb logcat -d | grep -i "flutter" | tail -40 || true
 
+# Finds a node by its accessibility label; prints "left top right bottom".
+find_node() {
+  for _ in 1 2 3 4 5 6 7 8; do
+    adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 || true
+    adb pull /sdcard/ui.xml "$OUT/ui.xml" > /dev/null 2>&1 || true
+    if python3 "$(dirname "$0")/ui_find.py" "$OUT/ui.xml" "$1"; then return 0; fi
+    sleep 2
+  done
+  return 1
+}
+
+tap_node() {
+  local b
+  b=$(find_node "$1") || fail "could not find '$1' on screen"
+  read -r l t r bt <<< "$b"
+  adb shell input tap $(( (l + r) / 2 )) $(( (t + bt) / 2 ))
+  sleep 2
+}
+
+echo "== Playing level 1 with real swipes"
+tap_node "Level 1"
+tap_node "Play"
+adb exec-out screencap -p > "$OUT/02-level-start.png"
+if find_node "Got it!" > /dev/null; then tap_node "Got it!"; fi
+board=$(find_node "Game board") || fail "game board not found"
+read -r BL BT BR BB <<< "$board"
+python3 - "$BL" "$BT" "$BR" "$BB" > "$OUT/swipes.txt" <<'PY'
+import random, sys
+l, t, r, b = map(int, sys.argv[1:])
+w, h, n = r - l, b - t, 8
+cell = min(w / (n + 1), h / (n + 1))
+ox, oy = l + (w - cell * n) / 2, t + (h - cell * n) / 2
+rnd = random.Random(7)
+for _ in range(40):
+    row, col = rnd.randrange(n), rnd.randrange(n - 1)
+    x, y = ox + (col + 0.5) * cell, oy + (row + 0.5) * cell
+    if rnd.random() < 0.5:
+        print(int(x), int(y), int(x + cell), int(y))
+    elif row < n - 1:
+        print(int(x), int(y), int(x), int(y + cell))
+    else:
+        print(int(x), int(y), int(x), int(y - cell))
+PY
+i=0
+while read -r x1 y1 x2 y2; do
+  adb shell input swipe "$x1" "$y1" "$x2" "$y2" 150
+  sleep 0.8
+  i=$((i + 1))
+  if [ $((i % 10)) -eq 0 ]; then
+    check_alive "after $i swipes"
+    adb exec-out screencap -p > "$OUT/03-play-$i.png"
+  fi
+done < "$OUT/swipes.txt"
+sleep 5
+check_alive "after playing"
+
 echo "== Monkey: random taps and swipes"
 # Touch/motion only, so the monkey stays inside the game.
 if ! adb shell monkey -p "$PKG" --pct-touch 55 --pct-motion 45 \
@@ -53,7 +109,7 @@ sleep 5
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 > /dev/null || true
 sleep 5
 check_alive "after monkey"
-adb exec-out screencap -p > "$OUT/02-after-monkey.png"
+adb exec-out screencap -p > "$OUT/04-after-monkey.png"
 
 echo "== Cold restart (saved progress is read back)"
 adb shell am force-stop "$PKG"
@@ -61,7 +117,7 @@ sleep 2
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 > /dev/null || fail "relaunch failed"
 sleep 20
 check_alive "after restart"
-adb exec-out screencap -p > "$OUT/03-restart.png"
+adb exec-out screencap -p > "$OUT/05-restart.png"
 
 adb logcat -d > "$OUT/logcat.txt"
 # Leave the device clean for the integration test (it installs a debug build).

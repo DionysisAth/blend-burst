@@ -386,10 +386,14 @@ class BoardViewState extends State<BoardView>
           onPanEnd: _onPanEnd,
           onPanCancel: _cancelDrag,
           onTapUp: _onTapUp,
-          child: RepaintBoundary(
-            child: CustomPaint(
-              size: size,
-              painter: _BoardPainter(this, _repaint),
+          child: Semantics(
+            label: 'Game board',
+            container: true,
+            child: RepaintBoundary(
+              child: CustomPaint(
+                size: size,
+                painter: _BoardPainter(this, _repaint),
+              ),
             ),
           ),
         );

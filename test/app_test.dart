@@ -101,12 +101,15 @@ void main() {
     expect(find.text('Art Studio'), findsOneWidget);
     expect(find.byKey(const Key('level-1')), findsOneWidget);
     expect(find.byKey(const Key('lives')), findsOneWidget);
+    // The CI smoke test finds these through Android accessibility.
+    expect(find.bySemanticsLabel('Level 1'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('swiping on the board makes a move', (tester) async {
     await boot(tester);
     final game = await openLevel(tester, 1);
+    expect(find.bySemanticsLabel('Game board'), findsOneWidget);
     final hint = game.session.board.findHint()!;
     final box = tester.getRect(find.byKey(const Key('board')));
     final g = BoardGeometry.fit(box.size, game.level.rows, game.level.cols);
@@ -137,7 +140,8 @@ void main() {
     tester,
   ) async {
     await boot(tester, prefs: unlockedAll);
-    final game = await openLevel(tester, 3);
+    // Level 15 (lots of stains) cannot be finished by a single move.
+    final game = await openLevel(tester, 15);
     game.session.movesLeft = 1;
     // Make a plain move that does not finish the level.
     game.playHintMove();

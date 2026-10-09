@@ -305,42 +305,47 @@ class _LevelNode extends StatelessWidget {
     return GestureDetector(
       key: Key('level-${level.id}'),
       onTap: onTap,
-      child: SizedBox(
-        width: 64,
-        height: 84,
-        child: Column(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color,
-                border: Border.all(
-                  color: current ? const Color(0xFFFFEB3B) : Colors.white,
-                  width: current ? 5 : 3,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: current ? 14 : 4,
-                    color: current ? Colors.yellow : Colors.black26,
+      child: Semantics(
+        button: true,
+        label: 'Level ${level.id}',
+        excludeSemantics: true,
+        child: SizedBox(
+          width: 64,
+          height: 84,
+          child: Column(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color,
+                  border: Border.all(
+                    color: current ? const Color(0xFFFFEB3B) : Colors.white,
+                    width: current ? 5 : 3,
                   ),
-                ],
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: current ? 14 : 4,
+                      color: current ? Colors.yellow : Colors.black26,
+                    ),
+                  ],
+                ),
+                child: unlocked
+                    ? Text(
+                        '${level.id}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      )
+                    : const Icon(Icons.lock, color: Colors.white),
               ),
-              child: unlocked
-                  ? Text(
-                      '${level.id}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    )
-                  : const Icon(Icons.lock, color: Colors.white),
-            ),
-            if (unlocked) StarRow(stars: stars, size: 16),
-          ],
+              if (unlocked) StarRow(stars: stars, size: 16),
+            ],
+          ),
         ),
       ),
     );
