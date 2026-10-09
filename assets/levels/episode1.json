@@ -1,0 +1,288 @@
+{
+  "episode": "Art Studio",
+  "levels": [
+    {
+      "id": 1,
+      "name": "First Drops",
+      "moves": 10,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "score", "target": 7500}],
+      "stars": [7500,35000,75500],
+      "blending": false,
+      "tutorial": "Swipe a tile into a neighbor to match 3 or more of the same color!"
+    },
+    {
+      "id": 2,
+      "name": "Line Up",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "score", "target": 12500}],
+      "stars": [12500,50000,84500],
+      "blending": false,
+      "tutorial": "Match 4 in a line to make a Line Blaster. Match it again to clear a whole row!"
+    },
+    {
+      "id": 3,
+      "name": "Mix It Up",
+      "moves": 10,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "collect", "color": "purple", "target": 4}],
+      "stars": [4500,28500,51000],
+      "tutorial": "Swipe a Red tile into a Blue tile to BLEND them into Purple!"
+    },
+    {
+      "id": 4,
+      "name": "Green Thumb",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "collect", "color": "green", "target": 6}],
+      "stars": [5500,33500,71000],
+      "tutorial": "Blue + Yellow = Green. Match 3 Greens for a big paint splash!"
+    },
+    {
+      "id": 5,
+      "name": "Orange Glow",
+      "moves": 17,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "collect", "color": "orange", "target": 5}, {"type": "score", "target": 15000}],
+      "stars": [15000,56000,110000],
+      "tutorial": "Red + Yellow = Orange. Secondary-color matches clear their neighbors too."
+    },
+    {
+      "id": 6,
+      "name": "Paint Bomb",
+      "moves": 13,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "score", "target": 35000}],
+      "stars": [35000,63500,90500],
+      "tutorial": "Match in an L or T shape to make a Paint Bomb that clears a 3x3 area."
+    },
+    {
+      "id": 7,
+      "name": "First Stains",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "..ssss..",
+        "..ssss..",
+        "..ssss..",
+        "..ssss..",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [9000,29000,37500],
+      "tutorial": "Paint stains hide under tiles. Make matches on top of them to clean them up!"
+    },
+    {
+      "id": 8,
+      "name": "Studio Corners",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "#......#",
+        "..s..s..",
+        ".ssssss.",
+        ".ssssss.",
+        "..s..s..",
+        "#......#",
+        "##....##"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [8000,22000,30500]
+    },
+    {
+      "id": 9,
+      "name": "Prism Light",
+      "moves": 32,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "collect", "color": "red", "target": 40}, {"type": "collect", "color": "blue", "target": 40}],
+      "stars": [16500,46000,57000],
+      "tutorial": "Match 5 in a line to make a Prism. Swap it with any tile to clear every tile of that color!"
+    },
+    {
+      "id": 10,
+      "name": "Messy Easel",
+      "moves": 24,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ss....ss",
+        "ss....ss",
+        "..s..s..",
+        "...ss...",
+        "...ss...",
+        "..s..s..",
+        "ss....ss",
+        "ss....ss"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [17000,41500,52000],
+      "hard": true
+    },
+    {
+      "id": 11,
+      "name": "White Burst",
+      "moves": 24,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "collect", "color": "purple", "target": 7}, {"type": "score", "target": 20000}],
+      "stars": [20000,40000,52000],
+      "tutorial": "Blend a secondary with the primary it's missing (Purple + Yellow, Green + Red, Orange + Blue) to make a White Burst!"
+    },
+    {
+      "id": 12,
+      "name": "Palette Knife",
+      "moves": 26,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        ".s.ss.s.",
+        ".s.ss.s.",
+        "........",
+        "........",
+        ".s.ss.s.",
+        ".s.ss.s.",
+        "........"
+      ],
+      "goals": [{"type": "stains"}, {"type": "collect", "color": "green", "target": 6}],
+      "stars": [12000,34000,44500]
+    },
+    {
+      "id": 13,
+      "name": "Diamond Canvas",
+      "moves": 15,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "###..###",
+        "##....##",
+        "#..ss..#",
+        "..ssss..",
+        "..ssss..",
+        "#..ss..#",
+        "##....##",
+        "###..###"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [5500,17000,21000]
+    },
+    {
+      "id": 14,
+      "name": "Color Study",
+      "moves": 22,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "collect", "color": "purple", "target": 7}, {"type": "collect", "color": "orange", "target": 7}],
+      "stars": [6000,20000,29500]
+    },
+    {
+      "id": 15,
+      "name": "Gallery Opening",
+      "moves": 28,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ssssssss",
+        "s......s",
+        "s.ssss.s",
+        "s.s..s.s",
+        "s.s..s.s",
+        "s.ssss.s",
+        "s......s",
+        "ssssssss"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [16500,48000,70500],
+      "hard": true
+    }
+  ]
+}

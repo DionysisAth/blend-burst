@@ -1,0 +1,281 @@
+{
+  "episode": "Rainbow Garden",
+  "levels": [
+    {
+      "id": 16,
+      "name": "Greenhouse",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "..1111..",
+        "........",
+        "........",
+        "..1111..",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "glass"}],
+      "stars": [6000,18000,30500],
+      "tutorial": "Glass blocks break when you make a match next to them, or blast them with specials."
+    },
+    {
+      "id": 17,
+      "name": "Window Box",
+      "moves": 21,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        ".1....1.",
+        "........",
+        "...11...",
+        "...11...",
+        "........",
+        ".1....1.",
+        "........"
+      ],
+      "goals": [{"type": "glass"}, {"type": "score", "target": 15000}],
+      "stars": [15000,30000,40500]
+    },
+    {
+      "id": 18,
+      "name": "Double Glazed",
+      "moves": 17,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "..2..2..",
+        "..2..2..",
+        "........",
+        "11....11",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "glass"}],
+      "stars": [7500,23000,32500],
+      "tutorial": "Some glass has 2 layers. Hit it twice!"
+    },
+    {
+      "id": 19,
+      "name": "Garden Path",
+      "moves": 28,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "ss1..1ss",
+        "ss....ss",
+        "........",
+        "........",
+        "ss....ss",
+        "ss1..1ss",
+        "........"
+      ],
+      "goals": [{"type": "stains"}, {"type": "glass"}],
+      "stars": [15000,41000,56000]
+    },
+    {
+      "id": 20,
+      "name": "Thorny Hedge",
+      "moves": 19,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "1......1",
+        ".2....2.",
+        "..1..1..",
+        "........",
+        "........",
+        "..1..1..",
+        ".2....2.",
+        "1......1"
+      ],
+      "goals": [{"type": "glass"}],
+      "stars": [10000,35500,40500],
+      "hard": true
+    },
+    {
+      "id": 21,
+      "name": "Violet Bloom",
+      "moves": 17,
+      "colors": ["red", "blue", "yellow", "purple", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "collect", "color": "purple", "target": 60}],
+      "stars": [18000,57500,78500],
+      "tutorial": "Purple tiles now grow on the board. Blend more to collect faster!"
+    },
+    {
+      "id": 22,
+      "name": "Sunflowers",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "orange", "brown"],
+      "layout": [
+        "........",
+        "........",
+        ".111111.",
+        "........",
+        "........",
+        ".111111.",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "glass"}, {"type": "collect", "color": "orange", "target": 40}],
+      "stars": [15500,44000,65500]
+    },
+    {
+      "id": 23,
+      "name": "Lily Pond",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "green", "brown"],
+      "layout": [
+        "##....##",
+        "#.ssss.#",
+        ".ssssss.",
+        ".ss33ss.",
+        ".ss33ss.",
+        ".ssssss.",
+        "#.ssss.#",
+        "##....##"
+      ],
+      "goals": [{"type": "stains"}, {"type": "glass"}],
+      "stars": [10000,33500,55000]
+    },
+    {
+      "id": 24,
+      "name": "Trellis",
+      "moves": 20,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        ".2.1.2.1",
+        "........",
+        "1.2.1.2.",
+        "........",
+        ".2.1.2.1",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "glass"}],
+      "stars": [8500,28500,41000]
+    },
+    {
+      "id": 25,
+      "name": "Rainbow Gate",
+      "moves": 17,
+      "colors": ["red", "blue", "yellow", "purple", "brown"],
+      "layout": [
+        "..3..3..",
+        "........",
+        "ss....ss",
+        "ss....ss",
+        "ss....ss",
+        "ss....ss",
+        "........",
+        "..3..3.."
+      ],
+      "goals": [{"type": "stains"}, {"type": "glass"}],
+      "stars": [17500,63000,84000],
+      "hard": true
+    },
+    {
+      "id": 26,
+      "name": "Mixed Bouquet",
+      "moves": 22,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "collect", "color": "purple", "target": 6}, {"type": "collect", "color": "green", "target": 6}, {"type": "collect", "color": "orange", "target": 6}],
+      "stars": [4000,21000,31000]
+    },
+    {
+      "id": 27,
+      "name": "Glass Garden",
+      "moves": 20,
+      "colors": ["red", "blue", "yellow", "green", "brown"],
+      "layout": [
+        "11....11",
+        "1......1",
+        "...ss...",
+        "..ssss..",
+        "..ssss..",
+        "...ss...",
+        "1......1",
+        "11....11"
+      ],
+      "goals": [{"type": "glass"}, {"type": "stains"}],
+      "stars": [19500,59000,83500]
+    },
+    {
+      "id": 28,
+      "name": "Seed Rows",
+      "moves": 19,
+      "colors": ["red", "blue", "yellow", "orange", "brown"],
+      "layout": [
+        "........",
+        "22222222",
+        "........",
+        "........",
+        "........",
+        "........",
+        "11111111",
+        "........"
+      ],
+      "goals": [{"type": "glass"}],
+      "stars": [16500,54000,77500]
+    },
+    {
+      "id": 29,
+      "name": "Petal Spiral",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "purple", "brown"],
+      "layout": [
+        "ssssssss",
+        ".......s",
+        "sssss..s",
+        "s...s..s",
+        "s.sss..s",
+        "s......s",
+        "ssssssss",
+        "........"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [18000,58000,80500]
+    },
+    {
+      "id": 30,
+      "name": "Royal Garden",
+      "moves": 33,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "2ss..ss2",
+        "ss....ss",
+        "s..22..s",
+        "..2ss2..",
+        "..2ss2..",
+        "s..22..s",
+        "ss....ss",
+        "2ss..ss2"
+      ],
+      "goals": [{"type": "stains"}, {"type": "glass"}],
+      "stars": [18000,46500,63000],
+      "hard": true
+    }
+  ]
+}

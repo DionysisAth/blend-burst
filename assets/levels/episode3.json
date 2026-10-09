@@ -1,0 +1,242 @@
+{
+  "episode": "Paint Factory",
+  "levels": [
+    {
+      "id": 31,
+      "name": "Rising Paint",
+      "moves": 26,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "ssssssss",
+        "ssssssss"
+      ],
+      "goals": [{"type": "score", "target": 20000}, {"type": "stains"}],
+      "stars": [20000,40500,50500],
+      "gravity": "up",
+      "tutorial": "In the Paint Factory, gravity can change! Here tiles fall UP. Watch the arrow on the board edge."
+    },
+    {
+      "id": 32,
+      "name": "Sideways Drip",
+      "moves": 17,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        ".ssssss.",
+        ".ssssss.",
+        ".ssssss.",
+        ".ssssss.",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [10000,30500,40500],
+      "gravity": "left",
+      "tutorial": "Gravity pulls to the left now. New tiles enter from the right."
+    },
+    {
+      "id": 33,
+      "name": "Conveyor",
+      "moves": 29,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "......ss",
+        "......ss",
+        "....1.ss",
+        "....1.ss",
+        "....1.ss",
+        "....1.ss",
+        "......ss",
+        "......ss"
+      ],
+      "goals": [{"type": "stains"}, {"type": "glass"}],
+      "stars": [16500,47500,60000],
+      "gravity": "right"
+    },
+    {
+      "id": 34,
+      "name": "Switch Gear",
+      "moves": 28,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "1......1",
+        "........",
+        "........",
+        "........",
+        "........",
+        "1......1",
+        "........"
+      ],
+      "goals": [{"type": "score", "target": 30000}, {"type": "glass"}],
+      "stars": [30000,45500,59000],
+      "tiles": [
+        "........",
+        "........",
+        "...g....",
+        "........",
+        "........",
+        "....g...",
+        "........",
+        "........"
+      ],
+      "switchChance": 0.03,
+      "tutorial": "Tiles with a swirl badge are Gravity Switches. Clear one to rotate gravity 90 degrees!"
+    },
+    {
+      "id": 35,
+      "name": "Upside Studio",
+      "moves": 33,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ssssssss",
+        "ssssssss",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [16000,43500,58500],
+      "gravity": "up"
+    },
+    {
+      "id": 36,
+      "name": "Spin Cycle",
+      "moves": 17,
+      "colors": ["red", "blue", "yellow", "purple", "brown"],
+      "layout": [
+        "........",
+        ".1....1.",
+        "........",
+        "........",
+        "........",
+        "........",
+        ".1....1.",
+        "........"
+      ],
+      "goals": [{"type": "glass"}, {"type": "collect", "color": "purple", "target": 60}],
+      "stars": [20500,60000,75500],
+      "tiles": [
+        "........",
+        "........",
+        "..g.....",
+        "........",
+        "........",
+        ".....g..",
+        "........",
+        "........"
+      ],
+      "switchChance": 0.04
+    },
+    {
+      "id": 37,
+      "name": "Paint Mixer",
+      "moves": 17,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "#......#",
+        "...ss...",
+        "..ssss..",
+        "..ssss..",
+        "...ss...",
+        "#......#",
+        "##....##"
+      ],
+      "goals": [{"type": "stains"}, {"type": "collect", "color": "green", "target": 7}],
+      "stars": [7000,22000,30000],
+      "gravity": "left",
+      "switchChance": 0.04
+    },
+    {
+      "id": 38,
+      "name": "Pressure Pipes",
+      "moves": 21,
+      "colors": ["red", "blue", "yellow", "orange", "brown"],
+      "layout": [
+        "2.2.2.2.",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        ".2.2.2.2"
+      ],
+      "goals": [{"type": "glass"}],
+      "stars": [20500,63500,94500],
+      "gravity": "right",
+      "switchChance": 0.03
+    },
+    {
+      "id": 39,
+      "name": "Tumble Dryer",
+      "moves": 31,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ss....ss",
+        "s......s",
+        "..1..1..",
+        "........",
+        "........",
+        "..1..1..",
+        "s......s",
+        "ss....ss"
+      ],
+      "goals": [{"type": "stains"}, {"type": "glass"}],
+      "stars": [14000,38500,52000],
+      "tiles": [
+        "........",
+        "...g....",
+        "........",
+        "........",
+        "........",
+        "........",
+        "....g...",
+        "........"
+      ],
+      "switchChance": 0.04
+    },
+    {
+      "id": 40,
+      "name": "Gravity Storm",
+      "moves": 26,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "2ssssss2",
+        "s......s",
+        "s.1..1.s",
+        "s......s",
+        "s......s",
+        "s.1..1.s",
+        "s......s",
+        "2ssssss2"
+      ],
+      "goals": [{"type": "stains"}, {"type": "glass"}],
+      "stars": [16000,43500,54000],
+      "gravity": "up",
+      "switchChance": 0.05,
+      "tiles": [
+        "........",
+        "..g.....",
+        "........",
+        "........",
+        "........",
+        "........",
+        ".....g..",
+        "........"
+      ],
+      "hard": true
+    }
+  ]
+}
