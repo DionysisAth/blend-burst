@@ -83,6 +83,16 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: blend-burst-apk
+      - name: Pre-build the test app before the emulator needs the RAM
+        run: |
+          # The template lets Gradle take 8 GB; next to a 3 GB emulator on a
+          # 16 GB runner that gets the emulator OOM-killed. Cap it and stop
+          # the daemons once the build is cached.
+          sed -i 's/-Xmx8G -XX:MaxMetaspaceSize=4G/-Xmx3G -XX:MaxMetaspaceSize=1G/' android/gradle.properties
+          flutter build apk --debug --target integration_test/app_test.dart
+          (cd android && ./gradlew --stop) || true
+          pkill -f KotlinCompileDaemon || true
+          free -m
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -94,12 +104,17 @@ jobs:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
-          ram-size: 4096M
+          ram-size: 3072M
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: |
             bash ci/android_smoke_test.sh blend-burst.apk smoke-results
             flutter test integration_test/app_test.dart -d emulator-5554 --reporter expanded
+      - name: Diagnose runner memory
+        if: failure()
+        run: |
+          free -m
+          sudo dmesg | grep -i -E "out of memory|killed process|oom" | tail -20 || true
       - name: Upload screenshots and logs
         if: always()
         uses: actions/upload-artifact@v4
