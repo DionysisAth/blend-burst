@@ -31,7 +31,24 @@ enum Sfx {
   drop,
 }
 
-enum Music { map, game }
+/// Background tracks: the map, and one per episode.
+enum Music {
+  map,
+  studio,
+  garden,
+  factory,
+  sky,
+  lagoon,
+  peaks,
+  brigade,
+  galaxy;
+
+  /// The level music of episode [index] (0-based).
+  static Music forEpisode(int index) =>
+      Music.values[1 + index.clamp(0, Music.values.length - 2)];
+
+  String get file => 'music_$name.ogg';
+}
 
 /// Game sound effects and music.
 abstract class GameAudio {
@@ -138,40 +155,40 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
   }
 
   static const sfxFiles = [
-    'pop0.wav',
-    'pop1.wav',
-    'pop2.wav',
-    'pop3.wav',
-    'pop4.wav',
-    'pop5.wav',
-    'pop6.wav',
-    'pop7.wav',
-    'star0.wav',
-    'star1.wav',
-    'star2.wav',
-    'swap.wav',
-    'invalid.wav',
-    'blend.wav',
-    'special.wav',
-    'line.wav',
-    'bomb.wav',
-    'prism.wav',
-    'whiteburst.wav',
-    'combo.wav',
-    'glass.wav',
-    'stain.wav',
-    'gravity.wav',
-    'shuffle.wav',
-    'win.wav',
-    'lose.wav',
-    'click.wav',
-    'coin.wav',
-    'booster.wav',
-    'praise.wav',
-    'start.wav',
-    'chain.wav',
-    'ink.wav',
-    'drop.wav',
+    'pop0.ogg',
+    'pop1.ogg',
+    'pop2.ogg',
+    'pop3.ogg',
+    'pop4.ogg',
+    'pop5.ogg',
+    'pop6.ogg',
+    'pop7.ogg',
+    'star0.ogg',
+    'star1.ogg',
+    'star2.ogg',
+    'swap.ogg',
+    'invalid.ogg',
+    'blend.ogg',
+    'special.ogg',
+    'line.ogg',
+    'bomb.ogg',
+    'prism.ogg',
+    'whiteburst.ogg',
+    'combo.ogg',
+    'glass.ogg',
+    'stain.ogg',
+    'gravity.ogg',
+    'shuffle.ogg',
+    'win.ogg',
+    'lose.ogg',
+    'click.ogg',
+    'coin.ogg',
+    'booster.ogg',
+    'praise.ogg',
+    'start.ogg',
+    'chain.ogg',
+    'ink.ogg',
+    'drop.ogg',
   ];
 
   void _fail(Object e) {
@@ -192,18 +209,33 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
       _fail(e);
       return;
     }
-    // Music first, so the map track can start as soon as possible.
-    for (final file in [
-      for (final m in Music.values) 'music_${m.name}.wav',
-      ...sfxFiles,
-    ]) {
+    // The map track first, so it starts as soon as possible. Other tracks
+    // load when they are first needed.
+    await _loadMusic(Music.map);
+    final wanted = _wanted;
+    if (wanted != null) await _loadMusic(wanted);
+    for (final file in sfxFiles) {
       try {
         _sources[file] = await _engine.loadAsset('$_prefix$file');
       } catch (e) {
         debugPrint('Could not load $file: $e');
       }
-      if (file.startsWith('music_')) _sync();
     }
+  }
+
+  final Set<Music> _loading = {};
+
+  /// Music is decoded into memory (loops are sample-exact); only the map
+  /// track and the current level track stay loaded.
+  Future<void> _loadMusic(Music m) async {
+    if (_sources.containsKey(m.file) || !_loading.add(m)) return;
+    try {
+      _sources[m.file] = await _engine.loadAsset('$_prefix${m.file}');
+    } catch (e) {
+      debugPrint('Could not load ${m.file}: $e');
+    }
+    _loading.remove(m);
+    _sync();
   }
 
   void _play(String file, double volume) {
@@ -229,14 +261,14 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
       Sfx.stain: 0.7,
       Sfx.glass: 0.8,
     };
-    _play('${s.name}.wav', volume * (loud[s] ?? 0.9));
+    _play('${s.name}.ogg', volume * (loud[s] ?? 0.9));
   }
 
   @override
-  void pop(int cascade) => _play('pop${(cascade - 1).clamp(0, 7)}.wav', 0.8);
+  void pop(int cascade) => _play('pop${(cascade - 1).clamp(0, 7)}.ogg', 0.8);
 
   @override
-  void star(int i) => _play('star${i.clamp(0, 2)}.wav', 0.9);
+  void star(int i) => _play('star${i.clamp(0, 2)}.ogg', 0.9);
 
   @override
   void setSound(bool on) => soundOn = on;
@@ -258,8 +290,12 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
     if (!_live) return;
     final target = (musicOn && !_paused) ? _wanted : null;
     if (target == _playing) return;
-    final source = target == null ? null : _sources['music_${target.name}.wav'];
-    if (target != null && source == null) return; // still loading
+    final source = target == null ? null : _sources[target.file];
+    if (target != null && source == null) {
+      // Not loaded yet: start loading; _loadMusic syncs again when done.
+      unawaited(_loadMusic(target));
+      return;
+    }
     try {
       final old = _musicHandle;
       if (old != null) {
@@ -273,9 +309,24 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
         _engine.fadeVolume(h, _musicVolume, _fade);
         _musicHandle = h;
       }
+      _freeMusicLater(keep: {Music.map, ?target});
     } catch (e) {
       _fail(e);
     }
+  }
+
+  /// Frees level tracks other than [keep] once the cross-fade is over.
+  void _freeMusicLater({required Set<Music> keep}) {
+    Future<void>.delayed(_fade * 2, () {
+      for (final m in Music.values) {
+        if (keep.contains(m) || m == _playing) continue;
+        final src = _sources.remove(m.file);
+        if (src == null) continue;
+        try {
+          unawaited(_engine.disposeSource(src));
+        } catch (_) {}
+      }
+    });
   }
 
   @override

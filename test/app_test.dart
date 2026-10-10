@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:blend_burst/app/app_state.dart';
+import 'package:blend_burst/app/economy.dart';
 import 'package:blend_burst/app/scope.dart';
 import 'package:blend_burst/core/models.dart';
 import 'package:blend_burst/core/session.dart';
@@ -20,8 +21,12 @@ Future<void> run(WidgetTester tester, int ms) async {
   }
 }
 
-const unlockedAll = {
-  'blend_burst_save_v1': '{"unlocked": 40, "lives": 5, "coins": 500}',
+/// Every level unlocked; today's daily gift is already claimed so it does
+/// not pop up over the map.
+final unlockedAll = <String, Object>{
+  'blend_burst_save_v1':
+      '{"unlocked": 120, "lives": 5, "coins": 500, '
+      '"dailyLast": ${dayNumber(DateTime.now())}, "dailyStreak": 1}',
 };
 
 Future<void> boot(
@@ -98,7 +103,7 @@ Future<void> playToWin(WidgetTester tester, GameScreenState game) async {
 }
 
 void main() {
-  testWidgets('app boots to the map with 40 levels', (tester) async {
+  testWidgets('app boots to the map with 120 levels', (tester) async {
     await boot(tester);
     expect(find.text('Art Studio'), findsOneWidget);
     expect(find.byKey(const Key('level-1')), findsOneWidget);
@@ -235,6 +240,7 @@ void main() {
     await boot(tester, prefs: unlockedAll, size: const Size(880, 1760));
     for (final id in [
       1, 2, 3, 4, 5, 6, 7, 9, 11, 16, 18, 21, 25, 31, 32, 33, 34, 40, //
+      41, 42, 43, 46, 48, 61, 76, 91, 96, 106, 120, //
     ]) {
       final game = await openLevel(tester, id);
       for (var i = 0; i < 3; i++) {
@@ -267,6 +273,95 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('the daily gift pops up and can be claimed', (tester) async {
+    await boot(
+      tester,
+      prefs: const {
+        'blend_burst_save_v1': '{"unlocked": 10, "lives": 5, "coins": 100}',
+      },
+    );
+    await run(tester, 600);
+    expect(find.text('Daily Gift'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('daily-claim')));
+    await run(tester, 800);
+    await tester.tap(find.byKey(const Key('reward-ok')));
+    await run(tester, 800);
+    final app = AppScope.read(tester.element(find.byType(MapScreen))).app;
+    expect(app.coins, 100 + dailyRewards[0].coins);
+    expect(app.daily.claimable, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('shop, event and season pass open and work', (tester) async {
+    // A small phone, to catch overflows.
+    await boot(tester, prefs: unlockedAll, size: const Size(880, 1760));
+    final app = AppScope.read(tester.element(find.byType(MapScreen))).app;
+    final gold = app.gold;
+    await tester.tap(find.byKey(const Key('side-shop')));
+    await run(tester, 600);
+    expect(find.text('Shop'), findsWidgets);
+    // A test purchase of a gold pack.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('buy-gold50')),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await run(tester, 300);
+    await tester.tap(find.byKey(const Key('buy-gold50')));
+    await run(tester, 600);
+    await tester.tap(find.byKey(const Key('store-confirm')));
+    await run(tester, 800);
+    await tester.tap(find.byKey(const Key('reward-ok')));
+    await run(tester, 600);
+    expect(app.gold, gold + 50);
+    // Spend gold on unlimited lives.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('buy-unl30')),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await run(tester, 300);
+    await tester.tap(find.byKey(const Key('buy-unl30')));
+    await run(tester, 800);
+    await tester.tap(find.byKey(const Key('reward-ok')));
+    await run(tester, 600);
+    expect(app.hasUnlimited, isTrue);
+    expect(app.gold, gold + 50 - 30);
+    await tester.tap(find.bySemanticsLabel('Back'));
+    await run(tester, 600);
+
+    app.addEventTiles({app.event.colorName: WeeklyEvent.tiers[0]});
+    await tester.tap(find.byKey(const Key('side-event')));
+    await run(tester, 600);
+    await tester.tap(find.text('Claim').first);
+    await run(tester, 800);
+    await tester.tap(find.byKey(const Key('reward-ok')));
+    await run(tester, 600);
+    expect(app.eventClaimable, 0);
+    await tester.tap(find.bySemanticsLabel('Back'));
+    await run(tester, 600);
+
+    app.data.seasonPoints = Season.pointsPerTier;
+    await tester.tap(find.byKey(const Key('side-pass')));
+    await run(tester, 600);
+    await tester.tap(find.byKey(const Key('season-0-f')));
+    await run(tester, 800);
+    await tester.tap(find.byKey(const Key('reward-ok')));
+    await run(tester, 600);
+    expect(app.seasonClaimed(0, premium: false), isTrue);
+    await tester.tap(find.byKey(const Key('pass-unlock')));
+    await run(tester, 600);
+    await tester.tap(find.byKey(const Key('store-confirm')));
+    await run(tester, 800);
+    expect(app.premiumPass, isTrue);
+    await tester.tap(find.byKey(const Key('season-0-p')));
+    await run(tester, 800);
+    await tester.tap(find.byKey(const Key('reward-ok')));
+    await run(tester, 600);
+    expect(app.seasonClaimed(0, premium: true), isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('settings, analytics and the level editor open', (tester) async {
     await boot(tester);
     await tester.tap(find.byKey(const Key('settings')));
@@ -274,7 +369,7 @@ void main() {
     expect(find.text('Settings'), findsOneWidget);
     await tester.tap(find.text('Analytics'));
     await run(tester, 600);
-    expect(find.textContaining('Sessions'), findsOneWidget);
+    expect(find.text('Key metrics'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('Back'));
     await run(tester, 600);
     await tester.tap(find.text('Level editor'));

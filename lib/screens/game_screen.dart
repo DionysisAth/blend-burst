@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../app/app_state.dart';
 import '../app/audio.dart';
 import '../app/scope.dart';
+import '../app/share.dart';
 import '../core/board.dart';
 import '../core/level.dart';
 import '../core/models.dart';
@@ -29,12 +30,16 @@ class GameScreen extends StatefulWidget {
   /// Pre-level boosters chosen on the level start card.
   final Set<BoosterType> preBoosters;
 
+  /// Free starting boosters from the win streak (not taken from stock).
+  final Set<BoosterType> bonusBoosters;
+
   const GameScreen({
     super.key,
     required this.level,
     this.testMode = false,
     this.seed,
     this.preBoosters = const {},
+    this.bonusBoosters = const {},
   });
 
   @override
@@ -57,6 +62,36 @@ class GameScreenState extends State<GameScreen> {
   bool _dialogOpen = false;
   bool _adUsed = false;
   bool _failed = false;
+  bool _eventCounted = false;
+  final _shotKey = GlobalKey();
+
+  /// A "share this combo" button shows for a few seconds after a huge one.
+  bool _shareCombo = false;
+  Timer? _shareTimer;
+
+  void _onSpectacular() {
+    if (widget.testMode || !mounted) return;
+    _shareTimer?.cancel();
+    // May be reported mid-frame by the board; update after it.
+    scheduleMicrotask(() {
+      if (mounted) setState(() => _shareCombo = true);
+    });
+    _shareTimer = Timer(const Duration(seconds: 6), () {
+      if (mounted) setState(() => _shareCombo = false);
+    });
+  }
+
+  void _share(String why) {
+    app.logAndSave('share', {'level': level.id, 'what': why});
+    unawaited(
+      shareScreenshot(
+        _shotKey,
+        why == 'combo'
+            ? 'What a combo on level ${level.id} of Blend Burst!'
+            : 'I beat level ${level.id} of Blend Burst!',
+      ),
+    );
+  }
 
   AppState get app => _scope.app;
   GameAudio get audio => _scope.audio;
@@ -68,7 +103,7 @@ class GameScreenState extends State<GameScreen> {
     _alive++;
     _scope = AppScope.read(context);
     session = GameSession(level, seed: widget.seed);
-    for (final b in widget.preBoosters) {
+    for (final b in [...widget.preBoosters, ...widget.bonusBoosters]) {
       final special = switch (b) {
         BoosterType.startLine =>
           Random().nextBool() ? Special.lineH : Special.lineV,
@@ -77,7 +112,8 @@ class GameScreenState extends State<GameScreen> {
         _ => null,
       };
       if (special == null) continue;
-      if (session.board.placeSpecial(special) != null && !widget.testMode) {
+      final placed = session.board.placeSpecial(special) != null;
+      if (placed && !widget.testMode && widget.preBoosters.contains(b)) {
         app.useBooster(b, level.id);
       }
     }
@@ -85,7 +121,7 @@ class GameScreenState extends State<GameScreen> {
     controller.onIdle = _onIdle;
     controller.addListener(_onController);
     if (!widget.testMode) app.startLevel(level.id);
-    audio.music(Music.game);
+    audio.music(Music.forEpisode(level.episode));
     _restartHintTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) => _showTutorial());
   }
@@ -95,6 +131,7 @@ class GameScreenState extends State<GameScreen> {
     _alive--;
     if (_alive == 0) audio.music(Music.map);
     _hintTimer?.cancel();
+    _shareTimer?.cancel();
     controller.removeListener(_onController);
     controller.onIdle = null;
     controller.dispose();
@@ -275,9 +312,19 @@ class GameScreenState extends State<GameScreen> {
     }
   }
 
+  /// Counts this attempt's cleared tiles towards the weekly event.
+  void _countEventTiles() {
+    if (widget.testMode || _eventCounted) return;
+    _eventCounted = true;
+    app.addEventTiles({
+      for (final e in session.board.collected.entries) e.key.name: e.value,
+    });
+  }
+
   Future<void> _showWin() async {
     final score = session.score;
     final stars = session.starsFor(score);
+    _countEventTiles();
     final reward = widget.testMode
         ? null
         : app.completeLevel(level.id, stars, score, session.movesLeft);
@@ -291,9 +338,15 @@ class GameScreenState extends State<GameScreen> {
       reward: reward,
       hasNext: next != null,
       testMode: widget.testMode,
+      onShare: widget.testMode ? null : () => _share('win'),
     );
-    _dialogOpen = false;
     if (!mounted) return;
+    // An occasional ad break between levels (never for paying players).
+    if (!widget.testMode && app.takeInterstitialSlot()) {
+      await _scope.ads.showInterstitial(context);
+      if (!mounted) return;
+    }
+    _dialogOpen = false;
     if (choice == 'next' && next != null) {
       await _openLevel(next);
     } else {
@@ -303,20 +356,28 @@ class GameScreenState extends State<GameScreen> {
 
   Future<void> _openLevel(LevelDef next) async {
     final nav = Navigator.of(context);
-    if (app.lives <= 0 && !await showOutOfLives(context)) {
+    if (!widget.testMode && !app.canPlay && !await showOutOfLives(context)) {
       if (mounted) nav.pop();
       return;
     }
     if (!mounted) return;
+    final bonus = widget.testMode || next.id < 6
+        ? const <BoosterType>{}
+        : app.streakBoosters;
     nav.pushReplacement(
       MaterialPageRoute(
-        builder: (_) => GameScreen(level: next, testMode: widget.testMode),
+        builder: (_) => GameScreen(
+          level: next,
+          testMode: widget.testMode,
+          bonusBoosters: bonus,
+        ),
       ),
     );
   }
 
   Future<void> _showOutOfMoves() async {
     final cost = AppState.extraMovesCost(session.extraMovesBought);
+    final goldCost = app.extraMovesGoldCost(session.extraMovesBought);
     audio.sfx(Sfx.lose, volume: 0.7);
     _dialogOpen = true;
     final choice = await showOutOfMovesDialog(
@@ -324,6 +385,8 @@ class GameScreenState extends State<GameScreen> {
       goals: session.progress(),
       cost: cost,
       canAfford: app.coins >= cost,
+      goldCost: goldCost,
+      canAffordGold: app.gold >= goldCost,
       adAvailable: !_adUsed,
       testMode: widget.testMode,
     );
@@ -339,8 +402,15 @@ class GameScreenState extends State<GameScreen> {
           setState(() => session.addMoves(5));
           _restartHintTimer();
         }
+      case 'gold':
+        if (app.spendGold(goldCost)) {
+          app.logAndSave('extra_moves', {'level': level.id, 'gold': goldCost});
+          audio.sfx(Sfx.coin);
+          setState(() => session.addMoves(5));
+          _restartHintTimer();
+        }
       case 'ad':
-        final ok = await _scope.ads.showRewarded(context, reward: '+5 moves');
+        final ok = await _scope.ads.showRewarded(context, reward: '+3 moves');
         if (!mounted) return;
         if (ok) {
           _adUsed = true;
@@ -348,7 +418,7 @@ class GameScreenState extends State<GameScreen> {
             app.logAndSave('ad_reward', {'reward': 'moves', 'level': level.id});
           }
           audio.sfx(Sfx.booster);
-          setState(() => session.addMoves(5));
+          setState(() => session.addMoves(3));
           _restartHintTimer();
         } else {
           await _showOutOfMoves();
@@ -360,6 +430,7 @@ class GameScreenState extends State<GameScreen> {
 
   Future<void> _fail(String reason) async {
     _ended = true;
+    _countEventTiles();
     if (!widget.testMode && !_failed) {
       _failed = true;
       app.failLevel(level.id, reason: reason);
@@ -427,30 +498,59 @@ class GameScreenState extends State<GameScreen> {
         if (!didPop) _pause();
       },
       child: Scaffold(
-        body: PaintedBackground(
-          theme: level.episode,
-          child: SafeArea(
-            child: Column(
-              children: [
-                _hud(),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                    child: BoardView(
-                      key: const Key('board'),
-                      controller: controller,
-                      onSwipe: onSwipe,
-                      onTap: onTap,
-                      interactive: !busy,
-                      hint: hint,
-                      selected: freeSwapFirst,
-                      haptics: app.data.haptics,
-                      audio: audio,
+        body: RepaintBoundary(
+          key: _shotKey,
+          child: PaintedBackground(
+            theme: level.episode,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _hud(),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: BoardView(
+                              key: const Key('board'),
+                              controller: controller,
+                              onSwipe: onSwipe,
+                              onTap: onTap,
+                              interactive: !busy,
+                              hint: hint,
+                              selected: freeSwapFirst,
+                              haptics: app.data.haptics,
+                              audio: audio,
+                              onSpectacular: _onSpectacular,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 8,
+                          top: 0,
+                          child: AnimatedScale(
+                            scale: _shareCombo ? 1 : 0,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOutBack,
+                            child: CandyButton.label(
+                              'Share!',
+                              key: const Key('share-combo'),
+                              colors: CandyColors.purple,
+                              icon: GameIcons.gift,
+                              height: 40,
+                              width: 130,
+                              fontSize: 18,
+                              onTap: _shareCombo ? () => _share('combo') : null,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                _boosterBar(),
-              ],
+                  _boosterBar(),
+                ],
+              ),
             ),
           ),
         ),

@@ -1,0 +1,281 @@
+{
+  "episode": "Sky Gallery",
+  "levels": [
+    {
+      "id": 46,
+      "name": "Chained Canvas",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "..kkkk..",
+        "..kkkk..",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "locks"}],
+      "stars": [19500,60000,128000],
+      "tutorial": "Chained tiles cannot move. Match them (or blast them) to break the chains!",
+      "tutorialArt": "lock"
+    },
+    {
+      "id": 47,
+      "name": "Gallery Wall",
+      "moves": 19,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        ".k.kk.k.",
+        "........",
+        ".k.kk.k.",
+        ".k.kk.k.",
+        "........",
+        ".k.kk.k.",
+        "........"
+      ],
+      "goals": [{"type": "locks"}],
+      "stars": [13500,38500,41500]
+    },
+    {
+      "id": 48,
+      "name": "Double Bolted",
+      "moves": 30,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "#......#",
+        "...kk...",
+        "..K..K..",
+        "...kk...",
+        "...kk...",
+        "..K..K..",
+        "...kk...",
+        "#......#"
+      ],
+      "goals": [{"type": "locks"}],
+      "stars": [16500,43000,54000],
+      "tutorial": "Gold padlocks have two chains: break them twice."
+    },
+    {
+      "id": 49,
+      "name": "Hanging Frames",
+      "moves": 32,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "kkkkkkkk",
+        "........",
+        ".#....#.",
+        ".#....#.",
+        ".#....#.",
+        ".#....#.",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "locks"}, {"type": "score", "target": 20000}],
+      "stars": [20000,37500,41500]
+    },
+    {
+      "id": 50,
+      "name": "Vault",
+      "moves": 29,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "1......1",
+        "..k..k..",
+        "..####..",
+        "..#..#..",
+        "..#..#..",
+        "..####..",
+        "..k..k..",
+        "1......1"
+      ],
+      "goals": [{"type": "locks"}, {"type": "glass"}],
+      "stars": [8500,20500,25500],
+      "hard": true
+    },
+    {
+      "id": 51,
+      "name": "Skylight",
+      "moves": 19,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "#.k..k.#",
+        ".kssssk.",
+        "..ssss..",
+        "..ssss..",
+        ".kssssk.",
+        "#.k..k.#",
+        "##....##"
+      ],
+      "goals": [{"type": "locks"}, {"type": "stains"}],
+      "stars": [10000,26000,40500]
+    },
+    {
+      "id": 52,
+      "name": "Cloud Steps",
+      "moves": 37,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "k......k",
+        ".k....k.",
+        "..k..k..",
+        "...kk...",
+        "...kk...",
+        "..k..k..",
+        ".k....k.",
+        "k......k"
+      ],
+      "goals": [{"type": "locks"}],
+      "stars": [18000,57000,69000]
+    },
+    {
+      "id": 53,
+      "name": "Portrait",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "#..##..#",
+        "........",
+        "..k..k..",
+        "...kk...",
+        "...kk...",
+        "#......#",
+        "##....##",
+        "###..###"
+      ],
+      "goals": [{"type": "locks"}, {"type": "collect", "target": 18, "color": "purple"}],
+      "stars": [4500,16500,22500]
+    },
+    {
+      "id": 54,
+      "name": "Exhibit",
+      "moves": 30,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        ".k....k.",
+        "..#..#..",
+        "...11...",
+        "...11...",
+        "..#..#..",
+        ".k....k.",
+        "........"
+      ],
+      "goals": [{"type": "glass"}, {"type": "locks"}],
+      "stars": [10000,26000,33000]
+    },
+    {
+      "id": 55,
+      "name": "Locked Wing",
+      "moves": 22,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "##....##",
+        "k..kk..k",
+        ".K....K.",
+        ".K....K.",
+        "k..kk..k",
+        "##....##",
+        "##....##"
+      ],
+      "goals": [{"type": "locks"}],
+      "stars": [11500,28000,37500],
+      "hard": true
+    },
+    {
+      "id": 56,
+      "name": "Open Air",
+      "moves": 26,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        ".k.k.k.k",
+        "k.k.k.k.",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "score", "target": 35000}, {"type": "locks"}],
+      "stars": [35000,51500,65000]
+    },
+    {
+      "id": 57,
+      "name": "Sky Bridge",
+      "moves": 34,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ssssssss",
+        "#ssssss#",
+        "##....##",
+        "###kk###",
+        "###kk###",
+        "##....##",
+        "#......#",
+        "........"
+      ],
+      "goals": [{"type": "locks"}, {"type": "stains"}],
+      "stars": [10000,23500,31500]
+    },
+    {
+      "id": 58,
+      "name": "Wind Chimes",
+      "moves": 28,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "....#...",
+        ".k..#.k.",
+        "..k.#k..",
+        "........",
+        "........",
+        "..k#.k..",
+        ".k.#..k.",
+        "...#...."
+      ],
+      "goals": [{"type": "locks"}],
+      "stars": [11500,28500,34500]
+    },
+    {
+      "id": 59,
+      "name": "Curator",
+      "moves": 14,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "#......#",
+        "..1..1..",
+        ".k.kk.k.",
+        "ssssssss",
+        "ssssssss",
+        ".k.kk.k.",
+        "..1..1..",
+        "#......#"
+      ],
+      "goals": [{"type": "locks"}, {"type": "glass"}, {"type": "stains"}],
+      "stars": [9000,22500,35000]
+    },
+    {
+      "id": 60,
+      "name": "Grand Gallery",
+      "moves": 23,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "k..kk..k",
+        "........",
+        "........",
+        "k..KK..k",
+        "k..KK..k",
+        "........",
+        "........",
+        "k..kk..k"
+      ],
+      "goals": [{"type": "locks"}],
+      "stars": [19000,43500,52500],
+      "hard": true
+    }
+  ]
+}

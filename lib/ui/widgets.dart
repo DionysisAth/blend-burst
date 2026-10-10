@@ -203,6 +203,7 @@ class StarRow extends StatelessWidget {
 }
 
 String formatDuration(Duration d) {
+  if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes % 60}m';
   final m = d.inMinutes;
   final s = d.inSeconds % 60;
   return '$m:${s.toString().padLeft(2, '0')}';

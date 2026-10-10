@@ -4,12 +4,16 @@ import 'ad_service.dart';
 import 'app_state.dart';
 import 'audio.dart';
 import 'level_repository.dart';
+import 'notifications.dart';
+import 'store.dart';
 
 /// Makes the app state, levels and services available to every screen.
 class AppScope extends InheritedNotifier<AppState> {
   final LevelRepository levels;
   final AdService ads;
   final GameAudio audio;
+  final Store store;
+  final Notifier reminders;
 
   const AppScope({
     super.key,
@@ -17,6 +21,8 @@ class AppScope extends InheritedNotifier<AppState> {
     required this.levels,
     required this.ads,
     required this.audio,
+    this.store = const TestStore(),
+    this.reminders = const NoNotifier(),
     required super.child,
   }) : super(notifier: app);
 

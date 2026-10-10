@@ -54,7 +54,7 @@ class Goal {
 /// optional `tiles` rows place starting tiles (`.` = random):
 ///   color letters R B Y P G O N K, `g` = random-colored gravity switch tile,
 ///   `D` = paint bucket.
-/// optional `filters` rows: a color letter turns tiles falling through that
+/// optional `filters` rows: a color letter turns tiles that fall into that
 ///   cell into that color (`.` = none).
 /// optional `zones` rows: `v` `^` `<` `>` give that cell its own gravity
 ///   (`.` = the level's gravity).
@@ -269,6 +269,18 @@ class LevelDef {
   /// Episode index (0-based) for a level; 15 levels per episode.
   int get episode => (id - 1) ~/ 15;
 }
+
+/// The bundled level packs, one per episode, in map order.
+const levelPackFiles = [
+  'assets/levels/episode1.json',
+  'assets/levels/episode2.json',
+  'assets/levels/episode3.json',
+  'assets/levels/episode4.json',
+  'assets/levels/episode5.json',
+  'assets/levels/episode6.json',
+  'assets/levels/episode7.json',
+  'assets/levels/episode8.json',
+];
 
 /// Loads a level pack: `{"episode": "...", "levels": [ ... ]}`.
 List<LevelDef> parseLevelPack(Map<String, dynamic> pack) =>

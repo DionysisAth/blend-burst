@@ -8,11 +8,7 @@ import 'package:blend_burst/core/session.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 List<LevelDef> bundledLevels() => [
-  for (final f in [
-    'assets/levels/episode1.json',
-    'assets/levels/episode2.json',
-    'assets/levels/episode3.json',
-  ])
+  for (final f in levelPackFiles)
     ...parseLevelPack(
       jsonDecode(File(f).readAsStringSync()) as Map<String, dynamic>,
     ),
@@ -21,10 +17,11 @@ List<LevelDef> bundledLevels() => [
 void main() {
   final levels = bundledLevels();
 
-  test('there are 40 levels numbered 1..40 in 15-level episodes', () {
-    expect(levels.map((l) => l.id), [for (var i = 1; i <= 40; i++) i]);
-    expect(levels.where((l) => l.episode == 0), hasLength(15));
-    expect(levels.where((l) => l.episode == 1), hasLength(15));
+  test('there are 120 levels numbered 1..120 in 15-level episodes', () {
+    expect(levels.map((l) => l.id), [for (var i = 1; i <= 120; i++) i]);
+    for (var e = 0; e < 8; e++) {
+      expect(levels.where((l) => l.episode == e), hasLength(15));
+    }
   });
 
   test('every level is well formed', () {
@@ -39,6 +36,12 @@ void main() {
       }
       if (l.goals.any((g) => g.type == GoalType.glass)) {
         expect(l.glassCount, greaterThan(0), reason: 'level ${l.id}');
+      }
+      if (l.goals.any((g) => g.type == GoalType.locks)) {
+        expect(l.lockCount, greaterThan(0), reason: 'level ${l.id}');
+      }
+      if (l.goals.any((g) => g.type == GoalType.ink)) {
+        expect(l.inkCount, greaterThan(0), reason: 'level ${l.id}');
       }
       expect(LevelDef.fromJson(l.toJson()).toJson(), l.toJson());
     }

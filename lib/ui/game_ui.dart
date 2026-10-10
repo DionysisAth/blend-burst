@@ -786,8 +786,20 @@ class BackgroundPainter extends CustomPainter {
           );
         case 1:
           _flower(canvas, c, s, rnd);
-        default:
+        case 2:
           _gear(canvas, c, s * 1.2, rnd.nextDouble());
+        case 3:
+          i.isEven ? _cloud(canvas, c, s * 1.4) : _frame(canvas, c, s, rnd);
+        case 4:
+          i.isEven ? _bubbles(canvas, c, s, rnd) : _wave(canvas, c, s * 1.6);
+        case 5:
+          _crystal(canvas, c, s * 1.1, rnd);
+        case 6:
+          _drip(canvas, c, s, rnd);
+        default:
+          i % 3 == 0
+              ? _planet(canvas, c, s, rnd)
+              : _starShape(canvas, c, s * 0.6);
       }
     }
     // Sparkles.
@@ -874,6 +886,127 @@ class BackgroundPainter extends CustomPainter {
       s * 0.35,
       Paint()..color = Colors.white.withValues(alpha: 0.16),
     );
+  }
+
+  static final _soft = Paint()..color = Colors.white.withValues(alpha: 0.3);
+
+  static void _cloud(Canvas canvas, Offset c, double s) {
+    final p = Path()
+      ..addOval(Rect.fromCenter(center: c, width: s * 2.2, height: s * 0.9))
+      ..addOval(
+        Rect.fromCircle(
+          center: c + Offset(-s * 0.45, -s * 0.3),
+          radius: s * 0.5,
+        ),
+      )
+      ..addOval(
+        Rect.fromCircle(
+          center: c + Offset(s * 0.3, -s * 0.42),
+          radius: s * 0.62,
+        ),
+      );
+    canvas.drawPath(p, Paint()..color = Colors.white.withValues(alpha: 0.5));
+  }
+
+  static void _frame(Canvas canvas, Offset c, double s, Random rnd) {
+    final r = Rect.fromCenter(center: c, width: s * 1.6, height: s * 1.25);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(r, Radius.circular(s * 0.12)),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = s * 0.16
+        ..color = const Color(0xFFFFE08A).withValues(alpha: 0.45),
+    );
+    canvas.drawRect(r.deflate(s * 0.22), _soft);
+  }
+
+  static void _bubbles(Canvas canvas, Offset c, double s, Random rnd) {
+    final ring = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s * 0.08
+      ..color = Colors.white.withValues(alpha: 0.4);
+    for (var k = 0; k < 3; k++) {
+      final o = c + Offset((rnd.nextDouble() - 0.5) * s * 1.6, -k * s * 0.7);
+      canvas.drawCircle(o, s * (0.18 + rnd.nextDouble() * 0.22), ring);
+    }
+  }
+
+  static void _wave(Canvas canvas, Offset c, double s) {
+    final p = Path()..moveTo(c.dx - s, c.dy);
+    for (var k = 0; k < 4; k++) {
+      p.relativeQuadraticBezierTo(s * 0.25, -s * 0.3, s * 0.5, 0);
+    }
+    canvas.drawPath(
+      p,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = s * 0.12
+        ..strokeCap = StrokeCap.round
+        ..color = Colors.white.withValues(alpha: 0.32),
+    );
+  }
+
+  static void _crystal(Canvas canvas, Offset c, double s, Random rnd) {
+    final h = s * (1.2 + rnd.nextDouble() * 0.6);
+    final p = Path()
+      ..moveTo(c.dx, c.dy - h)
+      ..lineTo(c.dx + s * 0.5, c.dy - h * 0.3)
+      ..lineTo(c.dx + s * 0.35, c.dy + h * 0.5)
+      ..lineTo(c.dx - s * 0.35, c.dy + h * 0.5)
+      ..lineTo(c.dx - s * 0.5, c.dy - h * 0.3)
+      ..close();
+    canvas.drawPath(p, Paint()..color = Colors.white.withValues(alpha: 0.32));
+    canvas.drawLine(
+      Offset(c.dx, c.dy - h),
+      Offset(c.dx, c.dy + h * 0.5),
+      Paint()
+        ..strokeWidth = s * 0.06
+        ..color = Colors.white.withValues(alpha: 0.4),
+    );
+  }
+
+  static void _drip(Canvas canvas, Offset c, double s, Random rnd) {
+    final len = s * (1 + rnd.nextDouble() * 1.4);
+    final p = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(c.dx - s * 0.18, c.dy - len, s * 0.36, len),
+          Radius.circular(s * 0.18),
+        ),
+      )
+      ..addOval(Rect.fromCircle(center: c, radius: s * 0.3));
+    canvas.drawPath(p, Paint()..color = Colors.white.withValues(alpha: 0.32));
+  }
+
+  static void _planet(Canvas canvas, Offset c, double s, Random rnd) {
+    canvas.drawCircle(
+      c,
+      s * 0.7,
+      Paint()..color = Colors.white.withValues(alpha: 0.22),
+    );
+    canvas.save();
+    canvas.translate(c.dx, c.dy);
+    canvas.rotate(-0.4);
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset.zero, width: s * 2.2, height: s * 0.5),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = s * 0.1
+        ..color = Colors.white.withValues(alpha: 0.32),
+    );
+    canvas.restore();
+  }
+
+  static void _starShape(Canvas canvas, Offset c, double s) {
+    final p = Path();
+    for (var k = 0; k < 10; k++) {
+      final a = -pi / 2 + k * pi / 5;
+      final r = k.isEven ? s : s * 0.45;
+      final q = c + Offset(cos(a), sin(a)) * r;
+      k == 0 ? p.moveTo(q.dx, q.dy) : p.lineTo(q.dx, q.dy);
+    }
+    p.close();
+    canvas.drawPath(p, Paint()..color = Colors.white.withValues(alpha: 0.4));
   }
 
   @override

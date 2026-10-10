@@ -13,11 +13,7 @@ class Episode {
 
 /// Loads the bundled level packs (assets/levels/*.json).
 class LevelRepository {
-  static const packs = [
-    'assets/levels/episode1.json',
-    'assets/levels/episode2.json',
-    'assets/levels/episode3.json',
-  ];
+  static const packs = levelPackFiles;
 
   final List<Episode> episodes;
   final List<LevelDef> levels;

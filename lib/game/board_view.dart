@@ -118,6 +118,9 @@ class BoardView extends StatefulWidget {
   final bool haptics;
   final GameAudio? audio;
 
+  /// Called after a "Spectacular!" combo.
+  final VoidCallback? onSpectacular;
+
   const BoardView({
     super.key,
     required this.controller,
@@ -128,6 +131,7 @@ class BoardView extends StatefulWidget {
     this.selected,
     this.haptics = true,
     this.audio,
+    this.onSpectacular,
   });
 
   @override
@@ -298,6 +302,7 @@ class BoardViewState extends State<BoardView>
       ..clear()
       ..add(_Callout(text, colors));
     widget.audio?.sfx(Sfx.praise);
+    if (text == 'Spectacular!') widget.onSpectacular?.call();
   }
 
   void _onStepStart(Step step, BoardSnapshot before) {

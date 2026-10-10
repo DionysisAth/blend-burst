@@ -8,6 +8,7 @@ import 'app/ad_service.dart';
 import 'app/app_state.dart';
 import 'app/audio.dart';
 import 'app/level_repository.dart';
+import 'app/notifications.dart';
 import 'app/scope.dart';
 import 'screens/map_screen.dart';
 import 'ui/game_ui.dart';
@@ -89,33 +90,56 @@ class BlendBurstApp extends StatefulWidget {
   final AppState? state;
   final AdService ads;
   final GameAudio? audio;
+  final Notifier? notifier;
 
   const BlendBurstApp({
     super.key,
     this.state,
     this.ads = const PlaceholderAdService(),
     this.audio,
+    this.notifier,
   });
 
   @override
   State<BlendBurstApp> createState() => _BlendBurstAppState();
 }
 
-class _BlendBurstAppState extends State<BlendBurstApp> {
+class _BlendBurstAppState extends State<BlendBurstApp>
+    with WidgetsBindingObserver {
   AppState? _app;
   LevelRepository? _levels;
   Object? _error;
   late final GameAudio _audio = widget.audio ?? GameAudio.create();
+  late final Notifier _notifier = widget.notifier ?? LocalNotifier();
+  bool _inBackground = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     UiSounds.click = () => _audio.sfx(Sfx.click);
     _load();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final app = _app;
+    if (app == null || !app.data.notifications) return;
+    // Reminders only make sense while the game is not on screen.
+    final away =
+        state == AppLifecycleState.paused || state == AppLifecycleState.hidden;
+    if (away && !_inBackground) {
+      _inBackground = true;
+      unawaited(_notifier.schedule(app.reminders()));
+    } else if (state == AppLifecycleState.resumed && _inBackground) {
+      _inBackground = false;
+      unawaited(_notifier.cancelAll());
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     UiSounds.click = null;
     _audio.dispose();
     super.dispose();
@@ -128,6 +152,13 @@ class _BlendBurstAppState extends State<BlendBurstApp> {
       final levels = await LevelRepository.load();
       if (widget.state == null) await app.load();
       app.totalLevels = levels.levels.length;
+      // Live tuning from the previous launch; fetch a fresh copy for next time.
+      final moves = app.config.moves;
+      for (final l in levels.levels) {
+        final m = moves[l.id];
+        if (m != null) l.moves = m;
+      }
+      if (widget.state == null) unawaited(app.refreshRemoteConfig());
       _audio.setSound(app.data.sound);
       _audio.setMusic(app.data.music);
       // Load sounds in the background; the game never waits for audio.
@@ -159,6 +190,7 @@ class _BlendBurstAppState extends State<BlendBurstApp> {
       levels: levels,
       ads: widget.ads,
       audio: _audio,
+      reminders: _notifier,
       child: MaterialApp(
         title: 'Blend Burst',
         debugShowCheckedModeBanner: false,

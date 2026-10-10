@@ -38,7 +38,41 @@ class Palette {
     [Color(0xFFFFB0C8), Color(0xFFFFD39A), Color(0xFFFF9EB5)], // Art Studio
     [Color(0xFF8FE3FF), Color(0xFFB8F5C8), Color(0xFF7FD6B8)], // Rainbow Garden
     [Color(0xFFB9A8FF), Color(0xFF8FB4FF), Color(0xFF6E7FD8)], // Paint Factory
+    [Color(0xFF9FD8FF), Color(0xFFD6ECFF), Color(0xFFA9C8FF)], // Sky Gallery
+    [Color(0xFF5FD6D0), Color(0xFF4BA3D8), Color(0xFF3F6FC4)], // Ink Lagoon
+    [Color(0xFFF6B8FF), Color(0xFFC8B8FF), Color(0xFF9FD0FF)], // Prism Peaks
+    [Color(0xFFFFD27A), Color(0xFFFFB27A), Color(0xFFFF8F8F)], // Bucket Brigade
+    [Color(0xFF6A4FD8), Color(0xFF4A3AA8), Color(0xFF2C2770)], // Gravity Galaxy
   ];
+
+  /// Level-node candy colors (top, bottom, edge) for each episode.
+  static const episodeNodes = [
+    [Color(0xFFFFA3D1), Color(0xFFE8368F), Color(0xFF8E1A55)],
+    [Color(0xFF8FF0C0), Color(0xFF14A866), Color(0xFF0B6B40)],
+    [Color(0xFFC79BFF), Color(0xFF7B3FC4), Color(0xFF4A2183)],
+    [Color(0xFF9FE0FF), Color(0xFF1F8EF0), Color(0xFF0D4F96)],
+    [Color(0xFF8EF5E8), Color(0xFF14A8A0), Color(0xFF0A5E5A)],
+    [Color(0xFFFFB8F0), Color(0xFFC04BE0), Color(0xFF6E1A8A)],
+    [Color(0xFFFFE08A), Color(0xFFFF9F1C), Color(0xFF9A5200)],
+    [Color(0xFFB8A8FF), Color(0xFF5A3FE0), Color(0xFF241A7A)],
+  ];
+
+  /// Ribbon color of each episode's map banner.
+  static const episodeRibbons = [
+    candyPink,
+    Color(0xFF1FB86B),
+    grape,
+    Color(0xFF1F8EF0),
+    Color(0xFF14A8A0),
+    Color(0xFFC04BE0),
+    Color(0xFFFF8A1F),
+    Color(0xFF5A3FE0),
+  ];
+
+  static List<Color> episodeNode(int i) =>
+      episodeNodes[i.clamp(0, episodeNodes.length - 1)];
+  static Color episodeRibbon(int i) =>
+      episodeRibbons[i.clamp(0, episodeRibbons.length - 1)];
 
   static List<Color> episode(int i) =>
       episodeGradients[i.clamp(0, episodeGradients.length - 1)];

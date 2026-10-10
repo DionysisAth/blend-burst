@@ -9,6 +9,7 @@ to ship. Requires numpy and scipy.
 """
 import math
 import os
+import subprocess
 import sys
 import wave
 
@@ -624,6 +625,80 @@ def song_game():
 
 
 
+
+# Episode tracks: (name, key root midi, mode, bpm, style, progression, seed).
+# Progressions are scale degrees (0-based) of the key's diatonic triads.
+EPISODE_SONGS = [
+    ('music_garden', 55, 'major', 104, 'map', [0, 4, 5, 3, 0, 4, 3, 4, 5, 3, 0, 4, 5, 1, 3, 4], 11),
+    ('music_factory', 50, 'minor', 120, 'game', [0, 5, 2, 6, 0, 5, 2, 6, 3, 4, 0, 5, 3, 6, 4, 4], 12),
+    ('music_sky', 51, 'major', 92, 'map', [0, 2, 3, 4, 0, 2, 3, 4, 5, 3, 0, 4, 1, 4, 0, 4], 13),
+    ('music_lagoon', 57, 'minor', 100, 'map', [0, 5, 2, 6, 0, 5, 2, 6, 3, 0, 5, 6, 3, 4, 0, 6], 14),
+    ('music_peaks', 52, 'major', 110, 'game', [0, 5, 3, 4, 0, 5, 3, 4, 1, 4, 0, 5, 3, 4, 0, 4], 15),
+    ('music_brigade', 58, 'major', 124, 'game', [0, 3, 4, 3, 0, 3, 4, 4, 5, 3, 0, 4, 5, 3, 4, 4], 16),
+    ('music_galaxy', 54, 'minor', 108, 'game', [0, 5, 6, 0, 0, 5, 6, 4, 3, 5, 6, 0, 3, 4, 0, 6], 17),
+]
+
+SCALES = {'major': [0, 2, 4, 5, 7, 9, 11], 'minor': [0, 2, 3, 5, 7, 8, 10]}
+
+
+def triad(root, mode, degree):
+    sc = SCALES[mode]
+    notes = []
+    for k in (0, 2, 4):
+        d = degree + k
+        notes.append(root + sc[d % 7] + 12 * (d // 7))
+    return notes
+
+
+def compose(root, mode, prog, seed):
+    """A singable lead: pentatonic notes, chord tones on strong beats,
+    mostly stepwise, phrases A A' B A."""
+    rng = np.random.default_rng(seed)
+    sc = SCALES[mode]
+    penta = [0, 2, 4, 7, 9] if mode == 'major' else [0, 3, 5, 7, 10]
+    pool = [root + 12 + o + 12 * k for k in (0, 1) for o in penta] + [root + 36]
+    rhythms = [
+        [(0, 1), (1, 0.5), (1.5, 0.5), (2, 1.5), (3.5, 0.5)],
+        [(0, 0.5), (0.5, 0.5), (1, 1), (2, 1), (3, 1)],
+        [(0, 1.5), (1.5, 0.5), (2, 2)],
+        [(0, 1), (1, 1), (2, 0.5), (2.5, 0.5), (3, 1)],
+    ]
+
+    def phrase(bars, start_idx, end_on_root):
+        out = []
+        idx = start_idx
+        for b, deg in enumerate(bars):
+            chord = [n % 12 for n in triad(root, mode, deg)]
+            cells = rhythms[rng.integers(len(rhythms))]
+            for j, (at, d) in enumerate(cells):
+                strong = at in (0, 2)
+                step = rng.choice([-2, -1, -1, 1, 1, 2])
+                idx = int(np.clip(idx + step, 0, len(pool) - 1))
+                if strong:
+                    # Snap to the nearest chord tone.
+                    best = min(range(len(pool)), key=lambda q: (pool[q] % 12 not in chord, abs(q - idx)))
+                    idx = best
+                if end_on_root and b == len(bars) - 1 and j == len(cells) - 1:
+                    idx = min(range(len(pool)), key=lambda q: (pool[q] % 12 != root % 12, abs(q - idx)))
+                out.append((b * 4 + at, pool[idx], d))
+        return out, idx
+
+    a, i1 = phrase(prog[0:4], 4, False)
+    a2, i2 = phrase(prog[4:8], i1, True)
+    b, i3 = phrase(prog[8:12], min(i2 + 2, len(pool) - 1), False)
+    a3, _ = phrase(prog[12:16], i3, True)
+    mel = []
+    for base, ph in ((0, a), (16, a2), (32, b), (48, a3)):
+        mel += [(base + x, m, d) for x, m, d in ph]
+    return mel
+
+
+def song_episode(spec):
+    name, root, mode, bpm, style, prog, seed = spec
+    chords = [(i, triad(root, mode, d)) for i, d in enumerate(prog)]
+    return render_song(bpm, 16, chords, compose(root, mode, prog, seed), style=style)
+
+
 def sfx_chain():
     """A chain snapping: metallic clank partials and a click."""
     dur = 0.7
@@ -693,6 +768,14 @@ SFX = {
 }
 
 
+def to_ogg(wav_path, quality):
+    """Encodes a WAV to Ogg Vorbis next to it (ffmpeg) and removes the WAV."""
+    ogg = wav_path[:-4] + '.ogg'
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', wav_path,
+                    '-c:a', 'libvorbis', '-q:a', str(quality), ogg], check=True)
+    os.remove(wav_path)
+
+
 def main(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     for i, nm in enumerate(PENTA):
@@ -702,7 +785,9 @@ def main(out_dir):
     for name, fn in SFX.items():
         save(os.path.join(out_dir, f'{name}.wav'), fn(), peak_db=-2)
     # Loops must keep their exact length and must not be faded.
-    for name, song in (('music_map', song_map()), ('music_game', song_game())):
+    songs = [('music_map', song_map()), ('music_studio', song_game())]
+    songs += [(spec[0], song_episode(spec)) for spec in EPISODE_SONGS]
+    for name, song in songs:
         x = normalize(song, -3)
         data = (np.clip(x, -1, 1) * 32767).astype('<i2')
         with wave.open(os.path.join(out_dir, f'{name}.wav'), 'wb') as w:
@@ -710,6 +795,10 @@ def main(out_dir):
             w.setsampwidth(2)
             w.setframerate(MUSIC_SR)
             w.writeframes(data.tobytes())
+    # Ship Ogg Vorbis: about a tenth of the size of the WAVs.
+    for f in sorted(os.listdir(out_dir)):
+        if f.endswith('.wav'):
+            to_ogg(os.path.join(out_dir, f), 4 if f.startswith('music_') else 6)
     print('wrote', len(os.listdir(out_dir)), 'files to', out_dir)
 
 

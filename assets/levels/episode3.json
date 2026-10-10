@@ -240,6 +240,128 @@
         "........"
       ],
       "hard": true
+    },
+    {
+      "id": 41,
+      "name": "Clockwork",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "..ssss..",
+        "..ssss..",
+        "..ssss..",
+        "..ssss..",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [9000,32000,53500],
+      "gravityEvery": 4,
+      "tutorial": "These gears turn on their own! Gravity rotates every few moves; the counter by the arrow shows when.",
+      "tutorialArt": "timed"
+    },
+    {
+      "id": 42,
+      "name": "Flip Switch",
+      "moves": 25,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "#......#",
+        "..1..1..",
+        ".1....1.",
+        "...11...",
+        "...11...",
+        ".1....1.",
+        "..1..1..",
+        "#......#"
+      ],
+      "goals": [{"type": "glass"}, {"type": "score", "target": 25000}],
+      "stars": [25000,44000,59500],
+      "gravity": "left",
+      "tutorial": "New booster: Gravity Flip! Choose where tiles fall for your next move.",
+      "tutorialArt": "flip"
+    },
+    {
+      "id": 43,
+      "name": "Conveyor Belts",
+      "moves": 33,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ssssssss",
+        "ssssssss",
+        "........",
+        "........",
+        "........",
+        "........",
+        "ssssssss",
+        "ssssssss"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [16000,50500,68000],
+      "zones": [
+        "........",
+        "........",
+        ">>>>>>>>",
+        "........",
+        "........",
+        "<<<<<<<<",
+        "........",
+        "........"
+      ],
+      "tutorial": "Arrows on cells are gravity zones: tiles there fall the way the arrow points.",
+      "tutorialArt": "zones"
+    },
+    {
+      "id": 44,
+      "name": "Spin Dryer",
+      "moves": 20,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##.ss.##",
+        "#......#",
+        "..2..2..",
+        "s......s",
+        "s......s",
+        "..2..2..",
+        "#......#",
+        "##.ss.##"
+      ],
+      "goals": [{"type": "glass"}, {"type": "stains"}],
+      "stars": [10000,29000,39000],
+      "switchChance": 0.04,
+      "gravityEvery": 3
+    },
+    {
+      "id": 45,
+      "name": "Factory Finale",
+      "moves": 24,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "##2..2##",
+        "##....##",
+        "..2..2..",
+        "ssssssss",
+        "ssssssss",
+        "..2..2..",
+        "##....##",
+        "##2..2##"
+      ],
+      "goals": [{"type": "glass"}, {"type": "stains"}],
+      "stars": [14500,38500,45500],
+      "zones": [
+        "...vv...",
+        "...vv...",
+        "...vv...",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "gravityEvery": 5,
+      "hard": true
     }
   ]
 }

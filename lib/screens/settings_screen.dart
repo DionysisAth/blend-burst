@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../app/economy.dart';
+import '../app/metrics.dart';
 import '../app/scope.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
@@ -155,6 +157,31 @@ class SettingsScreen extends StatelessWidget {
                 d.tapActivate,
                 app.setTapActivate,
               ),
+              sw(
+                'Reminders',
+                'Full lives, daily gift and event reminders',
+                d.notifications,
+                (v) async {
+                  if (!v) {
+                    app.setNotifications(false);
+                    await scope.reminders.cancelAll();
+                    return;
+                  }
+                  final ok = await scope.reminders.enable();
+                  if (ok) {
+                    app.setNotifications(true);
+                  } else if (context.mounted) {
+                    await confirm(
+                      context,
+                      'Reminders',
+                      'Notifications are turned off for Blend Burst. You can '
+                          'allow them in your phone settings.',
+                      ok: 'OK',
+                      cancel: 'Close',
+                    );
+                  }
+                },
+              ),
             ],
           ),
           _Card(
@@ -219,10 +246,55 @@ class AnalyticsScreen extends StatelessWidget {
     final scope = AppScope.of(context);
     final d = scope.app.data;
     final played = d.attempts.keys.toList()..sort();
+    final m = Metrics(d, dayNumber(DateTime.now()));
+    String pct(double v) => '${(v * 100).toStringAsFixed(0)}%';
+    String day(int n) => switch (m.retainedOnDay(n)) {
+      true => 'yes',
+      false => 'no',
+      null => 'not yet',
+    };
+    Widget row(String k, String v) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      child: Row(
+        children: [
+          Expanded(flex: 3, child: Text(k, style: _labelStyle)),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 2,
+            child: Text(v, style: _subStyle, textAlign: TextAlign.right),
+          ),
+        ],
+      ),
+    );
     return MenuPage(
       title: 'Analytics',
       child: ListView(
         children: [
+          _Card(
+            children: [
+              const ListTile(title: Text('Key metrics', style: _labelStyle)),
+              row(
+                'Back on day 1 / 7 / 30',
+                '${day(1)} / ${day(7)} / ${day(30)}',
+              ),
+              row('Levels per session', m.levelsPerSession.toStringAsFixed(1)),
+              row('Sessions per day', m.sessionsPerDay.toStringAsFixed(1)),
+              row('Win rate', pct(m.winRate)),
+              row(
+                'Attempts per won level',
+                m.attemptsPerWonLevel.toStringAsFixed(1),
+              ),
+              row('Extra moves bought on fail', pct(m.extraMovesRate)),
+              row('Ads watched per day', m.adsPerDay.toStringAsFixed(1)),
+              row('Tutorials seen', '${m.tutorialsSeen}'),
+              row('Purchases', '${m.purchases}'),
+              if (m.hardestLevels().isNotEmpty)
+                row(
+                  'Hardest levels',
+                  m.hardestLevels().map((id) => '$id').join(', '),
+                ),
+            ],
+          ),
           _Card(
             children: [
               ListTile(

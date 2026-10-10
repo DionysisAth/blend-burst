@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../app/app_state.dart';
 import '../app/audio.dart';
+import '../app/economy.dart';
 import '../app/scope.dart';
 import '../core/level.dart';
 import '../core/models.dart';
@@ -14,11 +15,27 @@ import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
 import '../ui/widgets.dart';
+import 'live_ops_screens.dart';
 
 int goalTarget(LevelDef level, Goal g) {
-  if (g.type == GoalType.stains && g.target == 0) return level.stainCount;
-  if (g.type == GoalType.glass && g.target == 0) return level.glassCount;
-  return g.target;
+  if (g.target > 0 && g.type != GoalType.locks) return g.target;
+  switch (g.type) {
+    case GoalType.stains:
+      return level.stainCount;
+    case GoalType.glass:
+      return level.glassCount;
+    case GoalType.drop:
+      return level.buckets;
+    case GoalType.locks:
+    case GoalType.ink:
+      // Chains count each link (gold locks have two): ask a fresh board.
+      return GameSession(
+        level,
+        seed: 0,
+      ).progress().firstWhere((p) => p.goal.type == g.type).target;
+    default:
+      return g.target;
+  }
 }
 
 /// A soft inset box used inside panels.
@@ -48,10 +65,14 @@ class InsetBox extends StatelessWidget {
 
 /// Shows the level card. Returns the chosen pre-level boosters when the
 /// player taps Play, or null if they close it.
+/// Shows the level card. [bonus] are free starting boosters from the win
+/// streak. Returns the chosen pre-level boosters, or null if closed.
 Future<Set<BoosterType>?> showLevelStart(
   BuildContext context,
-  LevelDef level,
-) async {
+  LevelDef level, {
+  Set<BoosterType> bonus = const {},
+  int streak = 0,
+}) async {
   final scope = AppScope.read(context);
   final stars = scope.app.starsFor(level.id);
   final chosen = <BoosterType>{};
@@ -141,6 +162,10 @@ Future<Set<BoosterType>?> showLevelStart(
               GameText('${level.moves} moves', size: 20, color: Palette.sky),
             ],
           ),
+          if (bonus.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _StreakStrip(streak: streak, bonus: bonus),
+          ],
           // Pre-level boosters, once the basics have been taught.
           if (level.id >= 6) ...[
             const SizedBox(height: 12),
@@ -160,6 +185,44 @@ Future<Set<BoosterType>?> showLevelStart(
     ),
   );
   return result == true ? chosen : null;
+}
+
+/// "Win streak!" strip with the free boosters it earned.
+class _StreakStrip extends StatelessWidget {
+  final int streak;
+  final Set<BoosterType> bonus;
+  const _StreakStrip({required this.streak, required this.bonus});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('streak-bonus'),
+      padding: const EdgeInsets.fromLTRB(12, 6, 12, 6),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFF8A1F), Color(0xFFFF4FA3)],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white, width: 3),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: GameText('Win streak $streak!  Free:', size: 18),
+            ),
+          ),
+          const SizedBox(width: 6),
+          for (final b in bonus) ...[
+            boosterArt(b, size: 34),
+            const SizedBox(width: 2),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 class _PreBoosters extends StatefulWidget {
@@ -433,6 +496,7 @@ Future<String?> showWinDialog(
   LevelReward? reward,
   required bool hasNext,
   required bool testMode,
+  VoidCallback? onShare,
 }) {
   return showGameDialog<String>(
     context,
@@ -442,6 +506,7 @@ Future<String?> showWinDialog(
       reward: reward,
       hasNext: hasNext,
       testMode: testMode,
+      onShare: onShare,
     ),
   );
 }
@@ -452,12 +517,14 @@ class _WinPanel extends StatefulWidget {
   final LevelReward? reward;
   final bool hasNext;
   final bool testMode;
+  final VoidCallback? onShare;
   const _WinPanel({
     required this.stars,
     required this.score,
     this.reward,
     required this.hasNext,
     required this.testMode,
+    this.onShare,
   });
 
   @override
@@ -599,6 +666,19 @@ class _WinPanelState extends State<_WinPanel>
                       ],
                     ],
                   ),
+                  if (widget.onShare != null) ...[
+                    const SizedBox(height: 10),
+                    CandyButton.label(
+                      'Share',
+                      key: const Key('win-share'),
+                      colors: CandyColors.purple,
+                      icon: GameIcons.gift,
+                      height: 44,
+                      fontSize: 20,
+                      width: 160,
+                      onTap: widget.onShare,
+                    ),
+                  ],
                 ],
               );
             },
@@ -637,6 +717,8 @@ Future<String?> showOutOfMovesDialog(
   required List<GoalProgress> goals,
   required int cost,
   required bool canAfford,
+  int goldCost = 0,
+  bool canAffordGold = false,
   required bool adAvailable,
   required bool testMode,
 }) {
@@ -680,10 +762,28 @@ Future<String?> showOutOfMovesDialog(
               ],
             ),
           ),
+          if (!testMode && goldCost > 0) ...[
+            const SizedBox(height: 10),
+            CandyButton(
+              key: const Key('gold-moves'),
+              colors: CandyColors.purple,
+              onTap: canAffordGold ? () => Navigator.of(ctx).pop('gold') : null,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const GameText('+5 moves', size: 24),
+                  const SizedBox(width: 10),
+                  const GameIcon(GameIcons.gold, size: 28),
+                  const SizedBox(width: 2),
+                  GameText('$goldCost', size: 22),
+                ],
+              ),
+            ),
+          ],
           if (adAvailable) ...[
             const SizedBox(height: 10),
             CandyButton.label(
-              'Watch ad: +5',
+              'Watch ad: +3',
               key: const Key('ad-moves'),
               colors: CandyColors.blue,
               icon: GameIcons.video,
@@ -907,7 +1007,7 @@ Future<bool> showOutOfLives(BuildContext context) async {
     dismissible: true,
     builder: (_) => const _OutOfLivesPanel(),
   );
-  return (result ?? false) || scope.app.lives > 0;
+  return (result ?? false) || scope.app.canPlay;
 }
 
 class _OutOfLivesPanel extends StatefulWidget {
@@ -940,6 +1040,49 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
     final app = scope.app;
     final next = app.nextLifeIn;
     final full = next == null;
+    final unlimited = app.unlimitedLeft;
+    Future<void> buyGold(String id) async {
+      final p = productById(id);
+      final nav = Navigator.of(context);
+      if (app.buyWithCurrency(p)) {
+        scope.audio.sfx(Sfx.coin);
+        nav.pop(true);
+        return;
+      }
+      final shop = await confirm(
+        context,
+        'Not enough gold',
+        'Get gold in the shop?',
+        ok: 'Shop',
+        cancel: 'Close',
+      );
+      if (shop && context.mounted) {
+        await Navigator.of(context)
+            .push(MaterialPageRoute(builder: (_) => const ShopScreen()));
+        if (context.mounted) setState(() {});
+      }
+    }
+
+    Widget goldButton(String key, GameIcons icon, String text, String id) =>
+        CandyButton(
+          key: Key(key),
+          colors: CandyColors.purple,
+          height: 50,
+          onTap: () => buyGold(id),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GameIcon(icon, size: 28),
+              const SizedBox(width: 4),
+              GameText(text, size: 20),
+              const SizedBox(width: 8),
+              const GameIcon(GameIcons.gold, size: 24),
+              const SizedBox(width: 2),
+              GameText(productById(id).priceLabel, size: 20),
+            ],
+          ),
+        );
+
     return GamePanel(
       title: full ? 'Lives' : 'More lives',
       ribbonColor: const Color(0xFFF0304E),
@@ -959,7 +1102,11 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
             ),
           ),
           const SizedBox(height: 6),
-          if (full)
+          if (unlimited != null) ...[
+            const GameIcon(GameIcons.unlimited, size: 40),
+            const GameText('Unlimited lives!', size: 24, color: Palette.sun),
+            GameText(formatDuration(unlimited), size: 30, color: Palette.sky),
+          ] else if (full)
             const GameText('Your lives are full!', size: 22, color: Palette.sun)
           else ...[
             const Text(
@@ -973,7 +1120,7 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
             GameText(formatDuration(next), size: 34, color: Palette.sun),
           ],
           const SizedBox(height: 14),
-          if (!full) ...[
+          if (!full && unlimited == null) ...[
             CandyButton(
               colors: CandyColors.yellow,
               onTap: app.coins >= AppState.refillCost
@@ -1017,6 +1164,15 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
                   nav.pop(true);
                 }
               },
+            ),
+            const SizedBox(height: 10),
+            goldButton('gold-refill', GameIcons.heart, 'Refill', 'refill'),
+            const SizedBox(height: 10),
+            goldButton(
+              'gold-unlimited',
+              GameIcons.unlimited,
+              '30 min',
+              'unl30',
             ),
           ] else
             CandyButton.label(

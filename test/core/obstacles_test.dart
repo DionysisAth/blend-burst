@@ -170,6 +170,40 @@ void main() {
       expect(b.checkInvariants(), isNull);
     });
 
+    test('never spreads onto the spawn edge', () {
+      final b = Board.fromLevel(
+        level(
+          tiles: matchRow4(),
+          layout: edit(_empty, {const Pos(0, 0): 'i', const Pos(1, 0): '#'}),
+        ),
+        Random(1),
+      );
+      final o = b.swipe(const Pos(4, 5), const Pos(4, 4));
+      expect(
+        o.steps
+            .expand((s) => s.effects)
+            .any((e) => e.kind == EffectKind.inkSpread),
+        isFalse,
+      );
+      expect(b.checkInvariants(), isNull);
+    });
+
+    test('stops spreading at its limit', () {
+      final b = Board.fromLevel(
+        level(tiles: matchRow4(), layout: edit(_empty, {const Pos(3, 7): 'i'})),
+        Random(1),
+      );
+      expect(b.inkLimit, 7);
+      b.inkLimit = 1;
+      final o = b.swipe(const Pos(4, 5), const Pos(4, 4));
+      expect(
+        o.steps
+            .expand((s) => s.effects)
+            .any((e) => e.kind == EffectKind.inkSpread),
+        isFalse,
+      );
+    });
+
     test('the ink goal tracks cleared against remaining ink', () {
       final s = GameSession(
         level(
@@ -187,9 +221,9 @@ void main() {
     });
   });
 
-  test('a color filter recolors tiles that fall through it', () {
-    // Filter at (2,3): the column above the cleared Y at (4,3) falls
-    // through it, so the tile landing on (4,3) and the spawns pass it.
+  test('a color filter recolors tiles that fall into it', () {
+    // Filter at (3,3): the column above the cleared Y at (4,3) falls one
+    // cell, so the tile from (2,3) lands on the filter.
     final b = Board.fromLevel(
       level(
         tiles: matchRow4(),

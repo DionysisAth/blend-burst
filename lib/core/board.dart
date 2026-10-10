@@ -234,7 +234,7 @@ class Board {
   /// Ink fills a cell (no tile) and spreads when left alone.
   final List<bool> ink;
 
-  /// Color filters recolor tiles that fall into or through them.
+  /// Color filters recolor tiles that fall into them.
   final List<TileColor?> filter;
 
   /// Per-cell gravity (gravity zones); null cells follow [gravity].
@@ -346,6 +346,8 @@ class Board {
     }
     b._fillInitial(level.tiles);
     b.bucketsToSpawn = max(0, level.buckets - b.bucketsOnBoard);
+    final inkStart = b.ink.where((x) => x).length;
+    b.inkLimit = max(inkStart * 2, inkStart + 6);
     return b;
   }
 
@@ -376,6 +378,7 @@ class Board {
     b.bucketsToSpawn = bucketsToSpawn;
     b.dropped = dropped;
     b.inkClearedTotal = inkClearedTotal;
+    b.inkLimit = inkLimit;
     b.movesMade = movesMade;
     b._flipRestore = _flipRestore;
     b._flipTurns = _flipTurns;
@@ -995,7 +998,7 @@ class Board {
     return _newTile(_calm ? _safeColor(at) : _randomColor());
   }
 
-  /// Recolors [t] when it passes a color filter at [p].
+  /// Recolors [t] when it lands on a color filter at [p].
   void _filterInto(Pos p, Tile t) {
     final f = filter[_i(p)];
     if (f == null ||
@@ -1049,24 +1052,16 @@ class Board {
           }
         }
         final missing = seg.length - existing.length;
-        // Tiles pass every cell between where they were and where they
-        // land; the filter closest to the landing cell wins.
-        void filterPath(Tile t, int land, int start) {
-          for (var k = start - 1; k >= land; k--) {
-            _filterInto(seg[k], t);
-          }
-        }
-
         for (var k = 0; k < seg.length; k++) {
           final p = seg[k];
           if (k < existing.length) {
             if (!identical(tiles[_i(p)], existing[k])) changed = true;
             tiles[_i(p)] = existing[k];
-            filterPath(existing[k], k, from[k]);
+            if (from[k] != k) _filterInto(p, existing[k]);
           } else {
             final t = _spawnTile(p);
             tiles[_i(p)] = t;
-            filterPath(t, k, seg.length);
+            _filterInto(p, t);
             final j = k + missing;
             spawnFrom[t.id] = PosD(
               (seg[0].r - j * g.dr).toDouble(),
@@ -1122,8 +1117,10 @@ class Board {
       return false;
     }
 
+    final moved = <Tile>{};
     void spawn(Pos p, {bool inPlace = false}) {
       final t = _spawnTile(p);
+      moved.add(t);
       tiles[_i(p)] = t;
       final k = spawned[p] = (spawned[p] ?? 0) + 1;
       final d = dirAt(p);
@@ -1131,28 +1128,29 @@ class Board {
           ? PosD(p.r.toDouble(), p.c.toDouble())
           : PosD((p.r - d.dr * k).toDouble(), (p.c - d.dc * k).toDouble());
       spawnEntry[t.id] = p;
-      _filterInto(p, t);
     }
 
     for (var it = 0; it < rows * cols * 3; it++) {
-      var moved = false;
+      var stepped = false;
       for (final p in allPositions) {
         final t = tiles[_i(p)];
         if (t == null || !isMovable(p)) continue;
         final q = next(p);
         if (!isMovable(q) || tiles[_i(q)] != null) continue;
+        // Two zones pointing at each other: the flows meet and stop there.
+        if (next(q) == p) continue;
         tiles[_i(q)] = t;
         tiles[_i(p)] = null;
-        _filterInto(q, t);
-        moved = true;
+        moved.add(t);
+        stepped = true;
       }
       for (final p in allPositions) {
         if (isMovable(p) && tiles[_i(p)] == null && !fed(p)) {
           spawn(p);
-          moved = true;
+          stepped = true;
         }
       }
-      if (!moved) break;
+      if (!stepped) break;
       changed = true;
     }
     // A loop of zones with no way in would stay empty: fill it in place.
@@ -1161,6 +1159,11 @@ class Board {
         spawn(p, inPlace: true);
         changed = true;
       }
+    }
+    // Tiles that fell into a filter cell take its color.
+    for (final p in allPositions) {
+      final t = tiles[_i(p)];
+      if (t != null && moved.contains(t)) _filterInto(p, t);
     }
     if (changed) {
       out.add(
@@ -1400,14 +1403,22 @@ class Board {
     }
   }
 
+  /// Ink stops spreading at this many cells, so it can never take over
+  /// the board.
+  int inkLimit = 1 << 30;
+
   void _spreadInk(List<Step> out) {
     if (_inkCleared || !ink.contains(true)) return;
+    if (ink.where((x) => x).length >= inkLimit) return;
     final options = <(Pos, Pos)>[];
     for (final p in allPositions) {
       if (!ink[_i(p)]) continue;
       for (final q in _neighbors(p)) {
         final t = tileAt(q);
         if (t != null && t.isPlain && lockAt(q) == 0 && glassAt(q) == 0) {
+          // Never onto the spawn edge: that would starve the column.
+          final d = dirAt(q);
+          if (!inBounds(Pos(q.r - d.dr, q.c - d.dc))) continue;
           options.add((p, q));
         }
       }

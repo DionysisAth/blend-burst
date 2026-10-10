@@ -1,0 +1,292 @@
+{
+  "episode": "Ink Lagoon",
+  "levels": [
+    {
+      "id": 61,
+      "name": "Inkwell",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "...ii...",
+        "...ii...",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "ink"}],
+      "stars": [21500,74500,117000],
+      "tutorial": "Ink spreads every move you do not clear any! Match next to it to wipe it out.",
+      "tutorialArt": "ink"
+    },
+    {
+      "id": 62,
+      "name": "Spill",
+      "moves": 28,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ii....ii",
+        "i......i",
+        "........",
+        "........",
+        "........",
+        "........",
+        "i......i",
+        "ii....ii"
+      ],
+      "goals": [{"type": "ink"}],
+      "stars": [16000,41500,51000]
+    },
+    {
+      "id": 63,
+      "name": "Tide Pool",
+      "moves": 18,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "#......#",
+        "........",
+        "..iiii..",
+        "..iiii..",
+        "........",
+        "#......#",
+        "##....##"
+      ],
+      "goals": [{"type": "ink"}, {"type": "score", "target": 20000}],
+      "stars": [20000,32500,43500]
+    },
+    {
+      "id": 64,
+      "name": "Squid Trail",
+      "moves": 20,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ssssssss",
+        "ssssssss",
+        "........",
+        "........",
+        "........",
+        "........",
+        "iiiiiiii",
+        "........"
+      ],
+      "goals": [{"type": "ink"}, {"type": "stains"}],
+      "stars": [16000,44500,53500]
+    },
+    {
+      "id": 65,
+      "name": "Black Lagoon",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "#......#",
+        "........",
+        "..iiii..",
+        "..iiii..",
+        "..iiii..",
+        "..iiii..",
+        "........",
+        "#......#"
+      ],
+      "goals": [{"type": "ink"}],
+      "stars": [7000,20000,34000],
+      "hard": true
+    },
+    {
+      "id": 66,
+      "name": "Coral",
+      "moves": 40,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        ".#....#.",
+        ".#.kk.#.",
+        ".#.kk.#.",
+        ".#....#.",
+        "........",
+        "...ii..."
+      ],
+      "goals": [{"type": "ink"}, {"type": "locks"}],
+      "stars": [13500,29500,37500]
+    },
+    {
+      "id": 67,
+      "name": "Ink Rings",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "..i..i..",
+        "........",
+        "...##...",
+        "..#..#..",
+        "........",
+        "..i..i..",
+        "........"
+      ],
+      "goals": [{"type": "ink"}],
+      "stars": [11000,32500,75000]
+    },
+    {
+      "id": 68,
+      "name": "Shoreline",
+      "moves": 22,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "11111111",
+        "........",
+        "ii....ii",
+        "ii....ii"
+      ],
+      "goals": [{"type": "ink"}, {"type": "glass"}],
+      "stars": [14500,41500,47500]
+    },
+    {
+      "id": 69,
+      "name": "Deep Current",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "#......#",
+        "#......#",
+        "#..ii..#",
+        "#..ii..#",
+        "#..ii..#",
+        "#..ii..#",
+        "#......#",
+        "#......#"
+      ],
+      "goals": [{"type": "ink"}],
+      "stars": [6000,15000,22000],
+      "zones": [
+        ".>....<.",
+        ".>....<.",
+        ".>....<.",
+        ".>....<.",
+        ".>....<.",
+        ".>....<.",
+        ".>....<.",
+        ".>....<."
+      ]
+    },
+    {
+      "id": 70,
+      "name": "Kraken",
+      "moves": 21,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "##i..i##",
+        "##....##",
+        "..K..K..",
+        "...ii...",
+        "...ii...",
+        "..K..K..",
+        "##....##",
+        "##i..i##"
+      ],
+      "goals": [{"type": "ink"}, {"type": "locks"}],
+      "stars": [10000,27000,29000],
+      "hard": true
+    },
+    {
+      "id": 71,
+      "name": "Low Tide",
+      "moves": 25,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "i.i.i.i.",
+        ".i.i.i.i"
+      ],
+      "goals": [{"type": "ink"}, {"type": "collect", "target": 15, "color": "green"}],
+      "stars": [15000,33000,57500]
+    },
+    {
+      "id": 72,
+      "name": "Bottle Message",
+      "moves": 40,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        ".ssssss.",
+        "#......#",
+        "##....##",
+        "###..###",
+        "###..###",
+        "##....##",
+        "#......#",
+        "..iiii.."
+      ],
+      "goals": [{"type": "ink"}, {"type": "stains"}],
+      "stars": [10000,24500,29500]
+    },
+    {
+      "id": 73,
+      "name": "Riptide",
+      "moves": 13,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "...ii...",
+        "..i..i..",
+        ".i....i.",
+        "i......i",
+        "i......i",
+        ".i....i.",
+        "..i..i..",
+        "...ii..."
+      ],
+      "goals": [{"type": "ink"}],
+      "stars": [7000,21000,43000],
+      "gravity": "up"
+    },
+    {
+      "id": 74,
+      "name": "Pearl Diver",
+      "moves": 21,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "#..##..#",
+        ".ii..ii.",
+        "........",
+        "..k..k..",
+        "...22...",
+        "#......#",
+        "##....##",
+        "###..###"
+      ],
+      "goals": [{"type": "ink"}, {"type": "glass"}, {"type": "locks"}],
+      "stars": [8500,25000,28000]
+    },
+    {
+      "id": 75,
+      "name": "Lagoon Storm",
+      "moves": 21,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "iiiiiiii",
+        "i......i",
+        "i......i",
+        "i......i",
+        "i......i",
+        "i......i",
+        "i......i",
+        "iiiiiiii"
+      ],
+      "goals": [{"type": "ink"}],
+      "stars": [13500,42000,61000],
+      "gravityEvery": 4,
+      "hard": true
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "_doc": "Live tuning read by the app on its next launch. moves: {levelId: moveLimit}; eventColor: weekly event color (red, blue, yellow, purple, green, orange); adEvery: wins between ad breaks; extraMovesGold: gold prices of +5 moves.",
+  "moves": {},
+  "adEvery": 3,
+  "extraMovesGold": [12, 20, 32]
+}

@@ -1,0 +1,365 @@
+{
+  "episode": "Gravity Galaxy",
+  "levels": [
+    {
+      "id": 106,
+      "name": "Orbit",
+      "moves": 25,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ssssssss",
+        "s......s",
+        "s.####.s",
+        "s.#..#.s",
+        "s.#..#.s",
+        "s.####.s",
+        "s......s",
+        "ssssssss"
+      ],
+      "goals": [{"type": "stains"}],
+      "stars": [10000,25500,30500],
+      "zones": [
+        ">>>>>>>v",
+        "^......v",
+        "^......v",
+        "^......v",
+        "^......v",
+        "^......v",
+        "^......v",
+        "^<<<<<<<"
+      ]
+    },
+    {
+      "id": 107,
+      "name": "Comet Tail",
+      "moves": 27,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "iiiiiiii",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "ink"}, {"type": "drop"}],
+      "stars": [16000,45000,61500],
+      "buckets": 3,
+      "gravityEvery": 3
+    },
+    {
+      "id": 108,
+      "name": "Moon Phases",
+      "moves": 19,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "#.1..1.#",
+        ".1....1.",
+        "..K..K..",
+        "..K..K..",
+        ".1....1.",
+        "#.1..1.#",
+        "##....##"
+      ],
+      "goals": [{"type": "locks"}, {"type": "glass"}],
+      "stars": [10500,27500,39500],
+      "gravityEvery": 4
+    },
+    {
+      "id": 109,
+      "name": "Black Hole",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "...ii...",
+        "...ii...",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "ink"}],
+      "stars": [7500,21500,28500],
+      "zones": [
+        "vvvvvvvv",
+        "vvvvvvvv",
+        "vvvvvvvv",
+        "........",
+        "........",
+        "^^^^^^^^",
+        "^^^^^^^^",
+        "^^^^^^^^"
+      ]
+    },
+    {
+      "id": 110,
+      "name": "Supernova",
+      "moves": 13,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "##....##",
+        "..k..k..",
+        "ssssssss",
+        "ssssssss",
+        "..k..k..",
+        "##....##",
+        "##....##"
+      ],
+      "goals": [{"type": "collect", "target": 20, "color": "purple"}, {"type": "locks"}, {"type": "stains"}],
+      "stars": [6500,19500,26500],
+      "hard": true
+    },
+    {
+      "id": 111,
+      "name": "Zero G",
+      "moves": 34,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ssssssss",
+        "ssssssss",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}, {"type": "stains"}],
+      "stars": [17000,46000,68500],
+      "gravity": "up",
+      "buckets": 4,
+      "gravityEvery": 4
+    },
+    {
+      "id": 112,
+      "name": "Nebula",
+      "moves": 12,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "#..##..#",
+        "........",
+        "........",
+        "........",
+        ".ii..ii.",
+        "#......#",
+        "##....##",
+        "###..###"
+      ],
+      "goals": [{"type": "ink"}, {"type": "collect", "target": 18, "color": "green"}],
+      "stars": [17000,45500,56500],
+      "filters": [
+        "........",
+        "..G..G..",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ]
+    },
+    {
+      "id": 113,
+      "name": "Asteroid Belt",
+      "moves": 38,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        ".#....#.",
+        "1#1111#1",
+        ".#....#.",
+        "k#kkkk#k",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "glass"}, {"type": "locks"}],
+      "stars": [12000,29000,34000],
+      "switchChance": 0.05
+    },
+    {
+      "id": 114,
+      "name": "Starlight",
+      "moves": 37,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "score", "target": 45000}, {"type": "drop"}],
+      "stars": [45000,81000,101500],
+      "zones": [
+        ">......<",
+        ">......<",
+        ">......<",
+        ">......<",
+        ">......<",
+        ">......<",
+        ">......<",
+        ">......<"
+      ],
+      "buckets": 4
+    },
+    {
+      "id": 115,
+      "name": "Eclipse",
+      "moves": 23,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "...kk...",
+        ".1#..#1.",
+        ".i....i.",
+        "........",
+        ".1#..#1.",
+        "...kk...",
+        "........"
+      ],
+      "goals": [{"type": "ink"}, {"type": "locks"}, {"type": "glass"}],
+      "stars": [10000,24500,31500],
+      "gravityEvery": 5,
+      "hard": true
+    },
+    {
+      "id": 116,
+      "name": "Gravity Well",
+      "moves": 32,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "ssssssss",
+        "ssssssss",
+        "ssssssss"
+      ],
+      "goals": [{"type": "stains"}, {"type": "drop"}],
+      "stars": [23500,62500,78000],
+      "zones": [
+        "...^^...",
+        "...^^...",
+        "...^^...",
+        "...^^...",
+        "...^^...",
+        "...^^...",
+        "...^^...",
+        "...^^..."
+      ],
+      "switchChance": 0.04,
+      "buckets": 4
+    },
+    {
+      "id": 117,
+      "name": "Constellation",
+      "moves": 27,
+      "colors": ["red", "blue", "yellow", "gray"],
+      "layout": [
+        "k......k",
+        "...kk...",
+        "..#..#..",
+        ".k....k.",
+        ".k....k.",
+        "..#..#..",
+        "...kk...",
+        "k......k"
+      ],
+      "goals": [{"type": "locks"}, {"type": "collect", "target": 18, "color": "orange"}],
+      "stars": [12500,46500,60500],
+      "filters": [
+        "........",
+        "........",
+        "........",
+        "..O.....",
+        ".....O..",
+        "........",
+        "........",
+        "........"
+      ]
+    },
+    {
+      "id": 118,
+      "name": "Warp Drive",
+      "moves": 27,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "#......#",
+        "#......#",
+        "#......#",
+        "#..ii..#",
+        "#......#",
+        "#......#",
+        "#......#",
+        "#......#"
+      ],
+      "goals": [{"type": "ink"}, {"type": "drop"}],
+      "stars": [11500,28500,38000],
+      "gravity": "left",
+      "buckets": 4,
+      "gravityEvery": 3
+    },
+    {
+      "id": 119,
+      "name": "Cosmic Canvas",
+      "moves": 26,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "ssssssss",
+        "ssssssss",
+        "........",
+        "1..kk..1",
+        "1..kk..1",
+        "........",
+        "........",
+        "...ii..."
+      ],
+      "goals": [{"type": "stains"}, {"type": "glass"}, {"type": "locks"}, {"type": "ink"}],
+      "stars": [16500,43500,66000],
+      "gravityEvery": 5
+    },
+    {
+      "id": 120,
+      "name": "Blend Burst",
+      "moves": 17,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "..K..K..",
+        "........",
+        "i......i",
+        "..K..K..",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}, {"type": "ink"}, {"type": "locks"}, {"type": "collect", "target": 20, "color": "purple"}],
+      "stars": [19000,46000,73500],
+      "filters": [
+        "........",
+        "..P..P..",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "buckets": 5,
+      "gravityEvery": 6,
+      "hard": true
+    }
+  ]
+}

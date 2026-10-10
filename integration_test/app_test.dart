@@ -1,7 +1,9 @@
 // On-device smoke test, run on an Android emulator in CI:
 //   flutter test integration_test/app_test.dart
 // Boots the real app, plays level 1 with real swipes, uses a booster,
-// leaves the level and visits settings and the editor.
+// leaves the level and visits settings, the editor, the shop, the event and
+// the season pass, and schedules (then cancels) a reminder notification.
+import 'package:blend_burst/app/notifications.dart';
 import 'package:blend_burst/core/models.dart';
 import 'package:blend_burst/core/session.dart';
 import 'package:blend_burst/game/board_view.dart';
@@ -129,5 +131,30 @@ void main() {
     await run(tester, 800);
     await tester.tap(find.bySemanticsLabel('Back'));
     expect(await waitFor(tester, find.byType(MapScreen)), isTrue);
+    await run(tester, 800);
+
+    for (final key in ['side-shop', 'side-event', 'side-pass']) {
+      await tester.tap(find.byKey(Key(key)));
+      await run(tester, 1500);
+      expect(find.bySemanticsLabel('Back'), findsWidgets, reason: key);
+      await tester.tap(find.bySemanticsLabel('Back').last);
+      expect(await waitFor(tester, find.byType(MapScreen)), isTrue);
+      await run(tester, 800);
+    }
+
+    // The notification plugin works on the device (no permission is needed
+    // to schedule; it only shows once the player allows it).
+    final notifier = LocalNotifier();
+    await tester.runAsync(
+      () => notifier.schedule([
+        Reminder(
+          9,
+          'Test',
+          'Integration test reminder',
+          DateTime.now().add(const Duration(hours: 5)),
+        ),
+      ]),
+    );
+    await tester.runAsync(notifier.cancelAll);
   });
 }

@@ -2,8 +2,10 @@
 //
 //   dart run tool/level_bot.dart                 # all levels, 20 plays each
 //   dart run tool/level_bot.dart --plays 50 --level 12
+//   dart run tool/level_bot.dart --tune --level 50,54,60
 //   dart run tool/level_bot.dart --tune          # rewrite move limits
 //   dart run tool/level_bot.dart --calibrate     # rewrite star thresholds
+//   dart run tool/level_bot.dart --from 41 --tune   # only levels 41 and up
 //
 // Plays every level with a greedy bot to estimate win rates, and checks the
 // board invariants after every move, so it doubles as a fuzz test.
@@ -14,15 +16,12 @@ import 'package:blend_burst/core/bot.dart';
 import 'package:blend_burst/core/level.dart';
 import 'package:blend_burst/core/session.dart';
 
-const packFiles = [
-  'assets/levels/episode1.json',
-  'assets/levels/episode2.json',
-  'assets/levels/episode3.json',
-];
+const packFiles = levelPackFiles;
 
 void main(List<String> args) {
   var plays = 20;
-  int? only;
+  Set<int>? only;
+  var from = 1;
   var calibrate = false;
   var tune = false;
   var skill = 0.7;
@@ -31,7 +30,9 @@ void main(List<String> args) {
       case '--plays':
         plays = int.parse(args[++i]);
       case '--level':
-        only = int.parse(args[++i]);
+        only = args[++i].split(',').map(int.parse).toSet();
+      case '--from':
+        from = int.parse(args[++i]);
       case '--skill':
         skill = double.parse(args[++i]);
       case '--calibrate':
@@ -49,7 +50,8 @@ void main(List<String> args) {
     final rawLevels = pack['levels'] as List;
     for (var li = 0; li < levels.length; li++) {
       final level = levels[li];
-      if (only != null && level.id != only) continue;
+      if (only != null && !only.contains(level.id)) continue;
+      if (level.id < from) continue;
       if (tune) {
         final moves = suggestMoves(level, plays, skill);
         stdout.writeln('L${level.id}: ${level.moves} -> $moves moves');
@@ -128,8 +130,10 @@ int suggestMoves(LevelDef level, int plays, double skill) {
   needed.sort();
   final rate = targetWinRate(level);
   final idx = ((needed.length - 1) * rate).round();
-  final slack = level.id <= 5 ? 3 : 0;
-  return (needed[idx] + slack).clamp(10, 40);
+  // Levels that teach something get room to experiment.
+  final teaches = level.id <= 5 || level.tutorial != null;
+  final slack = teaches ? 4 : 0;
+  return (needed[idx] + slack).clamp(teaches ? 16 : 12, 40);
 }
 
 /// Rewrites one top-level field per level in place, keeping the formatting.

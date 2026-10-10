@@ -11,6 +11,7 @@ import 'tile_art.dart';
 enum GameIcons {
   heart,
   heartBroken,
+  unlimited,
   coin,
   star,
   starEmpty,
@@ -33,6 +34,11 @@ enum GameIcons {
   arrow,
   back,
   gravity,
+  gold,
+  shop,
+  gift,
+  trophy,
+  ticket,
 }
 
 class GameIcon extends StatelessWidget {
@@ -61,13 +67,19 @@ class IconArt {
     ..strokeCap = StrokeCap.round
     ..strokeJoin = StrokeJoin.round;
 
-  static Paint _grad(Rect r, List<Color> colors, {bool vertical = true}) =>
-      Paint()
-        ..shader = ui.Gradient.linear(
-          vertical ? r.topCenter : r.centerLeft,
-          vertical ? r.bottomCenter : r.centerRight,
-          colors,
-        );
+  static Paint _grad(
+    Rect r,
+    List<Color> colors, {
+    bool vertical = true,
+  }) => Paint()
+    ..shader = ui.Gradient.linear(
+      vertical ? r.topCenter : r.centerLeft,
+      vertical ? r.bottomCenter : r.centerRight,
+      colors,
+      colors.length == 2
+          ? null
+          : [for (var i = 0; i < colors.length; i++) i / (colors.length - 1)],
+    );
 
   static void _gloss(Canvas canvas, Path clip, Rect area) {
     canvas.save();
@@ -108,6 +120,7 @@ class IconArt {
     switch (icon) {
       case GameIcons.heart:
       case GameIcons.heartBroken:
+      case GameIcons.unlimited:
         final p = heartPath();
         canvas.drawPath(
           p.shift(const Offset(0, 4)),
@@ -122,6 +135,17 @@ class IconArt {
         );
         _gloss(canvas, p, const Rect.fromLTWH(18, 14, 52, 30));
         canvas.drawPath(p, _stroke(const Color(0xFF9C0F35), 5));
+        if (icon == GameIcons.unlimited) {
+          // An infinity loop across the heart.
+          final loop = Path()
+            ..moveTo(50, 50)
+            ..cubicTo(60, 36, 78, 36, 78, 50)
+            ..cubicTo(78, 64, 60, 64, 50, 50)
+            ..cubicTo(40, 36, 22, 36, 22, 50)
+            ..cubicTo(22, 64, 40, 64, 50, 50);
+          canvas.drawPath(loop, _stroke(const Color(0xFF9C0F35), 13));
+          canvas.drawPath(loop, _stroke(Colors.white, 7));
+        }
         if (icon == GameIcons.heartBroken) {
           canvas.drawPath(
             Path()
@@ -460,7 +484,209 @@ class IconArt {
         _splash(canvas);
       case GameIcons.gravity:
         _gravity(canvas);
+      case GameIcons.gold:
+        _gold(canvas);
+      case GameIcons.shop:
+        _shop(canvas);
+      case GameIcons.gift:
+        _gift(canvas);
+      case GameIcons.trophy:
+        _trophy(canvas);
+      case GameIcons.ticket:
+        _ticket(canvas);
     }
+  }
+
+  /// Hard currency: a faceted gold gem.
+  static void _gold(Canvas canvas) {
+    final gem = Path()
+      ..moveTo(26, 30)
+      ..lineTo(74, 30)
+      ..lineTo(90, 46)
+      ..lineTo(50, 88)
+      ..lineTo(10, 46)
+      ..close();
+    canvas.drawPath(
+      gem.shift(const Offset(0, 4)),
+      _fill(const Color(0x40402000)),
+    );
+    canvas.drawPath(
+      gem,
+      _grad(const Rect.fromLTWH(10, 30, 80, 58), [
+        const Color(0xFFFFF0A0),
+        const Color(0xFFFFB61E),
+        const Color(0xFFE07A00),
+      ]),
+    );
+    final facets = _stroke(const Color(0xAAFFF6CC), 2.5);
+    canvas.drawLine(const Offset(10, 46), const Offset(90, 46), facets);
+    canvas.drawLine(const Offset(38, 30), const Offset(30, 46), facets);
+    canvas.drawLine(const Offset(62, 30), const Offset(70, 46), facets);
+    canvas.drawLine(const Offset(30, 46), const Offset(50, 88), facets);
+    canvas.drawLine(const Offset(70, 46), const Offset(50, 88), facets);
+    canvas.drawPath(gem, _stroke(const Color(0xFF9A4E00), 4.5));
+    canvas.drawPath(
+      Path()
+        ..moveTo(28, 34)
+        ..lineTo(40, 34)
+        ..lineTo(32, 44)
+        ..close(),
+      _fill(const Color(0xCCFFFFFF)),
+    );
+    TileArtSparkle.draw(canvas, const Offset(82, 22), 9);
+  }
+
+  static void _shop(Canvas canvas) {
+    // A striped shopping bag.
+    final bag = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(16, 34, 68, 56),
+      const Radius.circular(10),
+    );
+    canvas.drawArc(
+      const Rect.fromLTWH(32, 12, 36, 40),
+      pi,
+      pi,
+      false,
+      _stroke(const Color(0xFF8E1A55), 7),
+    );
+    canvas.drawRRect(
+      bag.shift(const Offset(0, 4)),
+      _fill(const Color(0x40301040)),
+    );
+    canvas.drawRRect(
+      bag,
+      _grad(bag.outerRect, [const Color(0xFFFF8FCB), const Color(0xFFE8368F)]),
+    );
+    canvas.save();
+    canvas.clipRRect(bag);
+    for (var x = 22.0; x < 84; x += 16) {
+      canvas.drawRect(
+        Rect.fromLTWH(x, 34, 7, 56),
+        _fill(const Color(0x33FFFFFF)),
+      );
+    }
+    canvas.restore();
+    canvas.drawRRect(bag, _stroke(const Color(0xFF8E1A55), 4));
+    final star = starPath(50, 62, 14, 6);
+    canvas.drawPath(star, _fill(const Color(0xFFFFE14D)));
+    canvas.drawPath(star, _stroke(const Color(0xFFC77D00), 2.5));
+  }
+
+  static void _gift(Canvas canvas) {
+    final box = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(16, 44, 68, 46),
+      const Radius.circular(8),
+    );
+    final lid = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(10, 32, 80, 18),
+      const Radius.circular(6),
+    );
+    canvas.drawRRect(
+      box.shift(const Offset(0, 4)),
+      _fill(const Color(0x40301040)),
+    );
+    canvas.drawRRect(
+      box,
+      _grad(box.outerRect, [const Color(0xFF8FE3FF), const Color(0xFF1F8EF0)]),
+    );
+    canvas.drawRRect(
+      lid,
+      _grad(lid.outerRect, [const Color(0xFFB8EEFF), const Color(0xFF3FA8F5)]),
+    );
+    final ribbon = _fill(const Color(0xFFFF4FA3));
+    canvas.drawRect(const Rect.fromLTWH(44, 32, 12, 58), ribbon);
+    // Bow.
+    for (final s in [-1.0, 1.0]) {
+      final loop = Path()
+        ..moveTo(50, 32)
+        ..cubicTo(50 + s * 30, 6, 50 + s * 34, 30, 50, 32);
+      canvas.drawPath(loop, ribbon);
+      canvas.drawPath(loop, _stroke(const Color(0xFFB0186A), 3));
+    }
+    canvas.drawRRect(box, _stroke(const Color(0xFF0D4F96), 4));
+    canvas.drawRRect(lid, _stroke(const Color(0xFF0D4F96), 4));
+  }
+
+  static void _trophy(Canvas canvas) {
+    final cup = Path()
+      ..moveTo(26, 16)
+      ..lineTo(74, 16)
+      ..quadraticBezierTo(74, 60, 50, 64)
+      ..quadraticBezierTo(26, 60, 26, 16)
+      ..close();
+    final handles = _stroke(const Color(0xFFC77D00), 6);
+    canvas.drawArc(
+      const Rect.fromLTWH(10, 20, 24, 26),
+      pi / 2,
+      pi,
+      false,
+      handles,
+    );
+    canvas.drawArc(
+      const Rect.fromLTWH(66, 20, 24, 26),
+      -pi / 2,
+      pi,
+      false,
+      handles,
+    );
+    canvas.drawRect(
+      const Rect.fromLTWH(44, 62, 12, 14),
+      _fill(const Color(0xFFE09A10)),
+    );
+    final base = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(28, 76, 44, 14),
+      const Radius.circular(4),
+    );
+    canvas.drawRRect(base, _fill(const Color(0xFF8E5A2A)));
+    canvas.drawRRect(base, _stroke(const Color(0xFF5A3410), 3));
+    canvas.drawPath(
+      cup,
+      _grad(const Rect.fromLTWH(26, 16, 48, 48), [
+        const Color(0xFFFFF0A0),
+        const Color(0xFFF2A50C),
+      ]),
+    );
+    canvas.drawPath(cup, _stroke(const Color(0xFFB36B00), 4));
+    final star = starPath(50, 36, 11, 5);
+    canvas.drawPath(star, _fill(Colors.white));
+  }
+
+  static void _ticket(Canvas canvas) {
+    final t = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(8, 26, 84, 50),
+          const Radius.circular(10),
+        ),
+      );
+    final notch = Path()
+      ..addOval(Rect.fromCircle(center: const Offset(8, 51), radius: 9))
+      ..addOval(Rect.fromCircle(center: const Offset(92, 51), radius: 9));
+    final shape = Path.combine(PathOperation.difference, t, notch);
+    canvas.save();
+    canvas.translate(50, 51);
+    canvas.rotate(-0.18);
+    canvas.translate(-50, -51);
+    canvas.drawPath(
+      shape.shift(const Offset(0, 4)),
+      _fill(const Color(0x40301040)),
+    );
+    canvas.drawPath(
+      shape,
+      _grad(const Rect.fromLTWH(8, 26, 84, 50), [
+        const Color(0xFFC79BFF),
+        const Color(0xFF7B3FC4),
+      ]),
+    );
+    canvas.drawPath(shape, _stroke(const Color(0xFF4A2183), 4));
+    final dash = _stroke(const Color(0x99FFFFFF), 3);
+    for (var y = 32.0; y < 72; y += 9) {
+      canvas.drawLine(Offset(30, y), Offset(30, y + 4), dash);
+    }
+    final star = starPath(62, 51, 15, 7);
+    canvas.drawPath(star, _fill(const Color(0xFFFFE14D)));
+    canvas.drawPath(star, _stroke(const Color(0xFFC77D00), 2.5));
+    canvas.restore();
   }
 
   static void _gravity(Canvas canvas) {

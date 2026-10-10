@@ -1,0 +1,341 @@
+{
+  "episode": "Bucket Brigade",
+  "levels": [
+    {
+      "id": 91,
+      "name": "First Delivery",
+      "moves": 16,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}],
+      "stars": [20500,76000,132500],
+      "tiles": [
+        "...DD...",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "buckets": 2,
+      "tutorial": "Bring the paint buckets to the exit, the glowing edge in the gravity direction!",
+      "tutorialArt": "bucket"
+    },
+    {
+      "id": 92,
+      "name": "Bucket Line",
+      "moves": 36,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}],
+      "stars": [19500,54500,67000],
+      "buckets": 4
+    },
+    {
+      "id": 93,
+      "name": "Paint Run",
+      "moves": 36,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        ".#....#.",
+        ".#....#.",
+        ".#....#.",
+        ".#....#.",
+        "ssssssss",
+        "ssssssss"
+      ],
+      "goals": [{"type": "drop"}, {"type": "stains"}],
+      "stars": [14500,41000,45500],
+      "buckets": 3
+    },
+    {
+      "id": 94,
+      "name": "Downhill",
+      "moves": 29,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "#......#",
+        "........",
+        "........",
+        "........",
+        "........",
+        "#......#",
+        "##....##"
+      ],
+      "goals": [{"type": "drop"}],
+      "stars": [15000,35500,56000],
+      "tiles": [
+        "........",
+        "..D..D..",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "buckets": 5
+    },
+    {
+      "id": 95,
+      "name": "Heavy Load",
+      "moves": 31,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "..2222..",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}, {"type": "glass"}],
+      "stars": [13000,41500,60000],
+      "buckets": 4,
+      "hard": true
+    },
+    {
+      "id": 96,
+      "name": "Upward Pour",
+      "moves": 39,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}],
+      "stars": [16500,62500,70000],
+      "gravity": "up",
+      "buckets": 4,
+      "tutorial": "Gravity is up here, so the exit is at the top!"
+    },
+    {
+      "id": 97,
+      "name": "Chained Cargo",
+      "moves": 36,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "#......#",
+        "........",
+        "........",
+        ".kkkkkk.",
+        "........",
+        "........",
+        "........",
+        "#......#"
+      ],
+      "goals": [{"type": "drop"}, {"type": "locks"}],
+      "stars": [19000,43500,54500],
+      "buckets": 4
+    },
+    {
+      "id": 98,
+      "name": "Side Chute",
+      "moves": 32,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}],
+      "stars": [19000,45000,58000],
+      "gravity": "right",
+      "buckets": 3
+    },
+    {
+      "id": 99,
+      "name": "Ink Spill",
+      "moves": 29,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "ii....ii",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}, {"type": "ink"}],
+      "stars": [17000,62000,81500],
+      "buckets": 4
+    },
+    {
+      "id": 100,
+      "name": "Century",
+      "moves": 28,
+      "colors": ["red", "blue", "yellow", "purple", "brown", "gray"],
+      "layout": [
+        "##ssss##",
+        "##ssss##",
+        "........",
+        "1......1",
+        "1......1",
+        "........",
+        "##....##",
+        "##....##"
+      ],
+      "goals": [{"type": "drop"}, {"type": "stains"}, {"type": "glass"}],
+      "stars": [14500,36000,42500],
+      "buckets": 5,
+      "hard": true
+    },
+    {
+      "id": 101,
+      "name": "Turntable",
+      "moves": 25,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}],
+      "stars": [16500,43000,63500],
+      "buckets": 5,
+      "gravityEvery": 4
+    },
+    {
+      "id": 102,
+      "name": "Switchback",
+      "moves": 36,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "#......#",
+        "##....##",
+        "###..###",
+        "###..###",
+        "##....##",
+        "#......#",
+        "........"
+      ],
+      "goals": [{"type": "drop"}],
+      "stars": [10000,22500,26000],
+      "tiles": [
+        ".g....g.",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "switchChance": 0.04,
+      "buckets": 4
+    },
+    {
+      "id": 103,
+      "name": "Funnel",
+      "moves": 28,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "##....##",
+        "#......#",
+        "........",
+        "........",
+        "........",
+        "........",
+        "#......#",
+        "##....##"
+      ],
+      "goals": [{"type": "drop"}],
+      "stars": [17500,44000,48500],
+      "buckets": 4
+    },
+    {
+      "id": 104,
+      "name": "Color Pipeline",
+      "moves": 18,
+      "colors": ["red", "blue", "yellow", "brown"],
+      "layout": [
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}, {"type": "collect", "target": 20, "color": "orange"}],
+      "stars": [26000,85500,157500],
+      "filters": [
+        "........",
+        "........",
+        "........",
+        "..O..O..",
+        "........",
+        "........",
+        "........",
+        "........"
+      ],
+      "buckets": 4
+    },
+    {
+      "id": 105,
+      "name": "Brigade Finale",
+      "moves": 28,
+      "colors": ["red", "blue", "yellow", "brown", "gray"],
+      "layout": [
+        "........",
+        "........",
+        "..k..k..",
+        ".k....k.",
+        ".k....k.",
+        "..kiik..",
+        "........",
+        "........"
+      ],
+      "goals": [{"type": "drop"}, {"type": "locks"}, {"type": "ink"}],
+      "stars": [17500,55500,73000],
+      "buckets": 6,
+      "gravityEvery": 5,
+      "hard": true
+    }
+  ]
+}

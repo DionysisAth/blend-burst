@@ -17,6 +17,7 @@ import '../ui/tile_art.dart';
 import '../ui/widgets.dart';
 import 'dialogs.dart';
 import 'game_screen.dart';
+import 'live_ops_screens.dart';
 import 'settings_screen.dart';
 
 /// The scrolling level map. Level 1 is at the bottom, like a climb.
@@ -48,9 +49,23 @@ class _MapScreenState extends State<MapScreen>
     scope.audio.music(Music.map);
     _clock = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      // Only rebuild while a life is refilling, to show the countdown.
-      if (AppScope.read(context).app.nextLifeIn != null) setState(() {});
+      // Only rebuild while a countdown is showing.
+      final app = AppScope.read(context).app;
+      if (app.nextLifeIn != null || app.hasUnlimited) setState(() {});
     });
+    // Offer the daily gift once the player is past the first levels.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final app = AppScope.read(context).app;
+      if (!mounted || app.data.unlocked < 4 || !app.daily.claimable) return;
+      await showDailyReward(context);
+      if (mounted) setState(() {});
+    });
+  }
+
+  Future<void> _push(Widget screen) async {
+    AppScope.read(context).audio.sfx(Sfx.click);
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+    if (mounted) setState(() {});
   }
 
   @override
@@ -69,15 +84,22 @@ class _MapScreenState extends State<MapScreen>
       return;
     }
     scope.audio.sfx(Sfx.click);
-    final pre = await showLevelStart(context, level);
+    final bonus = level.id >= 6 ? app.streakBoosters : const <BoosterType>{};
+    final pre = await showLevelStart(
+      context,
+      level,
+      bonus: bonus,
+      streak: app.data.winStreak,
+    );
     if (pre == null || !mounted) return;
-    if (app.lives <= 0) {
+    if (!app.canPlay) {
       final ok = await showOutOfLives(context);
       if (!ok || !mounted) return;
     }
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => GameScreen(level: level, preBoosters: pre),
+        builder: (_) =>
+            GameScreen(level: level, preBoosters: pre, bonusBoosters: bonus),
       ),
     );
     if (mounted) setState(() {});
@@ -87,7 +109,9 @@ class _MapScreenState extends State<MapScreen>
   double _yOf(int index, int episode) =>
       bottomPad + index * spacing + (episode + 1) * headerGap;
 
-  double _xOf(int index, double w) => w / 2 + sin(index * 0.9) * w * 0.28;
+  // Shifted right a little to keep clear of the side buttons.
+  double _xOf(int index, double w) =>
+      w / 2 + min(24.0, w * 0.06) + sin(index * 0.9) * w * 0.26;
 
   @override
   Widget build(BuildContext context) {
@@ -168,7 +192,65 @@ class _MapScreenState extends State<MapScreen>
               ),
             ),
           ),
-          Positioned(left: 0, right: 0, top: 0, child: _TopBar(app: app)),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: _TopBar(app: app, onShop: () => _push(const ShopScreen())),
+          ),
+          Positioned(
+            left: 6,
+            top: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 76),
+                child: Column(
+                  children: [
+                    _SideButton(
+                      key: const Key('side-daily'),
+                      icon: GameIcons.gift,
+                      label: 'Daily',
+                      colors: CandyColors.green,
+                      badge: app.daily.claimable ? '!' : null,
+                      onTap: () async {
+                        scope.audio.sfx(Sfx.click);
+                        await showDailyReward(context);
+                        if (mounted) setState(() {});
+                      },
+                    ),
+                    _SideButton(
+                      key: const Key('side-shop'),
+                      icon: GameIcons.shop,
+                      label: 'Shop',
+                      colors: CandyColors.yellow,
+                      onTap: () => _push(const ShopScreen()),
+                    ),
+                    _SideButton(
+                      key: const Key('side-event'),
+                      icon: GameIcons.trophy,
+                      label: 'Event',
+                      colors: CandyColors.red,
+                      badge: app.eventClaimable > 0
+                          ? '${app.eventClaimable}'
+                          : null,
+                      onTap: () => _push(const EventScreen()),
+                    ),
+                    _SideButton(
+                      key: const Key('side-pass'),
+                      icon: GameIcons.ticket,
+                      label: 'Pass',
+                      colors: CandyColors.purple,
+                      badge: app.seasonClaimable > 0
+                          ? '${app.seasonClaimable}'
+                          : null,
+                      onTap: () => _push(const SeasonPassScreen()),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           if (levels.isNotEmpty)
             Positioned(
               left: 0,
@@ -205,15 +287,7 @@ class _MapScreenState extends State<MapScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Ribbon(
-              e.name,
-              color: [
-                Palette.candyPink,
-                const Color(0xFF1FB86B),
-                Palette.grape,
-              ][e.index % 3],
-              fontSize: 28,
-            ),
+            Ribbon(e.name, color: Palette.episodeRibbon(e.index), fontSize: 28),
             Transform.translate(
               offset: const Offset(0, -4),
               child: GameText(
@@ -324,6 +398,28 @@ class _WorldPainter extends CustomPainter {
       BackgroundPainter.paintTheme(canvas, rect, e.index, seed: 3);
       canvas.restore();
     }
+    // Blend each episode into the one below instead of a hard edge.
+    for (final e in eps.skip(1)) {
+      final y = total - (yOf(e.levels.first.id - 1, e.index) - 110);
+      final above = Palette.episode(e.index).last;
+      final below = Palette.episode(e.index - 1).first;
+      const h = 90.0;
+      canvas.drawRect(
+        Rect.fromLTRB(0, y - h, size.width, y + h),
+        Paint()
+          ..shader = ui.Gradient.linear(
+            Offset(0, y - h),
+            Offset(0, y + h),
+            [
+              above.withValues(alpha: 0),
+              above,
+              below,
+              below.withValues(alpha: 0),
+            ],
+            const [0, 0.42, 0.58, 1],
+          ),
+      );
+    }
   }
 
   void _paintRoad(Canvas canvas) {
@@ -393,13 +489,70 @@ class _WorldPainter extends CustomPainter {
       old.points.length != points.length;
 }
 
+/// A round map button with a caption and an optional badge.
+class _SideButton extends StatelessWidget {
+  final GameIcons icon;
+  final String label;
+  final CandyColors colors;
+  final String? badge;
+  final VoidCallback onTap;
+  const _SideButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.colors,
+    required this.onTap,
+    this.badge,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: SizedBox(
+        width: 52,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                RoundButton(
+                  icon,
+                  label: label,
+                  size: 46,
+                  colors: colors,
+                  onTap: onTap,
+                ),
+                if (badge != null)
+                  Positioned(right: -6, top: -4, child: CountBadge(badge!)),
+              ],
+            ),
+            Transform.translate(
+              offset: const Offset(0, -3),
+              child: GameText(
+                label,
+                size: 13,
+                family: 'Fredoka',
+                strokeWidth: 3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _TopBar extends StatelessWidget {
   final AppState app;
-  const _TopBar({required this.app});
+  final VoidCallback onShop;
+  const _TopBar({required this.app, required this.onShop});
 
   @override
   Widget build(BuildContext context) {
     final next = app.nextLifeIn;
+    final unlimited = app.unlimitedLeft;
     // The backdrop also covers the status bar, and is opaque behind the
     // pills, so the map scrolling underneath never shows through.
     return CachedDecoratedBox(
@@ -425,8 +578,12 @@ class _TopBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       StatPill(
-                        icon: GameIcons.heart,
-                        text: next == null
+                        icon: unlimited != null
+                            ? GameIcons.unlimited
+                            : GameIcons.heart,
+                        text: unlimited != null
+                            ? formatDuration(unlimited)
+                            : next == null
                             ? '${app.lives} Full'
                             : '${app.lives} ${formatDuration(next)}',
                         textKey: const Key('lives'),
@@ -437,6 +594,13 @@ class _TopBar extends StatelessWidget {
                         icon: GameIcons.coin,
                         text: '${app.coins}',
                         textKey: const Key('coins'),
+                      ),
+                      const SizedBox(width: 6),
+                      StatPill(
+                        icon: GameIcons.gold,
+                        text: '${app.gold}',
+                        textKey: const Key('gold'),
+                        onTap: onShop,
                       ),
                       const SizedBox(width: 6),
                       StatPill(icon: GameIcons.star, text: '${app.totalStars}'),
@@ -494,23 +658,10 @@ class _LevelNode extends StatelessWidget {
             const Color(0xFFE01E3C),
             const Color(0xFF8A0F25),
           )
-        : switch (level.episode) {
-            0 => (
-              const Color(0xFFFFA3D1),
-              const Color(0xFFE8368F),
-              const Color(0xFF8E1A55),
-            ),
-            1 => (
-              const Color(0xFF8FF0C0),
-              const Color(0xFF14A866),
-              const Color(0xFF0B6B40),
-            ),
-            _ => (
-              const Color(0xFFC79BFF),
-              const Color(0xFF7B3FC4),
-              const Color(0xFF4A2183),
-            ),
-          };
+        : () {
+            final c = Palette.episodeNode(level.episode);
+            return (c[0], c[1], c[2]);
+          }();
     final size = current ? 70.0 : 60.0;
     return GestureDetector(
       key: Key('level-${level.id}'),
