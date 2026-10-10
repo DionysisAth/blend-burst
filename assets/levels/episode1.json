@@ -40,7 +40,7 @@
       "goals": [{"type": "score", "target": 12500}],
       "stars": [12500,50000,84500],
       "blending": false,
-      "tutorial": "Match 4 in a line to make a Line Blaster. Match it again to clear a whole row!",
+      "tutorial": "Match 4 in a line, or a 2x2 square, to make a Line Blaster. Match it again to clear a whole row!",
       "tutorialArt": "line"
     },
     {

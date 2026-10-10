@@ -208,8 +208,22 @@ class TutorialArt extends StatelessWidget {
           const GameIcon(GameIcons.star, size: 44),
         ]);
       case 'line':
+        Widget square() => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var r = 0; r < 2; r++)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var c = 0; c < 2; c++) _tile(TileColor.blue, size: 30),
+                ],
+              ),
+          ],
+        );
         return _row([
-          for (var i = 0; i < 4; i++) _tile(TileColor.blue, size: 38),
+          for (var i = 0; i < 4; i++) _tile(TileColor.blue, size: 34),
+          _op('/'),
+          square(),
           _op('='),
           _tile(TileColor.blue, special: Special.lineH),
         ]);

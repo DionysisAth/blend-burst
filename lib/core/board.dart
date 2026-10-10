@@ -173,7 +173,10 @@ class _Act {
 class _Run {
   final List<Pos> cells;
   final bool horizontal;
-  _Run(this.cells, this.horizontal);
+
+  /// A 2×2 block of one color (not a line).
+  final bool square;
+  _Run(this.cells, this.horizontal, {this.square = false});
 }
 
 class MatchGroup {
@@ -182,7 +185,10 @@ class MatchGroup {
   final TileColor color;
   MatchGroup(this.color);
 
-  int get longestRun => _runs.fold(0, (m, r) => max(m, r.cells.length));
+  int get longestRun =>
+      _runs.where((r) => !r.square).fold(0, (m, r) => max(m, r.cells.length));
+
+  bool get hasSquare => _runs.any((r) => r.square);
 }
 
 /// The board model: tiles, obstacles, gravity and every rule that changes
@@ -365,8 +371,20 @@ class Board {
       return n;
     }
 
-    return count(0, -1) + count(0, 1) + 1 >= 3 ||
-        count(-1, 0) + count(1, 0) + 1 >= 3;
+    if (count(0, -1) + count(0, 1) + 1 >= 3 ||
+        count(-1, 0) + count(1, 0) + 1 >= 3) {
+      return true;
+    }
+    bool same(int dr, int dc) {
+      final t = tileAt(Pos(p.r + dr, p.c + dc));
+      return t != null && t.special.hasColor && t.color == color;
+    }
+
+    // Any of the four 2×2 squares that contain p.
+    for (final (dr, dc) in const [(-1, -1), (-1, 1), (1, -1), (1, 1)]) {
+      if (same(dr, 0) && same(0, dc) && same(dr, dc)) return true;
+    }
+    return false;
   }
 
   TileColor _safeColor(Pos p) {
@@ -457,6 +475,25 @@ class Board {
         r = e;
       }
     }
+    // 2×2 squares of one color match too (and make a Line Blaster).
+    for (var r = 0; r + 1 < rows; r++) {
+      for (var c = 0; c + 1 < cols; c++) {
+        final color = _matchColor(r, c);
+        if (color == null ||
+            _matchColor(r, c + 1) != color ||
+            _matchColor(r + 1, c) != color ||
+            _matchColor(r + 1, c + 1) != color) {
+          continue;
+        }
+        runs.add(
+          _Run(
+            [Pos(r, c), Pos(r, c + 1), Pos(r + 1, c), Pos(r + 1, c + 1)],
+            false,
+            square: true,
+          ),
+        );
+      }
+    }
     if (runs.isEmpty) return const [];
 
     // Union runs that share a cell (L, T and + shapes).
@@ -497,15 +534,23 @@ class Board {
   /// Decides which special (if any) a match group creates and where.
   (Special, Pos?) _planGroup(MatchGroup g, List<Pos> preferred) {
     final longest = g.longestRun;
-    final hasH = g._runs.any((r) => r.horizontal);
-    final hasV = g._runs.any((r) => !r.horizontal);
+    final lines = g._runs.where((r) => !r.square);
+    final hasH = lines.any((r) => r.horizontal);
+    final hasV = lines.any((r) => !r.horizontal);
     Special special;
     if (longest >= 5) {
       special = Special.prism;
     } else if (hasH && hasV) {
       special = Special.bomb;
     } else if (longest == 4) {
-      special = g._runs.first.horizontal ? Special.lineH : Special.lineV;
+      final run = lines.firstWhere((r) => r.cells.length == 4);
+      special = run.horizontal ? Special.lineH : Special.lineV;
+    } else if (g.hasSquare) {
+      // Like 4 in a line: the blaster follows the swipe direction.
+      final horizontal = preferred.length >= 2
+          ? preferred[0].r == preferred[1].r
+          : rng.nextBool();
+      special = horizontal ? Special.lineH : Special.lineV;
     } else {
       return (Special.none, null);
     }

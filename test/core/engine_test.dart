@@ -228,6 +228,48 @@ void main() {
       expect(lines.first.special, Special.lineH);
     });
 
+    test('a 2x2 square matches and creates a line blaster', () {
+      // Y Y      Y Y
+      // Y R Y -> Y Y R  (swipe the right Y left)
+      final tiles = withTiles(background(), {
+        const Pos(3, 3): 'Y',
+        const Pos(3, 4): 'Y',
+        const Pos(4, 3): 'Y',
+        const Pos(4, 4): 'R',
+        const Pos(4, 5): 'Y',
+        const Pos(4, 2): 'N',
+        const Pos(5, 4): 'N',
+      });
+      final b = boardOf(tiles, blending: false);
+      expect(b.findMatches(), isEmpty);
+      expect(b.classify(const Pos(4, 5), const Pos(4, 4)), MoveKind.swap);
+      final o = b.swipe(const Pos(4, 5), const Pos(4, 4));
+      expect(o.kind, MoveKind.swap);
+      final made = o.steps[1];
+      final lines = made.after.tiles.values
+          .where((t) => t.special.isLine)
+          .toList();
+      expect(lines, hasLength(1));
+      expect(lines.first.pos, const Pos(4, 4));
+      expect(lines.first.special, Special.lineH);
+      // All four tiles were cleared; the blaster replaced the moved one.
+      expect(made.cleared.map((c) => c.at).toSet(), {
+        const Pos(3, 3),
+        const Pos(3, 4),
+        const Pos(4, 3),
+        const Pos(4, 4),
+      });
+      expect(b.checkInvariants(), isNull);
+    });
+
+    test('new boards never start with a 2x2 square', () {
+      for (var seed = 0; seed < 40; seed++) {
+        final random = List.filled(8, '........');
+        final b = Board.fromLevel(levelOf(random), Random(seed));
+        expect(b.findMatches(), isEmpty, reason: 'seed $seed');
+      }
+    });
+
     test('match of 5 creates a prism, which clears a whole color', () {
       final tiles = withTiles(background(), {
         const Pos(5, 0): 'B',

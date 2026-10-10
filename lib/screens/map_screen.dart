@@ -31,7 +31,8 @@ class _MapScreenState extends State<MapScreen>
     with SingleTickerProviderStateMixin {
   static const spacing = 104.0;
   static const headerGap = 130.0;
-  static const bottomPad = 150.0;
+  // Room for the play button below the first episode's banner.
+  static const bottomPad = 120.0;
   final _scroll = ScrollController();
   late final AnimationController _pulse = AnimationController(
     vsync: this,
@@ -81,7 +82,7 @@ class _MapScreenState extends State<MapScreen>
 
   /// y (from the bottom) of a level node's center.
   double _yOf(int index, int episode) =>
-      bottomPad + index * spacing + episode * headerGap;
+      bottomPad + index * spacing + (episode + 1) * headerGap;
 
   double _xOf(int index, double w) => w / 2 + sin(index * 0.9) * w * 0.28;
 
@@ -164,12 +165,7 @@ class _MapScreenState extends State<MapScreen>
               ),
             ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            top: 0,
-            child: SafeArea(bottom: false, child: _TopBar(app: app)),
-          ),
+          Positioned(left: 0, right: 0, top: 0, child: _TopBar(app: app)),
           if (levels.isNotEmpty)
             Positioned(
               left: 0,
@@ -290,18 +286,22 @@ class _WorldPainter extends CustomPainter {
         size.width,
         min(_chunk, size.height - y),
       );
+      // Padded and clipped, so neighbouring strips meet without a seam.
+      canvas.save();
+      canvas.clipRect(strip, doAntiAlias: false);
       ArtCache.paint(
         canvas,
         'world:${size.width.round()}:${total.round()}:${y.round()}',
         strip,
         dpr,
         (c, s) {
-          c.clipRect(Offset.zero & s);
           c.translate(0, -y);
           _paintBackdrop(c, size);
         },
         maxDpr: 1.5,
+        padPx: 3,
       );
+      canvas.restore();
     }
     _paintRoad(canvas);
   }
@@ -397,57 +397,63 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final next = app.nextLifeIn;
+    // The backdrop also covers the status bar, and is opaque behind the
+    // pills, so the map scrolling underneath never shows through.
     return CachedDecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xCC3B1A63), Color(0x003B1A63)],
+          colors: [Color(0xFF2E1050), Color(0xF23B1A63), Color(0x003B1A63)],
+          stops: [0, 0.68, 1],
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-        child: Row(
-          children: [
-            Expanded(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    StatPill(
-                      icon: GameIcons.heart,
-                      text: next == null
-                          ? '${app.lives} Full'
-                          : '${app.lives} ${formatDuration(next)}',
-                      textKey: const Key('lives'),
-                      onTap: () => showOutOfLives(context),
-                    ),
-                    const SizedBox(width: 6),
-                    StatPill(
-                      icon: GameIcons.coin,
-                      text: '${app.coins}',
-                      textKey: const Key('coins'),
-                    ),
-                    const SizedBox(width: 6),
-                    StatPill(icon: GameIcons.star, text: '${app.totalStars}'),
-                  ],
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 10, 24),
+          child: Row(
+            children: [
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      StatPill(
+                        icon: GameIcons.heart,
+                        text: next == null
+                            ? '${app.lives} Full'
+                            : '${app.lives} ${formatDuration(next)}',
+                        textKey: const Key('lives'),
+                        onTap: () => showOutOfLives(context),
+                      ),
+                      const SizedBox(width: 6),
+                      StatPill(
+                        icon: GameIcons.coin,
+                        text: '${app.coins}',
+                        textKey: const Key('coins'),
+                      ),
+                      const SizedBox(width: 6),
+                      StatPill(icon: GameIcons.star, text: '${app.totalStars}'),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            RoundButton(
-              GameIcons.gear,
-              key: const Key('settings'),
-              label: 'Settings',
-              size: 44,
-              colors: CandyColors.blue,
-              onTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-            ),
-          ],
+              const SizedBox(width: 8),
+              RoundButton(
+                GameIcons.gear,
+                key: const Key('settings'),
+                label: 'Settings',
+                size: 44,
+                colors: CandyColors.blue,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
