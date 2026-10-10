@@ -3,6 +3,13 @@
         android:label="Blend Burst"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Render with Skia. Impeller's OpenGL ES backend (used wherever
+             Vulkan is unavailable: emulators and many older phones) brought
+             the emulators down seconds after launch; Skia passes every
+             emulator test. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
