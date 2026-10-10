@@ -12,6 +12,7 @@ import '../core/models.dart';
 import '../core/session.dart';
 import '../game/board_view.dart';
 import '../game/game_controller.dart';
+import '../ui/art_cache.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
@@ -445,8 +446,7 @@ class GameScreenState extends State<GameScreen> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
+            child: CachedDecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22),
                 gradient: const LinearGradient(
@@ -463,42 +463,45 @@ class GameScreenState extends State<GameScreen> {
                   ),
                 ],
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: GameText(
-                            widget.testMode
-                                ? 'Test level'
-                                : 'Level ${level.id}',
-                            size: 16,
-                            color: Palette.sun,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: GameText(
+                              widget.testMode
+                                  ? 'Test level'
+                                  : 'Level ${level.id}',
+                              size: 16,
+                              color: Palette.sun,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                      _GravityChip(controller.shown.gravity),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        for (final g in controller.goals)
-                          GoalChip(progress: g, size: 44),
+                        const SizedBox(width: 6),
+                        _GravityChip(controller.shown.gravity),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  _scoreBar(),
-                ],
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (final g in controller.goals)
+                            GoalChip(progress: g, size: 44),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    _scoreBar(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -551,19 +554,27 @@ class GameScreenState extends State<GameScreen> {
                           borderRadius: BorderRadius.circular(7),
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: AnimatedFractionallySizedBox(
+                            // The gradient is cached at full width and
+                            // revealed by a clip, so a moving fill does not
+                            // render a new gradient every frame.
+                            child: TweenAnimationBuilder<double>(
+                              tween: Tween(end: max(frac, 0.02)),
                               duration: const Duration(milliseconds: 300),
                               curve: Curves.easeOut,
-                              widthFactor: max(frac, 0.02),
-                              heightFactor: 1,
-                              child: const DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Color(0xFFFFE14D),
-                                      Color(0xFFFF8A1F),
-                                      Color(0xFFFF4FA3),
-                                    ],
+                              builder: (context, f, child) => ClipRect(
+                                clipper: _WidthClipper(f),
+                                child: child,
+                              ),
+                              child: const SizedBox.expand(
+                                child: CachedDecoratedBox(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFFFFE14D),
+                                        Color(0xFFFF8A1F),
+                                        Color(0xFFFF4FA3),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -690,42 +701,43 @@ class _MovesBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+    return SizedBox(
       width: 74,
       height: 74,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: low
-              ? const [Color(0xFFFF8A8A), Color(0xFFE01E3C)]
-              : const [Color(0xFFC79BFF), Color(0xFF7B3FC4)],
-        ),
-        border: Border.all(color: Colors.white, width: 4),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x66301040),
-            blurRadius: 8,
-            offset: Offset(0, 4),
+      child: CachedDecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: low
+                ? const [Color(0xFFFF8A8A), Color(0xFFE01E3C)]
+                : const [Color(0xFFC79BFF), Color(0xFF7B3FC4)],
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'MOVES',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1,
+          border: Border.all(color: Colors.white, width: 4),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x66301040),
+              blurRadius: 8,
+              offset: Offset(0, 4),
             ),
-          ),
-          GameText('$moves', key: const Key('moves-left'), size: 30),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'MOVES',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1,
+              ),
+            ),
+            GameText('$moves', key: const Key('moves-left'), size: 30),
+          ],
+        ),
       ),
     );
   }
@@ -766,32 +778,35 @@ class _BoosterButton extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Container(
+                  SizedBox(
                     width: 76,
                     height: 76,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: colors,
-                      ),
-                      border: Border.all(
-                        color: selected ? Palette.sun : Colors.white,
-                        width: selected ? 5 : 4,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: selected
-                              ? const Color(0xAAFFE14D)
-                              : const Color(0x66301040),
-                          blurRadius: selected ? 16 : 8,
-                          offset: const Offset(0, 4),
+                    child: CachedDecoratedBox(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: colors,
                         ),
-                      ],
+                        border: Border.all(
+                          color: selected ? Palette.sun : Colors.white,
+                          width: selected ? 5 : 4,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: selected
+                                ? const Color(0xAAFFE14D)
+                                : const Color(0x66301040),
+                            blurRadius: selected ? 16 : 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: GameIcon(boosterIcon(type), size: 56),
+                      ),
                     ),
-                    alignment: Alignment.center,
-                    child: GameIcon(boosterIcon(type), size: 56),
                   ),
                   Positioned(
                     right: -6,
@@ -821,4 +836,17 @@ class _BoosterButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Clips its child to the left [fraction] of its width.
+class _WidthClipper extends CustomClipper<Rect> {
+  final double fraction;
+  _WidthClipper(this.fraction);
+
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTWH(0, 0, size.width * fraction, size.height);
+
+  @override
+  bool shouldReclip(_WidthClipper old) => old.fraction != fraction;
 }

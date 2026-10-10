@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'art_cache.dart';
 import 'icons.dart';
 import 'tile_art.dart';
 
@@ -243,7 +244,7 @@ class _CandyButtonState extends State<CandyButton> {
               children: [
                 Positioned.fill(
                   top: edge,
-                  child: DecoratedBox(
+                  child: CachedDecoratedBox(
                     decoration: BoxDecoration(
                       color: c.edge,
                       borderRadius: r,
@@ -263,7 +264,7 @@ class _CandyButtonState extends State<CandyButton> {
                   right: 0,
                   top: _down ? edge * 0.6 : 0,
                   height: widget.height,
-                  child: DecoratedBox(
+                  child: CachedDecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: r,
                       gradient: LinearGradient(
@@ -280,7 +281,7 @@ class _CandyButtonState extends State<CandyButton> {
                           right: 8,
                           top: 4,
                           height: widget.height * 0.36,
-                          child: DecoratedBox(
+                          child: CachedDecoratedBox(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(
                                 widget.radius,
@@ -364,7 +365,10 @@ class Ribbon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-    painter: _RibbonPainter(color),
+    painter: _RibbonPainter(
+      color,
+      MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
+    ),
     child: Padding(
       padding: EdgeInsets.fromLTRB(
         fontSize * 1.4,
@@ -386,10 +390,23 @@ class Ribbon extends StatelessWidget {
 
 class _RibbonPainter extends CustomPainter {
   final Color color;
-  _RibbonPainter(this.color);
+  final double dpr;
+  _RibbonPainter(this.color, this.dpr);
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    ArtCache.paint(
+      canvas,
+      'ribbon:${color.toARGB32()}',
+      Offset.zero & size,
+      dpr,
+      _draw,
+      padPx: 4,
+    );
+  }
+
+  void _draw(Canvas canvas, Size size) {
     final h = size.height;
     final w = size.width;
     final dark = Palette.shade(color, -0.22);
@@ -459,7 +476,8 @@ class _RibbonPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _RibbonPainter old) => old.color != color;
+  bool shouldRepaint(covariant _RibbonPainter old) =>
+      old.color != color || old.dpr != dpr;
 }
 
 /// A cream panel with a thick border and an optional ribbon title.
@@ -485,32 +503,34 @@ class GamePanel extends StatelessWidget {
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,
       children: [
-        Container(
-          margin: EdgeInsets.only(top: title == null ? 0 : 26),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Palette.plum, width: 5),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFDF7), Color(0xFFFFEFD9)],
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x66301040),
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Container(
-            margin: const EdgeInsets.all(3),
+        Padding(
+          padding: EdgeInsets.only(top: title == null ? 0 : 26),
+          child: CachedDecoratedBox(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: const Color(0xFFFFD9A8), width: 2),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Palette.plum, width: 5),
+              gradient: const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFFFFDF7), Color(0xFFFFEFD9)],
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x66301040),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
+                ),
+              ],
             ),
-            padding: title == null ? const EdgeInsets.all(20) : padding,
-            child: child,
+            child: Container(
+              margin: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25),
+                border: Border.all(color: const Color(0xFFFFD9A8), width: 2),
+              ),
+              padding: title == null ? const EdgeInsets.all(20) : padding,
+              child: child,
+            ),
           ),
         ),
         if (title != null) Ribbon(title!, color: ribbonColor),
@@ -682,7 +702,10 @@ class PaintedBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CustomPaint(
-    painter: BackgroundPainter(theme),
+    painter: BackgroundPainter(
+      theme,
+      dpr: MediaQuery.maybeDevicePixelRatioOf(context) ?? 1,
+    ),
     child: child ?? const SizedBox.expand(),
   );
 }
@@ -690,11 +713,22 @@ class PaintedBackground extends StatelessWidget {
 class BackgroundPainter extends CustomPainter {
   final int theme;
   final int seed;
-  BackgroundPainter(this.theme, {this.seed = 0});
+  final double dpr;
+  BackgroundPainter(this.theme, {this.seed = 0, this.dpr = 1});
 
   @override
-  void paint(Canvas canvas, Size size) =>
-      paintTheme(canvas, Offset.zero & size, theme, seed: seed);
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    // Soft art: twice the logical size is plenty, even on dense screens.
+    ArtCache.paint(
+      canvas,
+      'bg:$theme:$seed',
+      Offset.zero & size,
+      dpr,
+      (c, s) => paintTheme(c, Offset.zero & s, theme, seed: seed),
+      maxDpr: 2,
+    );
+  }
 
   static void paintTheme(Canvas canvas, Rect area, int theme, {int seed = 0}) {
     final colors = Palette.episode(theme);
@@ -843,7 +877,7 @@ class BackgroundPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant BackgroundPainter old) =>
-      old.theme != theme || old.seed != seed;
+      old.theme != theme || old.seed != seed || old.dpr != dpr;
 }
 
 // ---------------------------------------------------------------- confetti

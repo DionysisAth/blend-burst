@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/level.dart';
 import '../core/models.dart';
 import '../core/session.dart';
+import 'art_cache.dart';
 import 'game_ui.dart';
 import 'icons.dart';
 import 'tile_art.dart';
@@ -22,53 +23,19 @@ class MiniTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => CustomPaint(
+  Widget build(BuildContext context) => CachedArt(
+    id: 'tile:${color?.name}:${special.name}:$gravitySwitch',
     size: Size.square(size),
-    painter: _MiniTilePainter(color, special, gravitySwitch),
-  );
-}
-
-class _MiniTilePainter extends CustomPainter {
-  final TileColor? color;
-  final Special special;
-  final bool gravitySwitch;
-  _MiniTilePainter(this.color, this.special, this.gravitySwitch);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    TileArt.paint(
+    pad: 0.25,
+    draw: (canvas, size) => TileArt.paint(
       canvas,
       size.center(Offset.zero),
       size.width * 0.42,
       color: color,
       special: special,
       gravitySwitch: gravitySwitch,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _MiniTilePainter old) =>
-      old.color != color ||
-      old.special != special ||
-      old.gravitySwitch != gravitySwitch;
-}
-
-class _CellIconPainter extends CustomPainter {
-  final bool glass;
-  _CellIconPainter(this.glass);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    if (glass) {
-      TileArt.glass(canvas, rect, 1);
-    } else {
-      TileArt.stain(canvas, rect);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _CellIconPainter old) => old.glass != glass;
+    ),
+  );
 }
 
 class ObstacleIcon extends StatelessWidget {
@@ -77,8 +44,14 @@ class ObstacleIcon extends StatelessWidget {
   const ObstacleIcon({super.key, required this.glass, this.size = 28});
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _CellIconPainter(glass));
+  Widget build(BuildContext context) => CachedArt(
+    id: 'cell:$glass',
+    size: Size.square(size),
+    pad: 0.15,
+    draw: (canvas, size) => glass
+        ? TileArt.glass(canvas, Offset.zero & size, 1)
+        : TileArt.stain(canvas, Offset.zero & size),
+  );
 }
 
 Widget goalIcon(Goal g, {double size = 28}) {

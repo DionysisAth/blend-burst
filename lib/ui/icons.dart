@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../core/models.dart';
+import 'art_cache.dart';
 import 'tile_art.dart';
 
 /// Hand-drawn game icons (no icon fonts), drawn in a 100x100 box.
@@ -39,24 +40,15 @@ class GameIcon extends StatelessWidget {
   const GameIcon(this.icon, {super.key, this.size = 32});
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _IconPainter(icon));
-}
-
-class _IconPainter extends CustomPainter {
-  final GameIcons icon;
-  _IconPainter(this.icon);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.scale(size.width / 100);
-    IconArt.draw(canvas, icon);
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _IconPainter old) => old.icon != icon;
+  Widget build(BuildContext context) => CachedArt(
+    id: 'icon:${icon.name}',
+    size: Size.square(size),
+    pad: 0.15,
+    draw: (canvas, size) {
+      canvas.scale(size.width / 100);
+      IconArt.draw(canvas, icon);
+    },
+  );
 }
 
 class IconArt {

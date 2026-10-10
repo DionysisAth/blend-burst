@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -9,6 +10,7 @@ import '../app/level_repository.dart';
 import '../app/scope.dart';
 import '../core/level.dart';
 import '../core/models.dart';
+import '../ui/art_cache.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
@@ -130,7 +132,13 @@ class _MapScreenState extends State<MapScreen>
                         Positioned.fill(
                           child: RepaintBoundary(
                             child: CustomPaint(
-                              painter: _WorldPainter(repo, total, _yOf, points),
+                              painter: _WorldPainter(
+                                repo,
+                                total,
+                                _yOf,
+                                points,
+                                MediaQuery.devicePixelRatioOf(context),
+                              ),
                             ),
                           ),
                         ),
@@ -264,10 +272,41 @@ class _WorldPainter extends CustomPainter {
   final double total;
   final double Function(int, int) yOf;
   final List<Offset> points;
-  _WorldPainter(this.repo, this.total, this.yOf, this.points);
+  final double dpr;
+  _WorldPainter(this.repo, this.total, this.yOf, this.points, this.dpr);
+
+  /// Height of one cached background strip, in logical pixels.
+  static const _chunk = 512.0;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    // The painted backdrop is static: cache it in strips (one image would
+    // exceed the GPU's texture size limit on a 40-level map).
+    for (var y = 0.0; y < size.height; y += _chunk) {
+      final strip = Rect.fromLTWH(
+        0,
+        y,
+        size.width,
+        min(_chunk, size.height - y),
+      );
+      ArtCache.paint(
+        canvas,
+        'world:${size.width.round()}:${total.round()}:${y.round()}',
+        strip,
+        dpr,
+        (c, s) {
+          c.clipRect(Offset.zero & s);
+          c.translate(0, -y);
+          _paintBackdrop(c, size);
+        },
+        maxDpr: 1.5,
+      );
+    }
+    _paintRoad(canvas);
+  }
+
+  void _paintBackdrop(Canvas canvas, Size size) {
     final eps = repo.episodes;
     for (final e in eps) {
       final startY = e.index == 0
@@ -282,6 +321,9 @@ class _WorldPainter extends CustomPainter {
       BackgroundPainter.paintTheme(canvas, rect, e.index, seed: 3);
       canvas.restore();
     }
+  }
+
+  void _paintRoad(Canvas canvas) {
     if (points.length < 2) return;
     // A smooth road through all nodes (Catmull-Rom spline).
     final road = Path()..moveTo(points.first.dx, points.first.dy + 120);
@@ -343,7 +385,9 @@ class _WorldPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _WorldPainter old) =>
-      old.total != total || old.points.length != points.length;
+      old.total != total ||
+      old.dpr != dpr ||
+      old.points.length != points.length;
 }
 
 class _TopBar extends StatelessWidget {
@@ -353,8 +397,7 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final next = app.nextLifeIn;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+    return CachedDecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -362,47 +405,50 @@ class _TopBar extends StatelessWidget {
           colors: [Color(0xCC3B1A63), Color(0x003B1A63)],
         ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  StatPill(
-                    icon: GameIcons.heart,
-                    text: next == null
-                        ? '${app.lives} Full'
-                        : '${app.lives} ${formatDuration(next)}',
-                    textKey: const Key('lives'),
-                    onTap: () => showOutOfLives(context),
-                  ),
-                  const SizedBox(width: 6),
-                  StatPill(
-                    icon: GameIcons.coin,
-                    text: '${app.coins}',
-                    textKey: const Key('coins'),
-                  ),
-                  const SizedBox(width: 6),
-                  StatPill(icon: GameIcons.star, text: '${app.totalStars}'),
-                ],
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    StatPill(
+                      icon: GameIcons.heart,
+                      text: next == null
+                          ? '${app.lives} Full'
+                          : '${app.lives} ${formatDuration(next)}',
+                      textKey: const Key('lives'),
+                      onTap: () => showOutOfLives(context),
+                    ),
+                    const SizedBox(width: 6),
+                    StatPill(
+                      icon: GameIcons.coin,
+                      text: '${app.coins}',
+                      textKey: const Key('coins'),
+                    ),
+                    const SizedBox(width: 6),
+                    StatPill(icon: GameIcons.star, text: '${app.totalStars}'),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          RoundButton(
-            GameIcons.gear,
-            key: const Key('settings'),
-            label: 'Settings',
-            size: 44,
-            colors: CandyColors.blue,
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          ),
-        ],
+            const SizedBox(width: 8),
+            RoundButton(
+              GameIcons.gear,
+              key: const Key('settings'),
+              label: 'Settings',
+              size: 44,
+              colors: CandyColors.blue,
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -485,62 +531,22 @@ class _LevelNode extends StatelessWidget {
                     ),
                   ),
                 ),
-              // 3D base.
-              Positioned(
-                top: 44 - size / 2 + 6,
-                child: Container(
-                  width: size,
-                  height: size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: edge,
-                  ),
-                ),
-              ),
               Positioned(
                 top: 44 - size / 2,
-                child: Container(
+                child: SizedBox(
                   width: size,
                   height: size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [top, bottom],
-                    ),
-                    border: Border.all(
-                      color: current ? Palette.sun : Colors.white,
-                      width: current ? 5 : 4,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x55301040),
-                        blurRadius: 6,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-                  ),
                   child: Stack(
+                    clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
-                      Positioned(
-                        top: 4,
-                        left: size * 0.18,
-                        right: size * 0.18,
-                        height: size * 0.3,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(size),
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.white.withValues(alpha: 0.6),
-                                Colors.white.withValues(alpha: 0.0),
-                              ],
-                            ),
-                          ),
+                      Positioned.fill(
+                        child: CachedArt(
+                          id: 'node:${top.toARGB32()}:${edge.toARGB32()}:$current',
+                          size: Size.square(size),
+                          pad: 0.25,
+                          draw: (canvas, s) =>
+                              _paintNode(canvas, s, top, bottom, edge, current),
                         ),
                       ),
                       unlocked
@@ -601,8 +607,12 @@ class _Marker extends StatelessWidget {
   const _Marker();
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: const Size(40, 48), painter: _MarkerPainter());
+  Widget build(BuildContext context) => CachedArt(
+    id: 'marker',
+    size: const Size(40, 48),
+    pad: 0.2,
+    draw: (canvas, size) => _MarkerPainter().paint(canvas, size),
+  );
 }
 
 class _MarkerPainter extends CustomPainter {
@@ -645,4 +655,58 @@ class _MarkerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// The candy disc of a level node: shadow, 3D base, gradient face, border
+/// and gloss.
+void _paintNode(
+  Canvas canvas,
+  Size s,
+  Color top,
+  Color bottom,
+  Color edge,
+  bool current,
+) {
+  final r = s.width / 2;
+  final c = Offset(r, r);
+  canvas.drawCircle(
+    c + const Offset(0, 9),
+    r,
+    Paint()
+      ..color = const Color(0x55301040)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+  );
+  canvas.drawCircle(c + const Offset(0, 6), r, Paint()..color = edge);
+  canvas.drawCircle(
+    c,
+    r,
+    Paint()
+      ..shader = ui.Gradient.linear(Offset(r, 0), Offset(r, s.height), [
+        top,
+        bottom,
+      ]),
+  );
+  final border = current ? 5.0 : 4.0;
+  canvas.drawCircle(
+    c,
+    r - border / 2,
+    Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = border
+      ..color = current ? Palette.sun : Colors.white,
+  );
+  final gloss = Rect.fromLTWH(
+    s.width * 0.18,
+    4,
+    s.width * 0.64,
+    s.height * 0.3,
+  );
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(gloss, Radius.circular(s.height)),
+    Paint()
+      ..shader = ui.Gradient.linear(gloss.topCenter, gloss.bottomCenter, [
+        Colors.white.withValues(alpha: 0.6),
+        Colors.white.withValues(alpha: 0.0),
+      ]),
+  );
 }
