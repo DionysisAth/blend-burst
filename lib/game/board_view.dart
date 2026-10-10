@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../app/audio.dart';
 import '../core/board.dart';
 import '../core/models.dart';
+import '../ui/art_cache.dart';
 import '../ui/tile_art.dart';
 import 'game_controller.dart';
 import 'sprites.dart';
@@ -336,6 +337,21 @@ class BoardViewState extends State<BoardView>
       );
       strength = max(strength, 1);
     }
+    for (final g in step.lockHit) {
+      _emit(
+        at(g),
+        const Color(0xFFC9D2E3),
+        12,
+        speed: 4.5,
+        kind: _PKind.shard,
+        size: 0.13,
+      );
+      strength = max(strength, 1);
+    }
+    for (final g in step.inkHit) {
+      _emit(at(g), const Color(0xFF2A1640), 12, speed: 3.5, size: 0.16);
+      strength = max(strength, 1);
+    }
 
     Sfx? big;
     for (final e in step.effects) {
@@ -358,6 +374,8 @@ class BoardViewState extends State<BoardView>
         EffectKind.bomb || EffectKind.bigBomb || EffectKind.cross3 => Sfx.bomb,
         EffectKind.lineH || EffectKind.lineV || EffectKind.rowCol => Sfx.line,
         EffectKind.splash => null,
+        EffectKind.inkSpread => Sfx.ink,
+        EffectKind.drop => Sfx.drop,
       };
       if (s != null && (big == null || s.index > big.index)) big = s;
       if (e.kind == EffectKind.bomb ||
@@ -380,6 +398,20 @@ class BoardViewState extends State<BoardView>
         if (step.cleared.isNotEmpty) audio?.pop(step.cascade);
         if (big != null) audio?.sfx(big);
         if (step.glassHit.isNotEmpty) audio?.sfx(Sfx.glass);
+        if (step.lockHit.isNotEmpty) audio?.sfx(Sfx.chain);
+        if (step.inkHit.isNotEmpty) audio?.sfx(Sfx.ink);
+        if (step.effects.any((e) => e.kind == EffectKind.drop)) {
+          for (final e in step.effects) {
+            _emit(
+              at(e.at),
+              const Color(0xFF7CF2B0),
+              14,
+              kind: _PKind.star,
+              speed: 4,
+              size: 0.16,
+            );
+          }
+        }
         final stainsGone = before.stainsLeft - step.after.stainsLeft;
         if (stainsGone > 0) audio?.sfx(Sfx.stain);
         final made = step.after.tiles.values.where(
@@ -613,10 +645,43 @@ class _BoardPainter extends CustomPainter {
 
     // Obstacles switch from the old to the new state half-way through a step.
     final obstacles = (step != null && p >= 0.5) ? step.after : before;
+    final dpr = s.devicePixelRatio;
     for (var r = 0; r < g.rows; r++) {
       for (var c = 0; c < g.cols; c++) {
-        if (obstacles.stain[r * g.cols + c]) {
-          TileArt.stain(canvas, g.cellRect(r, c));
+        final i = r * g.cols + c;
+        final rect = g.cellRect(r, c);
+        final pos = Pos(r, c);
+        final f = board.filterAt(pos);
+        if (f != null) {
+          ArtCache.paint(
+            canvas,
+            'filter:${f.name}',
+            rect,
+            dpr,
+            (cv, sz) => TileArt.filter(cv, Offset.zero & sz, f),
+          );
+        }
+        final z = board.zoneAt(pos);
+        if (z != null) TileArt.zoneArrow(canvas, rect, z);
+        if (obstacles.stain[i]) {
+          TileArt.stain(canvas, rect);
+        }
+        if (obstacles.ink.isNotEmpty && obstacles.ink[i]) {
+          // Ink wobbles a little: it is alive.
+          final wob = 1 + 0.03 * sin(s.time * 3 + r * 1.3 + c);
+          final seed = (r * 7 + c) % 4;
+          ArtCache.paint(
+            canvas,
+            'ink:$seed',
+            Rect.fromCenter(
+              center: rect.center,
+              width: rect.width * wob,
+              height: rect.height * (2 - wob),
+            ),
+            dpr,
+            (cv, sz) => TileArt.ink(cv, Offset.zero & sz, seed: seed),
+            pad: 0.1,
+          );
         }
       }
     }
@@ -674,6 +739,10 @@ class _BoardPainter extends CustomPainter {
         default:
           break;
       }
+      if (look.bucket) {
+        // Buckets sway as if they were heavy.
+        spin = sin(s.time * 2.4 + look.id) * 0.08;
+      }
       final drawn = s.sprites.drawTile(
         canvas,
         center,
@@ -681,6 +750,7 @@ class _BoardPainter extends CustomPainter {
         look.color,
         look.special,
         rotation: spin,
+        bucket: look.bucket,
       );
       if (!drawn) {
         TileArt.paint(
@@ -689,6 +759,7 @@ class _BoardPainter extends CustomPainter {
           radius * scale,
           color: look.color,
           special: look.special,
+          bucket: look.bucket,
           time: s.time,
         );
       }
@@ -698,13 +769,35 @@ class _BoardPainter extends CustomPainter {
       canvas.restore();
     }
 
-    // Glass sits on top of everything that slides underneath.
+    // Glass, chains and filter badges sit on top of the tiles.
+    final hasBuckets = board.bucketsToSpawn > 0 || board.bucketsOnBoard > 0;
     for (var r = 0; r < g.rows; r++) {
       for (var c = 0; c < g.cols; c++) {
-        final layers = obstacles.glass[r * g.cols + c];
-        if (layers > 0 &&
-            !s.sprites.drawGlass(canvas, g.cellRect(r, c), layers)) {
-          TileArt.glass(canvas, g.cellRect(r, c), layers);
+        final i = r * g.cols + c;
+        final rect = g.cellRect(r, c);
+        final layers = obstacles.glass[i];
+        if (layers > 0 && !s.sprites.drawGlass(canvas, rect, layers)) {
+          TileArt.glass(canvas, rect, layers);
+        }
+        final locks = obstacles.lock.isEmpty ? 0 : obstacles.lock[i];
+        if (locks > 0) {
+          ArtCache.paint(
+            canvas,
+            'chains:$locks',
+            rect,
+            dpr,
+            (cv, sz) => TileArt.chains(cv, Offset.zero & sz, locks),
+            pad: 0.05,
+          );
+        }
+        final f = board.filterAt(Pos(r, c));
+        if (f != null) TileArt.filterBadge(canvas, rect, f);
+        final z = board.zoneAt(Pos(r, c));
+        if (z != null) TileArt.zoneBadge(canvas, rect, z);
+        if (hasBuckets &&
+            board.isPlayable(Pos(r, c)) &&
+            board.isExit(Pos(r, c))) {
+          _paintExit(canvas, g, Pos(r, c), board.dirAt(Pos(r, c)));
         }
       }
     }
@@ -727,12 +820,50 @@ class _BoardPainter extends CustomPainter {
     _paintFx(canvas, g);
     canvas.restore();
 
-    _paintGravity(canvas, g, before.gravity, step);
+    _paintGravity(
+      canvas,
+      g,
+      before.gravity,
+      step,
+      chevrons: !(board.bucketsToSpawn > 0 || board.bucketsOnBoard > 0),
+    );
     if (hint != null && step == null && s.dragStart == null) {
       _paintHand(canvas, g, hint);
     }
     _paintPreview(canvas, g);
     _paintCallouts(canvas, g);
+  }
+
+  /// A glowing strip on the edge where paint buckets leave the board.
+  void _paintExit(Canvas canvas, BoardGeometry g, Pos p, Gravity d) {
+    final rect = g.cellRect(p.r, p.c);
+    final w = g.cell;
+    final t = w * 0.12;
+    final strip = switch (d) {
+      Gravity.down => Rect.fromLTWH(
+        rect.left + w * 0.1,
+        rect.bottom - t,
+        w * 0.8,
+        t,
+      ),
+      Gravity.up => Rect.fromLTWH(rect.left + w * 0.1, rect.top, w * 0.8, t),
+      Gravity.left => Rect.fromLTWH(rect.left, rect.top + w * 0.1, t, w * 0.8),
+      Gravity.right => Rect.fromLTWH(
+        rect.right - t,
+        rect.top + w * 0.1,
+        t,
+        w * 0.8,
+      ),
+    };
+    final glow = 0.6 + 0.3 * sin(s.time * 4 + p.r + p.c);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(strip, Radius.circular(t)),
+      Paint()..color = const Color(0xFF7CF2B0).withValues(alpha: glow),
+    );
+    // A green arrow just outside the board, pointing out.
+    final out = Offset(d.dc.toDouble(), d.dr.toDouble());
+    final mark = rect.center + out * (w * 0.5 + g.cell * 0.36);
+    TileArt.exitMark(canvas, mark, w * 0.6, d, s.time);
   }
 
   void _paintFrame(Canvas canvas, BoardGeometry g, Board board) {
@@ -942,6 +1073,28 @@ class _BoardPainter extends CustomPainter {
               rays,
             );
           }
+        case EffectKind.inkSpread:
+          for (final src in f.targets) {
+            final from = g.center(src.dx, src.dy);
+            final e = Curves.easeOut.transform(t);
+            canvas.drawCircle(
+              Offset.lerp(from, center, e)!,
+              cell * (0.2 + 0.25 * (1 - t)),
+              Paint()
+                ..color = const Color(0xFF2A1640)
+                    .withValues(alpha: 0.8 * (1 - t)),
+            );
+          }
+        case EffectKind.drop:
+          final e = Curves.easeOut.transform(t);
+          canvas.drawCircle(
+            center,
+            cell * (0.3 + 0.9 * e),
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = cell * 0.16 * (1 - t)
+              ..color = const Color(0xFF7CF2B0).withValues(alpha: 1 - t),
+          );
         case EffectKind.splash:
           for (final target in f.targets) {
             final e = Curves.easeOut.transform(t);
@@ -1124,8 +1277,9 @@ class _BoardPainter extends CustomPainter {
     Canvas canvas,
     BoardGeometry g,
     Gravity current,
-    Step? step,
-  ) {
+    Step? step, {
+    bool chevrons = true,
+  }) {
     final gravity = step?.kind == StepKind.gravity
         ? step!.after.gravity
         : current;
@@ -1153,7 +1307,8 @@ class _BoardPainter extends CustomPainter {
     final ang = _angle(gravity);
     final dir = Offset(cos(ang), sin(ang));
     final side = Offset(-dir.dy, dir.dx);
-    const n = 3;
+    // Bucket levels show exit arrows instead.
+    final n = chevrons ? 3 : 0;
     final bob = sin(s.time * 4) * cell * 0.04;
     for (var i = 0; i < n; i++) {
       final c = Offset.lerp(a, b, (i + 1) / (n + 1))! + dir * bob;

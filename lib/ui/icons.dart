@@ -32,6 +32,7 @@ enum GameIcons {
   check,
   arrow,
   back,
+  gravity,
 }
 
 class GameIcon extends StatelessWidget {
@@ -457,6 +458,67 @@ class IconArt {
         _swap(canvas);
       case GameIcons.splash:
         _splash(canvas);
+      case GameIcons.gravity:
+        _gravity(canvas);
+    }
+  }
+
+  static void _gravity(Canvas canvas) {
+    // A star tile inside a big turning arrow: "choose where tiles fall".
+    const c = Offset(50, 52);
+    final ring = Rect.fromCircle(center: c, radius: 34);
+    canvas.drawArc(
+      ring,
+      -pi * 0.35,
+      pi * 1.55,
+      false,
+      _stroke(const Color(0xFF3B1A63), 15),
+    );
+    canvas.drawArc(
+      ring,
+      -pi * 0.35,
+      pi * 1.55,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 8
+        ..strokeCap = StrokeCap.round
+        ..shader = ui.Gradient.sweep(
+          c,
+          const [
+            Color(0xFF7CF2B0),
+            Color(0xFF2F9BFF),
+            Color(0xFFA24BF2),
+            Color(0xFF7CF2B0),
+          ],
+          const [0, 0.4, 0.8, 1],
+        ),
+    );
+    final a = -pi * 0.35;
+    final tip = c + Offset(cos(a), sin(a)) * 34;
+    final dir = Offset(-sin(a), cos(a)) * -1;
+    final nrm = Offset(-dir.dy, dir.dx);
+    final head = Path()
+      ..moveTo(tip.dx + dir.dx * 13, tip.dy + dir.dy * 13)
+      ..lineTo(tip.dx + nrm.dx * 12, tip.dy + nrm.dy * 12)
+      ..lineTo(tip.dx - nrm.dx * 12, tip.dy - nrm.dy * 12)
+      ..close();
+    canvas.drawPath(head, _stroke(const Color(0xFF3B1A63), 6));
+    canvas.drawPath(head, _fill(const Color(0xFF7CF2B0)));
+    TileArt.paint(
+      canvas,
+      c,
+      18,
+      color: TileColor.yellow,
+      special: Special.none,
+    );
+    for (final y in [80.0, 90.0]) {
+      final p = Path()
+        ..moveTo(42, y - 4)
+        ..lineTo(50, y + 2)
+        ..lineTo(58, y - 4);
+      canvas.drawPath(p, _stroke(const Color(0xFF3B1A63), 7));
+      canvas.drawPath(p, _stroke(Colors.white, 3.5));
     }
   }
 

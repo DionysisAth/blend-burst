@@ -52,6 +52,8 @@ Future<GameScreenState> openLevel(WidgetTester tester, int id) async {
   await run(tester, 300);
   await tester.tap(node);
   await run(tester, 400);
+  await tester.ensureVisible(find.byKey(const Key('play-level')));
+  await tester.pump();
   await tester.tap(find.byKey(const Key('play-level')));
   await run(tester, 600);
   expect(find.byType(GameScreen), findsOneWidget);

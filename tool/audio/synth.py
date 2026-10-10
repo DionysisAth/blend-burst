@@ -623,6 +623,49 @@ def song_game():
     return render_song(116, 16, chords, mel, style='game')
 
 
+
+def sfx_chain():
+    """A chain snapping: metallic clank partials and a click."""
+    dur = 0.7
+    t = t_axis(dur)
+    out = np.zeros(len(t))
+    for f, a, d in ((1180, 0.5, 0.18), (1730, 0.35, 0.12), (2610, 0.3, 0.09), (3920, 0.2, 0.06)):
+        out += np.sin(2 * np.pi * f * t) * np.exp(-t / d) * a
+    second = np.zeros(len(t))
+    for f, a, d in ((1420, 0.35, 0.14), (2240, 0.25, 0.08)):
+        second += np.sin(2 * np.pi * f * t) * np.exp(-t / d) * a
+    place(out, second[: int(0.5 * SR)], 0.06)
+    click = highpass(noise(dur), 3000) * np.exp(-t / 0.008) * 0.7
+    return reverb(out + click, wet=0.22)
+
+
+def sfx_ink():
+    """Thick ink: two low gloopy bubbles."""
+    dur = 0.5
+    out = np.zeros(int(dur * SR))
+    for at, f0, f1 in ((0.0, 180, 420), (0.11, 140, 360)):
+        d = 0.16
+        t = t_axis(d)
+        blop = np.sin(sweep_phase(f0, f1, len(t), SR, curve=0.7)) * np.exp(-t / 0.05)
+        place(out, blop * 0.8, at)
+    t = t_axis(dur)
+    out += lowpass(noise(dur), 700) * np.exp(-t / 0.04) * 0.4
+    return reverb(out, wet=0.18)
+
+
+def sfx_drop():
+    """A paint bucket reaching the exit: whoosh down, then a bright chime."""
+    out = np.zeros(int(1.2 * SR))
+    d = 0.3
+    t = t_axis(d)
+    whoosh = bandpass(noise(d), 600, 3000) * np.sin(np.pi * t / d) * 0.4
+    place(out, whoosh, 0)
+    for i, nm in enumerate(['C6', 'E6', 'G6', 'C7']):
+        place(out, bell(note_hz(nm), 0.7, decay=0.35) * 0.6, 0.18 + 0.06 * i)
+    place(out, sfx_coin() * 0.5, 0.2)
+    return reverb(out, wet=0.3)
+
+
 SFX = {
     'swap': sfx_swap,
     'invalid': sfx_invalid,
@@ -644,6 +687,9 @@ SFX = {
     'booster': sfx_booster,
     'praise': sfx_praise,
     'start': sfx_level_start,
+    'chain': sfx_chain,
+    'ink': sfx_ink,
+    'drop': sfx_drop,
 }
 
 

@@ -27,6 +27,12 @@ enum EffectKind {
   rowCol,
   cross3,
   board,
+
+  /// Ink crept from [Effect.targets] (the source cell) into [Effect.at].
+  inkSpread,
+
+  /// A paint bucket reached the exit at [Effect.at].
+  drop,
 }
 
 class Effect {
@@ -55,21 +61,37 @@ class BoardSnapshot {
   final Map<int, TileView> tiles;
   final List<int> glass;
   final List<bool> stain;
+  final List<int> lock;
+  final List<bool> ink;
   final Gravity gravity;
   final int score;
   final Map<TileColor, int> collected;
   final int stainsLeft;
   final int glassLeft;
+  final int locksLeft;
+  final int inkLeft;
+  final int inkCleared;
+  final int dropped;
+
+  /// Moves until gravity rotates on its own (null if it never does).
+  final int? shiftIn;
 
   const BoardSnapshot({
     required this.tiles,
     required this.glass,
     required this.stain,
+    this.lock = const [],
+    this.ink = const [],
     required this.gravity,
     required this.score,
     required this.collected,
     required this.stainsLeft,
     required this.glassLeft,
+    this.locksLeft = 0,
+    this.inkLeft = 0,
+    this.inkCleared = 0,
+    this.dropped = 0,
+    this.shiftIn,
   });
 }
 
@@ -89,6 +111,10 @@ class Step {
   final List<ScorePopup> popups;
   final List<Pos> glassHit;
 
+  /// Cells whose chain broke (the tile stays) and whose ink was cleared.
+  final List<Pos> lockHit;
+  final List<Pos> inkHit;
+
   const Step(
     this.kind,
     this.after, {
@@ -101,6 +127,8 @@ class Step {
     this.cascade = 0,
     this.popups = const [],
     this.glassHit = const [],
+    this.lockHit = const [],
+    this.inkHit = const [],
   });
 }
 
@@ -199,6 +227,18 @@ class Board {
   final List<bool> playable;
   final List<int> glass;
   final List<bool> stain;
+
+  /// Chains on locked tiles (0 = free). Locked tiles never move.
+  final List<int> lock;
+
+  /// Ink fills a cell (no tile) and spreads when left alone.
+  final List<bool> ink;
+
+  /// Color filters recolor tiles that fall into or through them.
+  final List<TileColor?> filter;
+
+  /// Per-cell gravity (gravity zones); null cells follow [gravity].
+  final List<Gravity?> zone;
   final List<Tile?> tiles;
   Gravity gravity;
   final List<TileColor> palette;
@@ -212,6 +252,31 @@ class Board {
   int _nextId = 1;
   int _pendingRotations = 0;
 
+  /// Buckets still to appear, how many may be on the board at once, and
+  /// how many reached the exit.
+  int bucketsToSpawn = 0;
+  final int bucketsMax;
+  int dropped = 0;
+
+  /// Timed gravity: rotates every [gravityEvery] moves (0 = never).
+  final int gravityEvery;
+  int movesMade = 0;
+
+  bool _inkCleared = false;
+
+  /// Set after a very long chain: filters pause and new tiles avoid
+  /// matches, so every cascade is guaranteed to settle.
+  bool _calm = false;
+
+  /// Ink cells cleared so far (ink can grow, so the goal counts these).
+  int inkClearedTotal = 0;
+
+  /// Gravity Flip: the direction to go back to after the next move, and the
+  /// rotations switch tiles made in the meantime.
+  Gravity? _flipRestore;
+  int _flipTurns = 0;
+  final bool hasZones;
+
   static const pointsPerTile = 60;
   static const pointsPerObstacle = 100;
 
@@ -221,6 +286,10 @@ class Board {
     required this.playable,
     required this.glass,
     required this.stain,
+    required this.lock,
+    required this.ink,
+    required this.filter,
+    required this.zone,
     required this.tiles,
     required this.gravity,
     required this.palette,
@@ -228,7 +297,9 @@ class Board {
     required this.switchChance,
     required this.maxSwitches,
     required this.rng,
-  });
+    this.bucketsMax = 2,
+    this.gravityEvery = 0,
+  }) : hasZones = zone.any((z) => z != null);
 
   factory Board.fromLevel(LevelDef level, Random rng) {
     final rows = level.rows, cols = level.cols, n = rows * cols;
@@ -238,6 +309,20 @@ class Board {
       playable: List.filled(n, true),
       glass: List.filled(n, 0),
       stain: List.filled(n, false),
+      lock: List.filled(n, 0),
+      ink: List.filled(n, false),
+      filter: [
+        for (var i = 0; i < n; i++)
+          level.filters == null
+              ? null
+              : tileColorFromCode(level.filters![i ~/ cols][i % cols]),
+      ],
+      zone: [
+        for (var i = 0; i < n; i++)
+          level.zones == null
+              ? null
+              : gravityFromArrow(level.zones![i ~/ cols][i % cols]),
+      ],
       tiles: List.filled(n, null),
       gravity: level.gravity,
       palette: List.of(level.colors),
@@ -245,6 +330,8 @@ class Board {
       switchChance: level.switchChance,
       maxSwitches: level.maxSwitches,
       rng: rng,
+      bucketsMax: level.bucketsOnBoard,
+      gravityEvery: level.gravityEvery,
     );
     for (var r = 0; r < rows; r++) {
       for (var c = 0; c < cols; c++) {
@@ -253,9 +340,12 @@ class Board {
         b.playable[i] = ch != '#';
         b.stain[i] = ch == 's';
         b.glass[i] = '123'.contains(ch) ? int.parse(ch) : 0;
+        b.lock[i] = ch == 'k' ? 1 : (ch == 'K' ? 2 : 0);
+        b.ink[i] = ch == 'i';
       }
     }
     b._fillInitial(level.tiles);
+    b.bucketsToSpawn = max(0, level.buckets - b.bucketsOnBoard);
     return b;
   }
 
@@ -266,6 +356,10 @@ class Board {
       playable: List.of(playable),
       glass: List.of(glass),
       stain: List.of(stain),
+      lock: List.of(lock),
+      ink: List.of(ink),
+      filter: filter,
+      zone: zone,
       tiles: tiles.map((t) => t?.copy()).toList(),
       gravity: gravity,
       palette: palette,
@@ -273,10 +367,18 @@ class Board {
       switchChance: switchChance,
       maxSwitches: maxSwitches,
       rng: rng ?? Random(this.rng.nextInt(1 << 31)),
+      bucketsMax: bucketsMax,
+      gravityEvery: gravityEvery,
     );
     b.score = score;
     b.collected.addAll(collected);
     b._nextId = _nextId;
+    b.bucketsToSpawn = bucketsToSpawn;
+    b.dropped = dropped;
+    b.inkClearedTotal = inkClearedTotal;
+    b.movesMade = movesMade;
+    b._flipRestore = _flipRestore;
+    b._flipTurns = _flipTurns;
     return b;
   }
 
@@ -285,10 +387,20 @@ class Board {
   int _i(Pos p) => p.r * cols + p.c;
   bool inBounds(Pos p) => p.r >= 0 && p.r < rows && p.c >= 0 && p.c < cols;
   bool isPlayable(Pos p) => inBounds(p) && playable[_i(p)];
-  bool canHoldTile(Pos p) => isPlayable(p) && glass[_i(p)] == 0;
+  bool canHoldTile(Pos p) => isPlayable(p) && glass[_i(p)] == 0 && !ink[_i(p)];
+
+  /// Holds a tile that can move (swap and fall): not locked.
+  bool isMovable(Pos p) => canHoldTile(p) && lock[_i(p)] == 0;
   Tile? tileAt(Pos p) => inBounds(p) ? tiles[_i(p)] : null;
   int glassAt(Pos p) => inBounds(p) ? glass[_i(p)] : 0;
   bool stainAt(Pos p) => inBounds(p) && stain[_i(p)];
+  int lockAt(Pos p) => inBounds(p) ? lock[_i(p)] : 0;
+  bool inkAt(Pos p) => inBounds(p) && ink[_i(p)];
+  TileColor? filterAt(Pos p) => inBounds(p) ? filter[_i(p)] : null;
+  Gravity? zoneAt(Pos p) => inBounds(p) ? zone[_i(p)] : null;
+
+  /// The direction tiles fall from [p].
+  Gravity dirAt(Pos p) => zoneAt(p) ?? gravity;
 
   Iterable<Pos> get allPositions sync* {
     for (var r = 0; r < rows; r++) {
@@ -300,6 +412,13 @@ class Board {
 
   int get stainsLeft => stain.where((s) => s).length;
   int get glassLeft => glass.where((g) => g > 0).length;
+  int get locksLeft => lock.where((l) => l > 0).length;
+  int get inkLeft => ink.where((i) => i).length;
+  int get bucketsOnBoard => tiles.where((t) => t?.bucket ?? false).length;
+
+  /// Moves until the next timed gravity shift, or null.
+  int? get shiftIn =>
+      gravityEvery > 0 ? gravityEvery - movesMade % gravityEvery : null;
   int get _switchCount => tiles.where((t) => t?.gravitySwitch ?? false).length;
 
   static const _dirs = [Pos(0, 1), Pos(1, 0), Pos(0, -1), Pos(-1, 0)];
@@ -316,11 +435,18 @@ class Board {
       tiles: map,
       glass: List.unmodifiable(glass),
       stain: List.unmodifiable(stain),
+      lock: List.unmodifiable(lock),
+      ink: List.unmodifiable(ink),
       gravity: gravity,
       score: score,
       collected: Map.unmodifiable(collected),
       stainsLeft: stainsLeft,
       glassLeft: glassLeft,
+      locksLeft: locksLeft,
+      inkLeft: inkLeft,
+      inkCleared: inkClearedTotal,
+      dropped: dropped,
+      shiftIn: shiftIn,
     );
   }
 
@@ -331,14 +457,23 @@ class Board {
     for (final p in allPositions) {
       final i = _i(p);
       final t = tiles[i];
-      if (!playable[i] && (t != null || glass[i] > 0 || stain[i])) {
+      if (!playable[i] &&
+          (t != null || glass[i] > 0 || stain[i] || ink[i] || lock[i] > 0)) {
         return 'hole at $p holds content';
       }
       if (glass[i] > 0 && t != null) return 'glass at $p holds a tile';
+      if (ink[i] && t != null) return 'ink at $p holds a tile';
+      if (lock[i] > 0 && t == null) return 'lock at $p holds no tile';
       if (canHoldTile(p) && t == null) return 'empty cell at $p';
       if (t != null) {
         if (!ids.add(t.id)) return 'duplicate tile id ${t.id}';
-        if (t.special.hasColor && t.color == null) return 'colorless $p';
+        if (t.bucket) {
+          if (t.color != null || t.special != Special.none) {
+            return 'bucket at $p has a color or special';
+          }
+        } else if (t.special.hasColor && t.color == null) {
+          return 'colorless $p';
+        }
       }
     }
     if (findMatches().isNotEmpty) return 'unresolved match on board';
@@ -405,6 +540,8 @@ class Board {
         final color = tileColorFromCode(ch);
         if (color != null) {
           tiles[_i(p)] = Tile(_nextId++, color);
+        } else if (ch == 'D') {
+          tiles[_i(p)] = Tile(_nextId++, null, bucket: true);
         } else if (ch == 'g') {
           randomCells.add(p);
           tiles[_i(p)] = Tile(_nextId++, null, gravitySwitch: true);
@@ -554,19 +691,26 @@ class Board {
     } else {
       return (Special.none, null);
     }
+    // A locked tile stays put when matched (its chain breaks), so a special
+    // is never created on one.
+    bool free(Pos p) => lock[_i(p)] == 0;
     for (final p in preferred) {
-      if (g.cells.contains(p)) return (special, p);
+      if (g.cells.contains(p) && free(p)) return (special, p);
     }
     if (special == Special.bomb) {
       final h = g._runs.where((r) => r.horizontal).expand((r) => r.cells);
       final v = g._runs.where((r) => !r.horizontal).expand((r) => r.cells);
-      final cross = h.toSet().intersection(v.toSet());
+      final cross = h.toSet().intersection(v.toSet()).where(free);
       if (cross.isNotEmpty) return (special, cross.first);
     }
     final run = g._runs.reduce(
       (a, b) => a.cells.length >= b.cells.length ? a : b,
     );
-    return (special, run.cells[run.cells.length ~/ 2]);
+    final mid = run.cells[run.cells.length ~/ 2];
+    if (free(mid)) return (special, mid);
+    final any = g.cells.where(free);
+    if (any.isEmpty) return (Special.none, null);
+    return (special, any.first);
   }
 
   // ------------------------------------------------------------ resolution
@@ -700,6 +844,8 @@ class Board {
       final cleared = <Cleared>[if (first) ...preCleared];
       var gained = first ? preGained : 0;
       final glassHit = <Pos>[];
+      final lockHit = <Pos>[];
+      final inkHit = <Pos>[];
       for (final a in acts) {
         hits.addAll(_activate(a, effs));
       }
@@ -715,8 +861,26 @@ class Board {
           score += pointsPerObstacle;
           continue;
         }
+        if (ink[i]) {
+          ink[i] = false;
+          _inkCleared = true;
+          inkClearedTotal++;
+          inkHit.add(p);
+          gained += pointsPerObstacle;
+          score += pointsPerObstacle;
+          continue;
+        }
         final t = tiles[i];
         if (t == null) continue;
+        // Chains break first, even on a bucket (which itself is immune).
+        if (lock[i] > 0) {
+          lock[i]--;
+          lockHit.add(p);
+          gained += pointsPerObstacle;
+          score += pointsPerObstacle;
+          continue;
+        }
+        if (t.bucket) continue;
         gained += _consume(p, t, cleared, mult);
         if (t.special != Special.none) nextActs.add(_Act.fromTile(t, p));
       }
@@ -725,11 +889,15 @@ class Board {
       }
       if (cleared.isNotEmpty ||
           glassHit.isNotEmpty ||
+          lockHit.isNotEmpty ||
+          inkHit.isNotEmpty ||
           effs.isNotEmpty ||
           (first && creations.isNotEmpty)) {
         final popup = _popupFor([
           ...cleared.map((c) => c.at),
           ...glassHit,
+          ...lockHit,
+          ...inkHit,
         ], gained);
         out.add(
           Step(
@@ -740,6 +908,8 @@ class Board {
             cascade: cascade,
             popups: [?popup],
             glassHit: glassHit,
+            lockHit: lockHit,
+            inkHit: inkHit,
           ),
         );
       }
@@ -757,9 +927,13 @@ class Board {
       for (var k = 0; k < turns; k++) {
         gravity = gravity.rotatedCw;
       }
+      if (_flipRestore != null) _flipTurns += turns;
       out.add(Step(StepKind.gravity, snapshot(), cascade: cascade));
     }
     _fall(out, cascade);
+    for (var guard = 0; guard < 12 && _collectBuckets(out, cascade); guard++) {
+      _fall(out, cascade);
+    }
   }
 
   bool _hasEmpty() {
@@ -769,9 +943,78 @@ class Board {
     return false;
   }
 
+  /// True when nothing playable lies beyond [p] in its gravity direction:
+  /// a bucket there has reached the exit.
+  bool isExit(Pos p) {
+    final d = dirAt(p);
+    var q = Pos(p.r + d.dr, p.c + d.dc);
+    while (inBounds(q)) {
+      if (isPlayable(q)) return false;
+      q = Pos(q.r + d.dr, q.c + d.dc);
+    }
+    return true;
+  }
+
+  bool _collectBuckets(List<Step> out, int cascade) {
+    final cleared = <Cleared>[];
+    final effects = <Effect>[];
+    for (final p in allPositions) {
+      final t = tiles[_i(p)];
+      if (t == null || !t.bucket || !isExit(p)) continue;
+      tiles[_i(p)] = null;
+      dropped++;
+      score += 500;
+      cleared.add(Cleared(t.id, p, null, Special.none));
+      effects.add(Effect(EffectKind.drop, p));
+    }
+    if (cleared.isEmpty) return false;
+    out.add(
+      Step(
+        StepKind.clear,
+        snapshot(),
+        cleared: cleared,
+        effects: effects,
+        cascade: cascade,
+        popups: [
+          for (final c in cleared)
+            ScorePopup(PosD(c.at.r.toDouble(), c.at.c.toDouble()), 500),
+        ],
+      ),
+    );
+    return true;
+  }
+
+  /// A new tile from the top of a segment: sometimes a paint bucket.
+  Tile _spawnTile(Pos at) {
+    if (bucketsToSpawn > 0 &&
+        bucketsOnBoard < bucketsMax &&
+        rng.nextDouble() < 0.2) {
+      bucketsToSpawn--;
+      return Tile(_nextId++, null, bucket: true);
+    }
+    return _newTile(_calm ? _safeColor(at) : _randomColor());
+  }
+
+  /// Recolors [t] when it passes a color filter at [p].
+  void _filterInto(Pos p, Tile t) {
+    final f = filter[_i(p)];
+    if (f == null ||
+        _calm ||
+        t.bucket ||
+        !t.special.hasColor ||
+        t.color == null) {
+      return;
+    }
+    t.color = f;
+  }
+
   /// Moves tiles in the gravity direction and spawns new ones at the
   /// upstream end of every segment (segments are split by holes and glass).
   void _fall(List<Step> out, int cascade) {
+    if (hasZones) {
+      _fallZones(out, cascade);
+      return;
+    }
     final g = gravity;
     final spawnFrom = <int, PosD>{};
     final spawnEntry = <int, Pos>{};
@@ -796,19 +1039,34 @@ class Board {
       var seg = <Pos>[];
       void flush() {
         if (seg.isEmpty) return;
-        final existing = [
-          for (final p in seg)
-            if (tiles[_i(p)] != null) tiles[_i(p)]!,
-        ];
+        final existing = <Tile>[];
+        final from = <int>[];
+        for (var k = 0; k < seg.length; k++) {
+          final t = tiles[_i(seg[k])];
+          if (t != null) {
+            existing.add(t);
+            from.add(k);
+          }
+        }
         final missing = seg.length - existing.length;
+        // Tiles pass every cell between where they were and where they
+        // land; the filter closest to the landing cell wins.
+        void filterPath(Tile t, int land, int start) {
+          for (var k = start - 1; k >= land; k--) {
+            _filterInto(seg[k], t);
+          }
+        }
+
         for (var k = 0; k < seg.length; k++) {
           final p = seg[k];
           if (k < existing.length) {
             if (!identical(tiles[_i(p)], existing[k])) changed = true;
             tiles[_i(p)] = existing[k];
+            filterPath(existing[k], k, from[k]);
           } else {
-            final t = _newTile(_randomColor());
+            final t = _spawnTile(p);
             tiles[_i(p)] = t;
+            filterPath(t, k, seg.length);
             final j = k + missing;
             spawnFrom[t.id] = PosD(
               (seg[0].r - j * g.dr).toDouble(),
@@ -822,13 +1080,87 @@ class Board {
       }
 
       for (final p in line) {
-        if (canHoldTile(p)) {
+        if (isMovable(p)) {
           seg.add(p);
         } else {
           flush();
         }
       }
       flush();
+    }
+    if (changed) {
+      out.add(
+        Step(
+          StepKind.fall,
+          snapshot(),
+          spawnFrom: spawnFrom,
+          spawnEntry: spawnEntry,
+          cascade: cascade,
+        ),
+      );
+    }
+  }
+
+  /// Falling with gravity zones: every cell has its own direction, so tiles
+  /// step cell by cell along it, and new tiles appear at cells nothing can
+  /// fall into.
+  void _fallZones(List<Step> out, int cascade) {
+    final spawnFrom = <int, PosD>{};
+    final spawnEntry = <int, Pos>{};
+    final spawned = <Pos, int>{};
+    var changed = false;
+    Pos next(Pos p) {
+      final d = dirAt(p);
+      return Pos(p.r + d.dr, p.c + d.dc);
+    }
+
+    bool fed(Pos p) {
+      for (final d in _dirs) {
+        final q = p + d;
+        if (isMovable(q) && next(q) == p) return true;
+      }
+      return false;
+    }
+
+    void spawn(Pos p, {bool inPlace = false}) {
+      final t = _spawnTile(p);
+      tiles[_i(p)] = t;
+      final k = spawned[p] = (spawned[p] ?? 0) + 1;
+      final d = dirAt(p);
+      spawnFrom[t.id] = inPlace
+          ? PosD(p.r.toDouble(), p.c.toDouble())
+          : PosD((p.r - d.dr * k).toDouble(), (p.c - d.dc * k).toDouble());
+      spawnEntry[t.id] = p;
+      _filterInto(p, t);
+    }
+
+    for (var it = 0; it < rows * cols * 3; it++) {
+      var moved = false;
+      for (final p in allPositions) {
+        final t = tiles[_i(p)];
+        if (t == null || !isMovable(p)) continue;
+        final q = next(p);
+        if (!isMovable(q) || tiles[_i(q)] != null) continue;
+        tiles[_i(q)] = t;
+        tiles[_i(p)] = null;
+        _filterInto(q, t);
+        moved = true;
+      }
+      for (final p in allPositions) {
+        if (isMovable(p) && tiles[_i(p)] == null && !fed(p)) {
+          spawn(p);
+          moved = true;
+        }
+      }
+      if (!moved) break;
+      changed = true;
+    }
+    // A loop of zones with no way in would stay empty: fill it in place.
+    for (final p in allPositions) {
+      if (canHoldTile(p) && tiles[_i(p)] == null) {
+        spawn(p, inPlace: true);
+        changed = true;
+      }
     }
     if (changed) {
       out.add(
@@ -850,7 +1182,9 @@ class Board {
     int startCascade = 1,
   }) {
     var cascade = startCascade;
+    final wasCalm = _calm;
     for (var guard = 0; guard < 80; guard++) {
+      if (guard == 12) _calm = true;
       final groups = findMatches();
       if (groups.isEmpty) {
         if (_hasEmpty() || _pendingRotations > 0) {
@@ -899,7 +1233,7 @@ class Board {
         }
         for (final p in g.cells) {
           for (final q in _neighbors(p)) {
-            if (glass[_i(q)] > 0) hits.add(q);
+            if (glass[_i(q)] > 0 || ink[_i(q)]) hits.add(q);
           }
         }
       }
@@ -916,6 +1250,7 @@ class Board {
       _afterWaves(out, cascade);
       cascade++;
     }
+    _calm = wasCalm;
   }
 
   void _ensureMoves(List<Step> out) {
@@ -925,7 +1260,7 @@ class Board {
   void _shuffle(List<Step> out) {
     final cells = [
       for (final p in allPositions)
-        if (tileAt(p)?.special == Special.none) p,
+        if ((tileAt(p)?.isPlain ?? false) && lockAt(p) == 0) p,
     ];
     if (cells.length < 3) return;
     final pool = [for (final p in cells) tiles[_i(p)]!];
@@ -969,7 +1304,7 @@ class Board {
 
   /// What swiping [a] into [b] would do, without changing the board.
   MoveKind classify(Pos a, Pos b) {
-    if (!a.isAdjacent(b) || !canHoldTile(a) || !canHoldTile(b)) {
+    if (!a.isAdjacent(b) || !isMovable(a) || !isMovable(b)) {
       return MoveKind.none;
     }
     final ta = tileAt(a), tb = tileAt(b);
@@ -1004,6 +1339,7 @@ class Board {
   MoveOutcome swipe(Pos a, Pos b) {
     final kind = classify(a, b);
     final out = <Step>[];
+    _inkCleared = false;
     switch (kind) {
       case MoveKind.none:
         return MoveOutcome.none;
@@ -1031,8 +1367,66 @@ class Board {
       case MoveKind.booster:
         return MoveOutcome.none;
     }
+    _endMove(out);
     _ensureMoves(out);
     return MoveOutcome(out, true, kind);
+  }
+
+  /// After every move that used a move: ink spreads unless some was
+  /// cleared, a Gravity Flip wears off, and timed gravity may rotate.
+  void _endMove(List<Step> out) {
+    movesMade++;
+    _spreadInk(out);
+    final restore = _flipRestore;
+    if (restore != null) {
+      var g = restore;
+      for (var k = 0; k < _flipTurns % 4; k++) {
+        g = g.rotatedCw;
+      }
+      _flipRestore = null;
+      _flipTurns = 0;
+      if (g != gravity) {
+        gravity = g;
+        out.add(Step(StepKind.gravity, snapshot()));
+        _afterWaves(out, 1);
+        _resolve(out, startCascade: 2);
+      }
+    }
+    if (gravityEvery > 0 && movesMade % gravityEvery == 0) {
+      gravity = gravity.rotatedCw;
+      out.add(Step(StepKind.gravity, snapshot()));
+      _afterWaves(out, 1);
+      _resolve(out, startCascade: 2);
+    }
+  }
+
+  void _spreadInk(List<Step> out) {
+    if (_inkCleared || !ink.contains(true)) return;
+    final options = <(Pos, Pos)>[];
+    for (final p in allPositions) {
+      if (!ink[_i(p)]) continue;
+      for (final q in _neighbors(p)) {
+        final t = tileAt(q);
+        if (t != null && t.isPlain && lockAt(q) == 0 && glassAt(q) == 0) {
+          options.add((p, q));
+        }
+      }
+    }
+    if (options.isEmpty) return;
+    final (from, to) = options[rng.nextInt(options.length)];
+    final t = tiles[_i(to)]!;
+    tiles[_i(to)] = null;
+    ink[_i(to)] = true;
+    out.add(
+      Step(
+        StepKind.transform,
+        snapshot(),
+        cleared: [Cleared(t.id, to, t.color, Special.none)],
+        effects: [
+          Effect(EffectKind.inkSpread, to, targets: [from]),
+        ],
+      ),
+    );
   }
 
   void _blend(Pos a, Pos b, MoveKind kind, List<Step> out) {
@@ -1147,8 +1541,11 @@ class Board {
   /// Activates a special in place (tap activation).
   MoveOutcome tapSpecial(Pos p) {
     final t = tileAt(p);
-    if (t == null || t.special == Special.none) return MoveOutcome.none;
+    if (t == null || t.special == Special.none || lockAt(p) > 0) {
+      return MoveOutcome.none;
+    }
     final out = <Step>[];
+    _inkCleared = false;
     final pre = <Cleared>[];
     final gained = _consume(p, t, pre, 1);
     _runWaves(
@@ -1161,6 +1558,7 @@ class Board {
     );
     _afterWaves(out, 1);
     _resolve(out, startCascade: 2);
+    _endMove(out);
     _ensureMoves(out);
     return MoveOutcome(out, true, MoveKind.special);
   }
@@ -1169,7 +1567,9 @@ class Board {
 
   /// Brush: removes one tile (or one glass layer). Does not use a move.
   MoveOutcome brush(Pos p) {
-    if (!isPlayable(p) || (tileAt(p) == null && glassAt(p) == 0)) {
+    if (!isPlayable(p) ||
+        (tileAt(p) == null && glassAt(p) == 0 && !inkAt(p)) ||
+        (tileAt(p)?.bucket ?? false)) {
       return MoveOutcome.none;
     }
     final out = <Step>[];
@@ -1182,7 +1582,11 @@ class Board {
 
   /// Free Swap: swaps any two tiles, even far apart. Does not use a move.
   MoveOutcome freeSwap(Pos a, Pos b) {
-    if (a == b || tileAt(a) == null || tileAt(b) == null) {
+    if (a == b ||
+        tileAt(a) == null ||
+        tileAt(b) == null ||
+        !isMovable(a) ||
+        !isMovable(b)) {
       return MoveOutcome.none;
     }
     final out = <Step>[];
@@ -1201,7 +1605,7 @@ class Board {
     if (color == null) return MoveOutcome.none;
     for (final q in _row(p.r)) {
       final u = tileAt(q);
-      if (u != null && u.special.hasColor) u.color = color;
+      if (u != null && !u.bucket && u.special.hasColor) u.color = color;
     }
     final out = <Step>[
       Step(
@@ -1222,12 +1626,48 @@ class Board {
     return MoveOutcome(out, false, MoveKind.booster);
   }
 
+  /// Gravity Flip booster: tiles fall towards [g] during the next move,
+  /// then gravity goes back. Does not use a move.
+  MoveOutcome flipGravity(Gravity g) {
+    if (g == gravity && _flipRestore == null) return MoveOutcome.none;
+    _flipRestore ??= gravity;
+    gravity = g;
+    final out = <Step>[Step(StepKind.gravity, snapshot())];
+    _afterWaves(out, 1);
+    _resolve(out, startCascade: 2);
+    _ensureMoves(out);
+    return MoveOutcome(out, false, MoveKind.booster);
+  }
+
+  /// Gravity the board returns to after a Gravity Flip (null if none).
+  Gravity? get flipRestore => _flipRestore;
+
+  /// Pre-level booster: turns a random plain tile into [special].
+  /// Returns where, or null if there is no room.
+  Pos? placeSpecial(Special special) {
+    final cells = [
+      for (final p in allPositions)
+        if ((tileAt(p)?.isPlain ?? false) &&
+            lockAt(p) == 0 &&
+            !(tileAt(p)!.gravitySwitch))
+          p,
+    ];
+    if (cells.isEmpty) return null;
+    final p = cells[rng.nextInt(cells.length)];
+    final t = tiles[_i(p)]!;
+    t.special = special;
+    if (special == Special.prism || special == Special.whiteBurst) {
+      t.color = null;
+    }
+    return p;
+  }
+
   /// End-of-level finale: leftover moves become line blasters that fire.
   List<Step> sugarRush(int movesLeft) {
     final out = <Step>[];
     final candidates = [
       for (final p in allPositions)
-        if (tileAt(p)?.special == Special.none) p,
+        if ((tileAt(p)?.isPlain ?? false) && lockAt(p) == 0) p,
     ]..shuffle(rng);
     final picked = candidates.take(min(movesLeft, 15)).toList();
     if (picked.isNotEmpty) {

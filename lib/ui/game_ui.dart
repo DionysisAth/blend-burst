@@ -563,10 +563,11 @@ Future<T?> showGameDialog<T>(
     barrierLabel: 'dialog',
     barrierColor: const Color(0x993B1A63),
     transitionDuration: const Duration(milliseconds: 380),
+    // Scrolls on short screens instead of overflowing.
     pageBuilder: (ctx, _, _) => SafeArea(
       child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Material(

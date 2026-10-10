@@ -47,6 +47,8 @@ void main() {
     await run(tester, 500);
     await tester.tap(node);
     expect(await waitFor(tester, find.byKey(const Key('play-level'))), isTrue);
+    await tester.ensureVisible(find.byKey(const Key('play-level')));
+    await tester.pump();
     await tester.tap(find.byKey(const Key('play-level')));
     expect(await waitFor(tester, find.byType(GameScreen)), isTrue);
     await run(tester, 800);

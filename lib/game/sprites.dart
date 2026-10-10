@@ -64,8 +64,8 @@ class SpriteCache {
     }
   }
 
-  ui.Image? _tile(TileColor? color, Special special) {
-    final key = (color?.index ?? 15) * 16 + special.index;
+  ui.Image? _tile(TileColor? color, Special special, {bool bucket = false}) {
+    final key = bucket ? 9999 : (color?.index ?? 15) * 16 + special.index;
     final cached = _tiles[key];
     if (cached != null) return cached;
     final r = _radius * _dpr;
@@ -77,6 +77,7 @@ class SpriteCache {
         r,
         color: color,
         special: special,
+        bucket: bucket,
       );
     });
     if (image != null) _tiles[key] = image;
@@ -92,8 +93,9 @@ class SpriteCache {
     TileColor? color,
     Special special, {
     double rotation = 0,
+    bool bucket = false,
   }) {
-    final image = _tile(color, special);
+    final image = _tile(color, special, bucket: bucket);
     if (image == null) return false;
     canvas.save();
     canvas.translate(center.dx, center.dy);

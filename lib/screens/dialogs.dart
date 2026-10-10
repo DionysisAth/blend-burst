@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -6,7 +7,9 @@ import '../app/app_state.dart';
 import '../app/audio.dart';
 import '../app/scope.dart';
 import '../core/level.dart';
+import '../core/models.dart';
 import '../core/session.dart';
+import '../ui/art_cache.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
@@ -43,9 +46,15 @@ class InsetBox extends StatelessWidget {
 
 // ------------------------------------------------------------- level start
 
-Future<bool> showLevelStart(BuildContext context, LevelDef level) async {
+/// Shows the level card. Returns the chosen pre-level boosters when the
+/// player taps Play, or null if they close it.
+Future<Set<BoosterType>?> showLevelStart(
+  BuildContext context,
+  LevelDef level,
+) async {
   final scope = AppScope.read(context);
   final stars = scope.app.starsFor(level.id);
+  final chosen = <BoosterType>{};
   final result = await showGameDialog<bool>(
     context,
     dismissible: true,
@@ -132,6 +141,11 @@ Future<bool> showLevelStart(BuildContext context, LevelDef level) async {
               GameText('${level.moves} moves', size: 20, color: Palette.sky),
             ],
           ),
+          // Pre-level boosters, once the basics have been taught.
+          if (level.id >= 6) ...[
+            const SizedBox(height: 12),
+            _PreBoosters(chosen: chosen),
+          ],
           const SizedBox(height: 16),
           CandyButton.label(
             'Play',
@@ -145,7 +159,225 @@ Future<bool> showLevelStart(BuildContext context, LevelDef level) async {
       ),
     ),
   );
-  return result ?? false;
+  return result == true ? chosen : null;
+}
+
+class _PreBoosters extends StatefulWidget {
+  final Set<BoosterType> chosen;
+  const _PreBoosters({required this.chosen});
+
+  @override
+  State<_PreBoosters> createState() => _PreBoostersState();
+}
+
+class _PreBoostersState extends State<_PreBoosters> {
+  Future<void> _toggle(BoosterType t) async {
+    final scope = AppScope.read(context);
+    final app = scope.app;
+    scope.audio.sfx(Sfx.click);
+    if (widget.chosen.remove(t)) {
+      setState(() {});
+      return;
+    }
+    if (app.boosterCount(t) <= 0) {
+      final buy = await confirm(
+        context,
+        'Get ${t.label}',
+        '${t.help} Buy one for ${AppState.boosterCost} coins?',
+        ok: 'Buy',
+      );
+      if (!buy || !mounted) return;
+      if (!app.buyBooster(t)) {
+        await confirm(
+          context,
+          'Not enough coins',
+          'Win levels to earn more coins!',
+          ok: 'OK',
+          cancel: 'Close',
+        );
+        return;
+      }
+      scope.audio.sfx(Sfx.coin);
+    }
+    setState(() => widget.chosen.add(t));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context).app;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Start with',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            color: Palette.plum,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            for (final t in BoosterInfo.preLevel)
+              Semantics(
+                button: true,
+                selected: widget.chosen.contains(t),
+                label: 'Start with ${t.label}',
+                child: GestureDetector(
+                  key: Key('pre-${t.name}'),
+                  onTap: () => _toggle(t),
+                  child: _PreBoosterChip(
+                    type: t,
+                    count: app.boosterCount(t),
+                    selected: widget.chosen.contains(t),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PreBoosterChip extends StatelessWidget {
+  final BoosterType type;
+  final int count;
+  final bool selected;
+  const _PreBoosterChip({
+    required this.type,
+    required this.count,
+    required this.selected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: selected ? 1.1 : 1,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutBack,
+      child: SizedBox(
+        width: 72,
+        height: 72,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: CachedDecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected
+                      ? const Color(0xFFFFF3B0)
+                      : const Color(0xFFF3E4FF),
+                  border: Border.all(
+                    color: selected ? Palette.sun : const Color(0xFFD8BDF5),
+                    width: selected ? 5 : 3,
+                  ),
+                ),
+                child: Center(child: boosterArt(type, size: 46)),
+              ),
+            ),
+            Positioned(
+              right: -4,
+              top: -4,
+              child: selected
+                  ? Container(
+                      width: 28,
+                      height: 28,
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF22B84C),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const GameIcon(GameIcons.check),
+                    )
+                  : count > 0
+                  ? CountBadge('$count')
+                  : const CountBadge('+', color: Color(0xFF22B84C)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --------------------------------------------------------- gravity picker
+
+/// Lets the player choose where tiles fall during their next move.
+Future<Gravity?> showGravityPicker(BuildContext context, Gravity current) {
+  Widget arrow(BuildContext ctx, Gravity g) {
+    final angle = switch (g) {
+      Gravity.down => pi / 2,
+      Gravity.up => -pi / 2,
+      Gravity.left => pi,
+      Gravity.right => 0.0,
+    };
+    final isCurrent = g == current;
+    return Semantics(
+      button: true,
+      label: 'Fall ${g.name}',
+      child: GestureDetector(
+        key: Key('flip-${g.name}'),
+        onTap: isCurrent ? null : () => Navigator.of(ctx).pop(g),
+        child: Opacity(
+          opacity: isCurrent ? 0.35 : 1,
+          child: Container(
+            width: 74,
+            height: 74,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF6A3FD0),
+              border: Border.all(color: Colors.white, width: 4),
+            ),
+            child: Transform.rotate(
+              angle: angle,
+              child: const GameIcon(GameIcons.arrow, size: 44),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  return showGameDialog<Gravity>(
+    context,
+    dismissible: true,
+    builder: (ctx) => GamePanel(
+      title: 'Gravity Flip',
+      ribbonColor: Palette.grape,
+      onClose: () => Navigator.of(ctx).pop(),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Where should tiles fall during your next move?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Palette.ink,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 14),
+          arrow(ctx, Gravity.up),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              arrow(ctx, Gravity.left),
+              const SizedBox(width: 78),
+              arrow(ctx, Gravity.right),
+            ],
+          ),
+          arrow(ctx, Gravity.down),
+        ],
+      ),
+    ),
+  );
 }
 
 // --------------------------------------------------------------- tutorial
@@ -333,10 +565,7 @@ class _WinPanelState extends State<_WinPanel>
                             GameText('+${widget.reward!.coins}', size: 24),
                             if (widget.reward!.booster != null) ...[
                               const SizedBox(width: 18),
-                              GameIcon(
-                                boosterIcon(widget.reward!.booster!),
-                                size: 34,
-                              ),
+                              boosterArt(widget.reward!.booster!),
                               const SizedBox(width: 4),
                               const GameText('+1', size: 24),
                             ],
@@ -381,10 +610,24 @@ class _WinPanelState extends State<_WinPanel>
   }
 }
 
-GameIcons boosterIcon(BoosterType t) => switch (t) {
-  BoosterType.brush => GameIcons.brush,
-  BoosterType.freeSwap => GameIcons.swap,
-  BoosterType.colorSplash => GameIcons.splash,
+/// The picture of a booster: a drawn icon, or for pre-level boosters the
+/// special tile the level starts with.
+Widget boosterArt(BoosterType t, {double size = 34}) => switch (t) {
+  BoosterType.brush => GameIcon(GameIcons.brush, size: size),
+  BoosterType.freeSwap => GameIcon(GameIcons.swap, size: size),
+  BoosterType.colorSplash => GameIcon(GameIcons.splash, size: size),
+  BoosterType.gravityFlip => GameIcon(GameIcons.gravity, size: size),
+  BoosterType.startLine => MiniTile(
+    color: TileColor.blue,
+    special: Special.lineH,
+    size: size,
+  ),
+  BoosterType.startBomb => MiniTile(
+    color: TileColor.red,
+    special: Special.bomb,
+    size: size,
+  ),
+  BoosterType.startPrism => MiniTile(special: Special.prism, size: size),
 };
 
 // ------------------------------------------------------------ out of moves

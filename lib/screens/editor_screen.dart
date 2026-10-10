@@ -22,6 +22,13 @@ enum EditTool {
   switchTile,
   tile,
   clearTile,
+  lock1,
+  lock2,
+  ink,
+  bucket,
+  filter,
+  zone,
+  clearOverlay,
 }
 
 BotReport _evaluate(LevelDef level) =>
@@ -42,6 +49,12 @@ class EditorScreen extends StatefulWidget {
 class _EditorScreenState extends State<EditorScreen> {
   List<List<String>> layout = [];
   List<List<String>> tiles = [];
+  List<List<String>> filters = [];
+  List<List<String>> zones = [];
+  int buckets = 0;
+  int bucketsOnBoard = 2;
+  int gravityEvery = 0;
+  Gravity zoneDir = Gravity.right;
   int id = 100;
   String name = 'Custom level';
   int moves = 20;
@@ -81,6 +94,8 @@ class _EditorScreenState extends State<EditorScreen> {
     setState(() {
       layout = grow(layout);
       tiles = grow(tiles);
+      filters = grow(filters);
+      zones = grow(zones);
     });
   }
 
@@ -98,16 +113,23 @@ class _EditorScreenState extends State<EditorScreen> {
       stars = List.of(l.stars);
       tutorial = l.tutorial;
       layout = [for (final row in l.layout) row.split('')];
-      tiles = l.tiles == null
+      List<List<String>> grid(List<String>? g) => g == null
           ? [for (final row in l.layout) List.filled(row.length, '.')]
-          : [for (final row in l.tiles!) row.split('')];
+          : [for (final row in g) row.split('')];
+      tiles = grid(l.tiles);
+      filters = grid(l.filters);
+      zones = grid(l.zones);
+      buckets = l.buckets;
+      bucketsOnBoard = l.bucketsOnBoard;
+      gravityEvery = l.gravityEvery;
       botResult = null;
     });
   }
 
   LevelDef? _build({bool quiet = false}) {
     try {
-      final hasTiles = tiles.any((r) => r.any((ch) => ch != '.'));
+      bool used(List<List<String>> g) => g.any((r) => r.any((ch) => ch != '.'));
+      final hasTiles = used(tiles);
       return LevelDef(
         id: id,
         name: name,
@@ -122,6 +144,11 @@ class _EditorScreenState extends State<EditorScreen> {
         switchChance: switchChance,
         hard: hard,
         tutorial: tutorial,
+        filters: used(filters) ? [for (final r in filters) r.join()] : null,
+        zones: used(zones) ? [for (final r in zones) r.join()] : null,
+        buckets: buckets,
+        bucketsOnBoard: bucketsOnBoard,
+        gravityEvery: gravityEvery,
       );
     } on FormatException catch (e) {
       if (!quiet) _toast(e.message);
@@ -154,9 +181,28 @@ class _EditorScreenState extends State<EditorScreen> {
         case EditTool.switchTile:
           if ('.s'.contains(layout[r][c])) tiles[r][c] = 'g';
         case EditTool.tile:
-          if ('.s'.contains(layout[r][c])) tiles[r][c] = toolColor.code;
+          if ('.skK'.contains(layout[r][c])) tiles[r][c] = toolColor.code;
         case EditTool.clearTile:
           tiles[r][c] = '.';
+        case EditTool.lock1:
+          layout[r][c] = 'k';
+        case EditTool.lock2:
+          layout[r][c] = 'K';
+        case EditTool.ink:
+          layout[r][c] = 'i';
+          tiles[r][c] = '.';
+        case EditTool.bucket:
+          if ('.s'.contains(layout[r][c])) {
+            tiles[r][c] = 'D';
+            if (buckets == 0) buckets = 1;
+          }
+        case EditTool.filter:
+          filters[r][c] = toolColor.code;
+        case EditTool.zone:
+          zones[r][c] = arrowOf(zoneDir);
+        case EditTool.clearOverlay:
+          filters[r][c] = '.';
+          zones[r][c] = '.';
       }
     });
   }
@@ -288,7 +334,7 @@ class _EditorScreenState extends State<EditorScreen> {
                   onPanUpdate: (d) => at(d.localPosition),
                   child: CustomPaint(
                     size: Size(box.maxWidth, box.maxWidth * rows / cols),
-                    painter: _EditorPainter(layout, tiles),
+                    painter: _EditorPainter(layout, tiles, filters, zones),
                   ),
                 );
               },
@@ -311,13 +357,43 @@ class _EditorScreenState extends State<EditorScreen> {
                     EditTool.switchTile => 'Gravity switch',
                     EditTool.tile => 'Tile',
                     EditTool.clearTile => 'Random tile',
+                    EditTool.lock1 => 'Chain',
+                    EditTool.lock2 => 'Double chain',
+                    EditTool.ink => 'Ink',
+                    EditTool.bucket => 'Bucket',
+                    EditTool.filter => 'Color filter',
+                    EditTool.zone => 'Gravity zone',
+                    EditTool.clearOverlay => 'Clear filter/zone',
                   }),
                   selected: tool == t,
                   onSelected: (_) => setState(() => tool = t),
                 ),
             ],
           ),
-          if (tool == EditTool.tile)
+          if (tool == EditTool.zone)
+            SegmentedButton<Gravity>(
+              segments: const [
+                ButtonSegment(
+                  value: Gravity.down,
+                  icon: Icon(Icons.arrow_downward),
+                ),
+                ButtonSegment(
+                  value: Gravity.up,
+                  icon: Icon(Icons.arrow_upward),
+                ),
+                ButtonSegment(
+                  value: Gravity.left,
+                  icon: Icon(Icons.arrow_back),
+                ),
+                ButtonSegment(
+                  value: Gravity.right,
+                  icon: Icon(Icons.arrow_forward),
+                ),
+              ],
+              selected: {zoneDir},
+              onSelectionChanged: (s) => setState(() => zoneDir = s.first),
+            ),
+          if (tool == EditTool.tile || tool == EditTool.filter)
             Wrap(
               children: [
                 for (final c in TileColor.values)
@@ -344,6 +420,27 @@ class _EditorScreenState extends State<EditorScreen> {
           _stepper('Columns', cols, 4, 10, (v) => _resize(rows, v)),
           _stepper('Moves', moves, 5, 60, (v) => setState(() => moves = v)),
           _stepper('Level id', id, 1, 9999, (v) => setState(() => id = v)),
+          _stepper(
+            'Buckets in total',
+            buckets,
+            0,
+            20,
+            (v) => setState(() => buckets = v),
+          ),
+          _stepper(
+            'Buckets on board at once',
+            bucketsOnBoard,
+            1,
+            4,
+            (v) => setState(() => bucketsOnBoard = v),
+          ),
+          _stepper(
+            'Gravity turns every N moves (0 = off)',
+            gravityEvery,
+            0,
+            10,
+            (v) => setState(() => gravityEvery = v),
+          ),
           const SizedBox(height: 8),
           const Text('Gravity'),
           SegmentedButton<Gravity>(
@@ -544,9 +641,9 @@ class _EditorScreenState extends State<EditorScreen> {
             initialValue: '${g.target}',
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              labelText: g.type == GoalType.stains || g.type == GoalType.glass
-                  ? 'Count (0 = all)'
-                  : 'Target',
+              labelText: g.type == GoalType.score || g.type == GoalType.collect
+                  ? 'Target'
+                  : 'Count (0 = all)',
             ),
             onChanged: (v) {
               final n = int.tryParse(v);
@@ -568,7 +665,9 @@ class _EditorScreenState extends State<EditorScreen> {
 class _EditorPainter extends CustomPainter {
   final List<List<String>> layout;
   final List<List<String>> tiles;
-  _EditorPainter(this.layout, this.tiles);
+  final List<List<String>> filters;
+  final List<List<String>> zones;
+  _EditorPainter(this.layout, this.tiles, this.filters, this.zones);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -589,10 +688,17 @@ class _EditorPainter extends CustomPainter {
                 ? const Color(0xFFEDE7F6)
                 : const Color(0xFFD1C4E9),
         );
+        final f = tileColorFromCode(filters[r][c]);
+        if (f != null) TileArt.filter(canvas, rect, f);
+        final z = gravityFromArrow(zones[r][c]);
+        if (z != null) TileArt.zoneArrow(canvas, rect, z);
         if (ch == 's') TileArt.stain(canvas, rect);
+        if (ch == 'i') TileArt.ink(canvas, rect);
         final t = tiles[r][c];
         final color = tileColorFromCode(t);
-        if (color != null || t == 'g') {
+        if (t == 'D') {
+          TileArt.bucket(canvas, rect.center, cell * 0.38);
+        } else if (color != null || t == 'g') {
           TileArt.paint(
             canvas,
             rect.center,
@@ -601,6 +707,9 @@ class _EditorPainter extends CustomPainter {
             special: Special.none,
             gravitySwitch: t == 'g',
           );
+        }
+        if (ch == 'k' || ch == 'K') {
+          TileArt.chains(canvas, rect, ch == 'K' ? 2 : 1);
         }
         if ('123'.contains(ch)) TileArt.glass(canvas, rect, int.parse(ch));
       }

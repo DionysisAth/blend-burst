@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'board.dart';
 import 'level.dart';
+import 'models.dart';
 import 'session.dart';
 
 class BotReport {
@@ -47,6 +48,22 @@ class LevelBot {
     for (final p in s.progress()) {
       final ratio = p.target == 0 ? 1.0 : min(1.0, p.current / p.target);
       v += ratio * 1000;
+    }
+    // Buckets only count once they drop, so also reward getting them
+    // closer to the exit.
+    if (s.level.goals.any((g) => g.type == GoalType.drop)) {
+      final b = s.board;
+      for (final p in b.allPositions) {
+        if (!(b.tileAt(p)?.bucket ?? false)) continue;
+        var q = p, steps = 0;
+        while (!b.isExit(q) && steps < 20) {
+          final d = b.dirAt(q);
+          q = Pos(q.r + d.dr, q.c + d.dc);
+          if (!b.inBounds(q)) break;
+          steps++;
+        }
+        v -= steps * 25;
+      }
     }
     return v + s.score * 0.01;
   }

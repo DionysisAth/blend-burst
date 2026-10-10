@@ -26,11 +26,15 @@ class GameScreen extends StatefulWidget {
   final bool testMode;
   final int? seed;
 
+  /// Pre-level boosters chosen on the level start card.
+  final Set<BoosterType> preBoosters;
+
   const GameScreen({
     super.key,
     required this.level,
     this.testMode = false,
     this.seed,
+    this.preBoosters = const {},
   });
 
   @override
@@ -64,6 +68,19 @@ class GameScreenState extends State<GameScreen> {
     _alive++;
     _scope = AppScope.read(context);
     session = GameSession(level, seed: widget.seed);
+    for (final b in widget.preBoosters) {
+      final special = switch (b) {
+        BoosterType.startLine =>
+          Random().nextBool() ? Special.lineH : Special.lineV,
+        BoosterType.startBomb => Special.bomb,
+        BoosterType.startPrism => Special.prism,
+        _ => null,
+      };
+      if (special == null) continue;
+      if (session.board.placeSpecial(special) != null && !widget.testMode) {
+        app.useBooster(b, level.id);
+      }
+    }
     controller = GameController(session);
     controller.onIdle = _onIdle;
     controller.addListener(_onController);
@@ -155,6 +172,11 @@ class GameScreenState extends State<GameScreen> {
         } else {
           _useBooster(BoosterType.freeSwap, session.freeSwap(first, p));
         }
+      case BoosterType.gravityFlip:
+      case BoosterType.startLine:
+      case BoosterType.startBomb:
+      case BoosterType.startPrism:
+        break;
       case null:
         final t = session.board.tileAt(p);
         if (app.data.tapActivate && t != null && t.special != Special.none) {
@@ -203,6 +225,16 @@ class GameScreenState extends State<GameScreen> {
         return;
       }
       audio.sfx(Sfx.coin);
+    }
+    if (type == BoosterType.gravityFlip) {
+      _dialogOpen = true;
+      final g = await showGravityPicker(context, session.board.gravity);
+      _dialogOpen = false;
+      if (g != null && mounted) {
+        _useBooster(type, session.flipGravity(g));
+        audio.sfx(Sfx.gravity);
+      }
+      return;
     }
     setState(() {
       activeBooster = type;
@@ -484,7 +516,10 @@ class GameScreenState extends State<GameScreen> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        _GravityChip(controller.shown.gravity),
+                        _GravityChip(
+                          controller.shown.gravity,
+                          shiftIn: controller.shown.shiftIn,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 2),
@@ -655,20 +690,21 @@ class GameScreenState extends State<GameScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              for (final b in BoosterType.values)
-                // Each button gets a third of the width and shrinks to fit
-                // on narrow phones.
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: _BoosterButton(
-                      type: b,
-                      count: widget.testMode ? 99 : app.boosterCount(b),
-                      selected: active == b,
-                      onTap: () => _selectBooster(b),
+              for (final b in BoosterInfo.inLevel)
+                if (b != BoosterType.gravityFlip || level.usesGravity)
+                  // Each button gets a third of the width and shrinks to fit
+                  // on narrow phones.
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: _BoosterButton(
+                        type: b,
+                        count: widget.testMode ? 99 : app.boosterCount(b),
+                        selected: active == b,
+                        onTap: () => _selectBooster(b),
+                      ),
                     ),
                   ),
-                ),
             ],
           ),
         ],
@@ -679,7 +715,10 @@ class GameScreenState extends State<GameScreen> {
 
 class _GravityChip extends StatelessWidget {
   final Gravity gravity;
-  const _GravityChip(this.gravity);
+
+  /// Moves until a timed gravity shift (shown as a badge), if any.
+  final int? shiftIn;
+  const _GravityChip(this.gravity, {this.shiftIn});
 
   @override
   Widget build(BuildContext context) {
@@ -689,14 +728,27 @@ class _GravityChip extends StatelessWidget {
       Gravity.left => pi,
       Gravity.right => 0.0,
     };
+    final arrow = AnimatedRotation(
+      turns: angle / (2 * pi),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOutBack,
+      child: const GameIcon(GameIcons.arrow, size: 22),
+    );
+    final n = shiftIn;
     return Tooltip(
-      message: 'Gravity ${gravity.name}',
-      child: AnimatedRotation(
-        turns: angle / (2 * pi),
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOutBack,
-        child: const GameIcon(GameIcons.arrow, size: 22),
-      ),
+      message: n == null
+          ? 'Gravity ${gravity.name}'
+          : 'Gravity turns in $n move${n == 1 ? '' : 's'}',
+      child: n == null
+          ? arrow
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                arrow,
+                const SizedBox(width: 2),
+                CountBadge('$n', key: const Key('gravity-timer')),
+              ],
+            ),
     );
   }
 }
@@ -768,6 +820,8 @@ class _BoosterButton extends StatelessWidget {
       BoosterType.brush => const [Color(0xFFFFA3D1), Color(0xFFE8368F)],
       BoosterType.freeSwap => const [Color(0xFF8FE3FF), Color(0xFF1F8EF0)],
       BoosterType.colorSplash => const [Color(0xFF9CF5B8), Color(0xFF1FB86B)],
+      BoosterType.gravityFlip => const [Color(0xFFC79BFF), Color(0xFF6A3FD0)],
+      _ => const [Color(0xFFFFE27A), Color(0xFFFF9F1C)],
     };
     return Semantics(
       button: true,
@@ -810,9 +864,7 @@ class _BoosterButton extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Center(
-                        child: GameIcon(boosterIcon(type), size: 56),
-                      ),
+                      child: Center(child: boosterArt(type, size: 56)),
                     ),
                   ),
                   Positioned(

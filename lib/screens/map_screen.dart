@@ -69,14 +69,17 @@ class _MapScreenState extends State<MapScreen>
       return;
     }
     scope.audio.sfx(Sfx.click);
-    final play = await showLevelStart(context, level);
-    if (!play || !mounted) return;
+    final pre = await showLevelStart(context, level);
+    if (pre == null || !mounted) return;
     if (app.lives <= 0) {
       final ok = await showOutOfLives(context);
       if (!ok || !mounted) return;
     }
-    await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => GameScreen(level: level)));
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GameScreen(level: level, preBoosters: pre),
+      ),
+    );
     if (mounted) setState(() {});
   }
 

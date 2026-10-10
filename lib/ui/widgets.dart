@@ -38,19 +38,40 @@ class MiniTile extends StatelessWidget {
   );
 }
 
+enum Obstacle { stain, glass, lock, ink, bucket }
+
 class ObstacleIcon extends StatelessWidget {
-  final bool glass;
+  final Obstacle kind;
   final double size;
-  const ObstacleIcon({super.key, required this.glass, this.size = 28});
+  const ObstacleIcon(this.kind, {super.key, this.size = 28});
 
   @override
   Widget build(BuildContext context) => CachedArt(
-    id: 'cell:$glass',
+    id: 'cell:${kind.name}',
     size: Size.square(size),
     pad: 0.15,
-    draw: (canvas, size) => glass
-        ? TileArt.glass(canvas, Offset.zero & size, 1)
-        : TileArt.stain(canvas, Offset.zero & size),
+    draw: (canvas, size) {
+      final rect = Offset.zero & size;
+      switch (kind) {
+        case Obstacle.stain:
+          TileArt.stain(canvas, rect);
+        case Obstacle.glass:
+          TileArt.glass(canvas, rect, 1);
+        case Obstacle.lock:
+          TileArt.paint(
+            canvas,
+            rect.center,
+            size.width * 0.42,
+            color: TileColor.blue,
+            special: Special.none,
+          );
+          TileArt.chains(canvas, rect, 2);
+        case Obstacle.ink:
+          TileArt.ink(canvas, rect);
+        case Obstacle.bucket:
+          TileArt.bucket(canvas, rect.center, size.width * 0.42);
+      }
+    },
   );
 }
 
@@ -59,11 +80,17 @@ Widget goalIcon(Goal g, {double size = 28}) {
     case GoalType.score:
       return GameIcon(GameIcons.star, size: size);
     case GoalType.stains:
-      return ObstacleIcon(glass: false, size: size);
+      return ObstacleIcon(Obstacle.stain, size: size);
     case GoalType.glass:
-      return ObstacleIcon(glass: true, size: size);
+      return ObstacleIcon(Obstacle.glass, size: size);
     case GoalType.collect:
       return MiniTile(color: g.color, size: size);
+    case GoalType.locks:
+      return ObstacleIcon(Obstacle.lock, size: size);
+    case GoalType.ink:
+      return ObstacleIcon(Obstacle.ink, size: size);
+    case GoalType.drop:
+      return ObstacleIcon(Obstacle.bucket, size: size);
   }
 }
 
@@ -77,6 +104,12 @@ String goalText(Goal g, int target) {
       return 'Break $target glass blocks';
     case GoalType.collect:
       return 'Collect $target ${g.color!.label}';
+    case GoalType.locks:
+      return 'Break $target chains';
+    case GoalType.ink:
+      return 'Clear all the ink';
+    case GoalType.drop:
+      return 'Bring $target paint buckets to the exit';
   }
 }
 
@@ -179,6 +212,20 @@ String formatDuration(Duration d) {
 class TutorialArt extends StatelessWidget {
   final String? kind;
   const TutorialArt(this.kind, {super.key});
+
+  /// A green "done" badge.
+  static Widget _ok(double size) => Container(
+    width: size,
+    height: size,
+    margin: const EdgeInsets.only(left: 4),
+    padding: EdgeInsets.all(size * 0.16),
+    decoration: BoxDecoration(
+      color: const Color(0xFF22B84C),
+      shape: BoxShape.circle,
+      border: Border.all(color: Colors.white, width: 2.5),
+    ),
+    child: const GameIcon(GameIcons.check),
+  );
 
   static Widget _op(String s) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -298,7 +345,7 @@ class TutorialArt extends StatelessWidget {
             child: Stack(
               alignment: Alignment.center,
               children: [
-                const ObstacleIcon(glass: false, size: 64),
+                const ObstacleIcon(Obstacle.stain, size: 64),
                 _tile(TileColor.orange, size: 46),
               ],
             ),
@@ -359,6 +406,101 @@ class TutorialArt extends StatelessWidget {
             ),
             child: const GameIcon(GameIcons.retry),
           ),
+        ]);
+      case 'lock':
+        return _row([
+          const ObstacleIcon(Obstacle.lock, size: 56),
+          const GameIcon(GameIcons.arrow, size: 36),
+          _tile(TileColor.blue, size: 50),
+          _ok(30),
+        ]);
+      case 'ink':
+        return _row([
+          for (var i = 0; i < 3; i++) _tile(TileColor.yellow, size: 36),
+          const ObstacleIcon(Obstacle.ink, size: 48),
+          _op('='),
+          _ok(34),
+        ]);
+      case 'filter':
+        return _row([
+          _tile(TileColor.yellow, size: 44),
+          const GameIcon(GameIcons.arrow, size: 34),
+          SizedBox(
+            width: 52,
+            height: 52,
+            child: CachedArt(
+              id: 'tut-filter',
+              size: const Size.square(52),
+              draw: (c, sz) {
+                TileArt.filter(c, Offset.zero & sz, TileColor.purple);
+                TileArt.filterBadge(c, Offset.zero & sz, TileColor.purple);
+              },
+            ),
+          ),
+          _op('='),
+          _tile(TileColor.purple, size: 44),
+        ]);
+      case 'bucket':
+        return _row([
+          const ObstacleIcon(Obstacle.bucket, size: 54),
+          Transform.rotate(
+            angle: 1.5708,
+            child: const GameIcon(GameIcons.arrow, size: 40),
+          ),
+          Container(
+            width: 54,
+            height: 14,
+            decoration: BoxDecoration(
+              color: const Color(0xFF7CF2B0),
+              borderRadius: BorderRadius.circular(7),
+              border: Border.all(color: Palette.plum, width: 2),
+            ),
+          ),
+          const SizedBox(width: 6),
+          _ok(30),
+        ]);
+      case 'zones':
+        return _row([
+          for (final g in const [Gravity.right, Gravity.down, Gravity.left])
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: CachedArt(
+                id: 'tut-zone-${g.name}',
+                size: const Size.square(52),
+                draw: (c, sz) {
+                  c.drawRRect(
+                    RRect.fromRectAndRadius(
+                      (Offset.zero & sz).deflate(2),
+                      const Radius.circular(10),
+                    ),
+                    Paint()..color = const Color(0xFF4A2183),
+                  );
+                  TileArt.zoneArrow(c, Offset.zero & sz, g);
+                  TileArt.zoneBadge(c, Offset.zero & sz, g);
+                },
+              ),
+            ),
+        ]);
+      case 'timed':
+        return _row([
+          const GameIcon(GameIcons.arrow, size: 44),
+          const CountBadge('3'),
+          _op('='),
+          Transform.rotate(
+            angle: 1.5708,
+            child: const GameIcon(GameIcons.arrow, size: 44),
+          ),
+        ]);
+      case 'flip':
+        return _row([
+          const GameIcon(GameIcons.gravity, size: 60),
+          _op('='),
+          for (final a in const [-1.5708, 3.14159, 0.0])
+            Transform.rotate(
+              angle: a,
+              child: const GameIcon(GameIcons.arrow, size: 34),
+            ),
         ]);
       default:
         return const SizedBox.shrink();

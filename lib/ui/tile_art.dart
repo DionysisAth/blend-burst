@@ -228,9 +228,14 @@ class TileArt {
     required TileColor? color,
     required Special special,
     bool gravitySwitch = false,
+    bool bucket = false,
     double time = 0,
   }) {
     if (r <= 0.5) return;
+    if (bucket) {
+      TileArt.bucket(canvas, c, r);
+      return;
+    }
     switch (special) {
       case Special.prism:
         _prism(canvas, c, r);
@@ -953,5 +958,489 @@ class TileArt {
       )..layout();
       tp.paint(canvas, bc - Offset(tp.width / 2, tp.height / 2));
     }
+  }
+
+  // ------------------------------------------------------- new obstacles
+
+  /// A paint bucket (drop item): tin pail with a handle, overflowing with
+  /// rainbow paint.
+  static void bucket(Canvas canvas, Offset c, double r) {
+    // Shadow.
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: c + Offset(0, r * 0.78),
+        width: r * 1.5,
+        height: r * 0.34,
+      ),
+      _blur(const Color(0x55301040), r * 0.06),
+    );
+    // Handle behind the pail.
+    canvas.drawArc(
+      Rect.fromCenter(
+        center: c + Offset(0, -r * 0.2),
+        width: r * 1.5,
+        height: r * 1.3,
+      ),
+      pi * 1.05,
+      pi * 0.9,
+      false,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.11
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFF6B5B7B),
+    );
+    final top = c.dy - r * 0.32, bottom = c.dy + r * 0.78;
+    final pail = Path()
+      ..moveTo(c.dx - r * 0.8, top)
+      ..lineTo(c.dx + r * 0.8, top)
+      ..lineTo(c.dx + r * 0.62, bottom - r * 0.08)
+      ..quadraticBezierTo(
+        c.dx,
+        bottom + r * 0.06,
+        c.dx - r * 0.62,
+        bottom - r * 0.08,
+      )
+      ..close();
+    canvas.drawPath(
+      pail,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(c.dx - r * 0.8, 0),
+          Offset(c.dx + r * 0.8, 0),
+          const [
+            Color(0xFF8E9BB0),
+            Color(0xFFF4F7FB),
+            Color(0xFFB7C1D1),
+            Color(0xFF6E7A90),
+          ],
+          const [0, 0.35, 0.7, 1],
+        ),
+    );
+    // Rim bands.
+    final band = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = r * 0.07
+      ..color = const Color(0xFF5E6A80);
+    canvas.drawLine(
+      Offset(c.dx - r * 0.74, top + r * 0.42),
+      Offset(c.dx + r * 0.74, top + r * 0.42),
+      band,
+    );
+    // Rainbow label stripes.
+    const stripes = [Color(0xFFFF3B5C), Color(0xFFFFC21A), Color(0xFF2F7BFF)];
+    for (var i = 0; i < 3; i++) {
+      final y = top + r * (0.58 + i * 0.16);
+      final inset = r * (0.08 + i * 0.04);
+      canvas.drawLine(
+        Offset(c.dx - r * 0.72 + inset, y),
+        Offset(c.dx + r * 0.72 - inset, y),
+        Paint()
+          ..strokeWidth = r * 0.12
+          ..color = stripes[i],
+      );
+    }
+    canvas.drawPath(
+      pail,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.07
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFF3B3F5C),
+    );
+    // Paint dome overflowing the top, with drips.
+    final dome = Path()
+      ..addOval(
+        Rect.fromCenter(
+          center: Offset(c.dx, top),
+          width: r * 1.7,
+          height: r * 0.62,
+        ),
+      );
+    final paint = ui.Gradient.linear(
+      Offset(c.dx - r * 0.8, top),
+      Offset(c.dx + r * 0.8, top),
+      const [
+        Color(0xFFFF3B5C),
+        Color(0xFFFF8A1F),
+        Color(0xFFFFC21A),
+        Color(0xFF1FC46B),
+        Color(0xFF2F7BFF),
+        Color(0xFFA24BF2),
+      ],
+      const [0, 0.2, 0.4, 0.6, 0.8, 1],
+    );
+    canvas.drawPath(dome, Paint()..shader = paint);
+    for (final (dx, len) in const [(-0.5, 0.36), (0.12, 0.5), (0.55, 0.28)]) {
+      final x = c.dx + r * dx;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x - r * 0.08, top, r * 0.16, r * len),
+          Radius.circular(r * 0.08),
+        ),
+        Paint()..shader = paint,
+      );
+    }
+    canvas.drawPath(
+      dome,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = r * 0.06
+        ..color = const Color(0xFF3B3F5C),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(c.dx - r * 0.3, top - r * 0.1),
+        width: r * 0.5,
+        height: r * 0.14,
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.75),
+    );
+  }
+
+  /// Chains across a locked tile: one chain, or two crossed chains with a
+  /// padlock.
+  static void chains(Canvas canvas, Rect cell, int layers) {
+    final w = cell.width;
+    final c = cell.center;
+    void chain(double angle, Color body, Color edge) {
+      canvas.save();
+      canvas.translate(c.dx, c.dy);
+      canvas.rotate(angle);
+      const links = 5;
+      final len = w * 1.12;
+      final step = len / links;
+      for (var i = 0; i < links; i++) {
+        final x = -len / 2 + step * (i + 0.5);
+        final horizontal = i.isEven;
+        final rect = Rect.fromCenter(
+          center: Offset(x, 0),
+          width: step * 1.25,
+          height: horizontal ? w * 0.2 : w * 0.11,
+        );
+        final rr = RRect.fromRectAndRadius(rect, Radius.circular(w * 0.1));
+        canvas.drawRRect(
+          rr.shift(Offset(0, w * 0.03)),
+          Paint()..color = const Color(0x66201030),
+        );
+        canvas.drawRRect(
+          rr,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = w * 0.065
+            ..color = edge,
+        );
+        canvas.drawRRect(
+          rr,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = w * 0.04
+            ..color = body,
+        );
+        canvas.drawLine(
+          rect.topLeft + Offset(step * 0.3, w * 0.015),
+          rect.topRight - Offset(step * 0.3, -w * 0.015),
+          Paint()
+            ..strokeWidth = w * 0.014
+            ..strokeCap = StrokeCap.round
+            ..color = Colors.white.withValues(alpha: 0.8),
+        );
+      }
+      canvas.restore();
+    }
+
+    canvas.save();
+    canvas.clipRect(cell.inflate(w * 0.02));
+    chain(-pi / 4, const Color(0xFFD5DCE8), const Color(0xFF4A5268));
+    if (layers >= 2) {
+      chain(pi / 4, const Color(0xFFFFD45C), const Color(0xFF8A5A0A));
+    }
+    canvas.restore();
+    if (layers >= 2) {
+      // Padlock.
+      final body = RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: c + Offset(0, w * 0.06),
+          width: w * 0.3,
+          height: w * 0.24,
+        ),
+        Radius.circular(w * 0.05),
+      );
+      canvas.drawArc(
+        Rect.fromCenter(
+          center: c + Offset(0, -w * 0.06),
+          width: w * 0.2,
+          height: w * 0.22,
+        ),
+        pi,
+        pi,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.05
+          ..color = const Color(0xFF4A5268),
+      );
+      canvas.drawRRect(body, Paint()..color = const Color(0xFFFFC21A));
+      canvas.drawRRect(
+        body,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.03
+          ..color = const Color(0xFF8A5A0A),
+      );
+      canvas.drawCircle(
+        c + Offset(0, w * 0.06),
+        w * 0.035,
+        Paint()..color = const Color(0xFF5A3A06),
+      );
+    }
+  }
+
+  /// Spreading ink: a glossy blob of dark paint with bubbles.
+  static void ink(Canvas canvas, Rect cell, {int seed = 0}) {
+    final w = cell.width;
+    final c = cell.center;
+    final rnd = Random(seed * 7919 + 13);
+    final blob = Path()
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          cell.deflate(w * 0.06),
+          Radius.circular(w * 0.24),
+        ),
+      );
+    for (var i = 0; i < 6; i++) {
+      final a = i * pi / 3 + rnd.nextDouble() * 0.6;
+      blob.addOval(
+        Rect.fromCircle(
+          center: c + Offset(cos(a), sin(a)) * w * 0.4,
+          radius: w * (0.1 + rnd.nextDouble() * 0.06),
+        ),
+      );
+    }
+    canvas.drawPath(
+      blob.shift(Offset(0, w * 0.04)),
+      Paint()..color = const Color(0x55100018),
+    );
+    canvas.drawPath(
+      blob,
+      Paint()
+        ..shader = ui.Gradient.radial(
+          c - Offset(w * 0.15, w * 0.18),
+          w * 0.75,
+          const [Color(0xFF5A3A7A), Color(0xFF2A1640), Color(0xFF120820)],
+          const [0, 0.55, 1],
+        ),
+    );
+    canvas.drawPath(
+      blob,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.035
+        ..color = const Color(0xFF0A0412),
+    );
+    // Gloss and bubbles.
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: c + Offset(-w * 0.14, -w * 0.2),
+        width: w * 0.36,
+        height: w * 0.14,
+      ),
+      Paint()..color = Colors.white.withValues(alpha: 0.35),
+    );
+    for (var i = 0; i < 3; i++) {
+      final b =
+          c +
+          Offset(
+            (rnd.nextDouble() - 0.5) * w * 0.5,
+            (rnd.nextDouble() - 0.2) * w * 0.4,
+          );
+      final br = w * (0.04 + rnd.nextDouble() * 0.04);
+      canvas.drawCircle(
+        b,
+        br,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.015
+          ..color = const Color(0xFFB79BD9).withValues(alpha: 0.7),
+      );
+      canvas.drawCircle(
+        b - Offset(br * 0.3, br * 0.3),
+        br * 0.3,
+        Paint()..color = Colors.white.withValues(alpha: 0.6),
+      );
+    }
+  }
+
+  /// A color filter cell: tinted glow, dashed rim and a paint-drop badge.
+  static void filter(Canvas canvas, Rect cell, TileColor color) {
+    final w = cell.width;
+    final col = Palette.of(color);
+    final rr = RRect.fromRectAndRadius(
+      cell.deflate(w * 0.04),
+      Radius.circular(w * 0.18),
+    );
+    canvas.drawRRect(
+      rr,
+      Paint()
+        ..shader = ui.Gradient.radial(cell.center, w * 0.7, [
+          col.withValues(alpha: 0.55),
+          col.withValues(alpha: 0.15),
+        ]),
+    );
+    final dash = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.05
+      ..strokeCap = StrokeCap.round
+      ..color = Palette.shade(col, 0.25);
+    final r = rr.outerRect;
+    const n = 4;
+    for (var i = 0; i < n; i++) {
+      final t0 = i / n + 0.06, t1 = (i + 1) / n - 0.06;
+      canvas.drawLine(
+        Offset(r.left + r.width * t0, r.top),
+        Offset(r.left + r.width * t1, r.top),
+        dash,
+      );
+      canvas.drawLine(
+        Offset(r.left + r.width * t0, r.bottom),
+        Offset(r.left + r.width * t1, r.bottom),
+        dash,
+      );
+      canvas.drawLine(
+        Offset(r.left, r.top + r.height * t0),
+        Offset(r.left, r.top + r.height * t1),
+        dash,
+      );
+      canvas.drawLine(
+        Offset(r.right, r.top + r.height * t0),
+        Offset(r.right, r.top + r.height * t1),
+        dash,
+      );
+    }
+  }
+
+  /// Small badge for a filter, drawn over the tile in the cell corner.
+  static void filterBadge(Canvas canvas, Rect cell, TileColor color) {
+    final w = cell.width;
+    final col = Palette.of(color);
+    final c = cell.topRight + Offset(-w * 0.16, w * 0.16);
+    final drop = Path()
+      ..moveTo(c.dx, c.dy - w * 0.12)
+      ..quadraticBezierTo(c.dx + w * 0.1, c.dy, c.dx, c.dy + w * 0.08)
+      ..quadraticBezierTo(c.dx - w * 0.1, c.dy, c.dx, c.dy - w * 0.12);
+    canvas.drawPath(drop, Paint()..color = col);
+    canvas.drawPath(
+      drop,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.025
+        ..color = Colors.white,
+    );
+  }
+
+  /// A gravity zone: soft chevrons pointing the cell's way.
+  static void zoneArrow(Canvas canvas, Rect cell, Gravity g) {
+    final w = cell.width;
+    canvas.save();
+    canvas.translate(cell.center.dx, cell.center.dy);
+    canvas.rotate(switch (g) {
+      Gravity.down => 0,
+      Gravity.left => pi / 2,
+      Gravity.up => pi,
+      Gravity.right => -pi / 2,
+    });
+    final p = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.07
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = Colors.white.withValues(alpha: 0.32);
+    for (final y in [-0.14, 0.12]) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(-w * 0.2, w * (y - 0.08))
+          ..lineTo(0, w * (y + 0.08))
+          ..lineTo(w * 0.2, w * (y - 0.08)),
+        p,
+      );
+    }
+    canvas.restore();
+  }
+
+  /// Exit marker below a column where buckets leave the board.
+  static void exitMark(
+    Canvas canvas,
+    Offset at,
+    double size,
+    Gravity g,
+    double time,
+  ) {
+    canvas.save();
+    canvas.translate(at.dx, at.dy);
+    canvas.rotate(switch (g) {
+      Gravity.down => 0,
+      Gravity.left => pi / 2,
+      Gravity.up => pi,
+      Gravity.right => -pi / 2,
+    });
+    final bob = sin(time * 4) * size * 0.08;
+    final path = Path()
+      ..moveTo(-size * 0.3, -size * 0.12 + bob)
+      ..lineTo(0, size * 0.16 + bob)
+      ..lineTo(size * 0.3, -size * 0.12 + bob);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = size * 0.16
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFF3B1A63),
+    );
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = size * 0.09
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFF7CF2B0),
+    );
+    canvas.restore();
+  }
+
+  /// Over-tile marker for a gravity zone: a small chevron on the cell's
+  /// downstream edge, so the direction stays visible under tiles.
+  static void zoneBadge(Canvas canvas, Rect cell, Gravity g) {
+    final w = cell.width;
+    final (at, angle) = switch (g) {
+      Gravity.down => (cell.bottomCenter + Offset(0, -w * 0.1), 0.0),
+      Gravity.up => (cell.topCenter + Offset(0, w * 0.1), pi),
+      Gravity.left => (cell.centerLeft + Offset(w * 0.1, 0), pi / 2),
+      Gravity.right => (cell.centerRight + Offset(-w * 0.1, 0), -pi / 2),
+    };
+    canvas.save();
+    canvas.translate(at.dx, at.dy);
+    canvas.rotate(angle);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(center: Offset.zero, width: w * 0.36, height: w * 0.2),
+        Radius.circular(w * 0.1),
+      ),
+      Paint()..color = const Color(0xCC3B1A63),
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(-w * 0.09, -w * 0.035)
+        ..lineTo(0, w * 0.04)
+        ..lineTo(w * 0.09, -w * 0.035),
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.045
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = Colors.white,
+    );
+    canvas.restore();
   }
 }

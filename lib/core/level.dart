@@ -1,11 +1,26 @@
 import 'models.dart';
 
-enum GoalType { score, stains, glass, collect }
+enum GoalType {
+  score,
+  stains,
+  glass,
+  collect,
+
+  /// Break every chain on locked tiles.
+  locks,
+
+  /// Clear all the ink (which spreads when left alone).
+  ink,
+
+  /// Bring paint buckets to the exit edge.
+  drop,
+}
 
 class Goal {
   final GoalType type;
 
-  /// For stains/glass a target of 0 means "all of them on the board".
+  /// For stains/glass/locks/ink a target of 0 means "all of them on the
+  /// board"; for drop it means all of the level's buckets.
   final int target;
   final TileColor? color;
 
@@ -35,8 +50,14 @@ class Goal {
 ///
 /// `layout` rows (one char per cell):
 ///   `.` playable   `#` hole   `s` paint stain   `1` `2` `3` glass block layers
+///   `k` `K` locked tile (one or two chains)   `i` ink
 /// optional `tiles` rows place starting tiles (`.` = random):
-///   color letters R B Y P G O N K, `g` = random-colored gravity switch tile.
+///   color letters R B Y P G O N K, `g` = random-colored gravity switch tile,
+///   `D` = paint bucket.
+/// optional `filters` rows: a color letter turns tiles falling through that
+///   cell into that color (`.` = none).
+/// optional `zones` rows: `v` `^` `<` `>` give that cell its own gravity
+///   (`.` = the level's gravity).
 class LevelDef {
   int id;
   String name;
@@ -56,6 +77,17 @@ class LevelDef {
   /// Optional illustration for the tutorial card (see TutorialArt).
   String? tutorialArt;
 
+  List<String>? filters;
+  List<String>? zones;
+
+  /// Paint buckets that appear in the level in total (including `D` tiles),
+  /// and how many may be on the board at once.
+  int buckets;
+  int bucketsOnBoard;
+
+  /// Gravity rotates clockwise every this many moves (0 = never).
+  int gravityEvery;
+
   LevelDef({
     required this.id,
     required this.name,
@@ -72,6 +104,11 @@ class LevelDef {
     this.hard = false,
     this.tutorial,
     this.tutorialArt,
+    this.filters,
+    this.zones,
+    this.buckets = 0,
+    this.bucketsOnBoard = 2,
+    this.gravityEvery = 0,
   }) {
     validate();
   }
@@ -92,7 +129,7 @@ class LevelDef {
         throw FormatException('Level $id: layout rows differ in length');
       }
       for (final ch in row.split('')) {
-        if (!'.#s123'.contains(ch)) {
+        if (!'.#s123kKi'.contains(ch)) {
           throw FormatException('Level $id: bad layout char "$ch"');
         }
       }
@@ -103,11 +140,36 @@ class LevelDef {
       }
       for (final row in tiles!) {
         for (final ch in row.split('')) {
-          if (ch != '.' && ch != 'g' && tileColorFromCode(ch) == null) {
+          if (ch != '.' &&
+              ch != 'g' &&
+              ch != 'D' &&
+              tileColorFromCode(ch) == null) {
             throw FormatException('Level $id: bad tile char "$ch"');
           }
         }
       }
+    }
+    void grid(String name, List<String>? g, bool Function(String) ok) {
+      if (g == null) return;
+      if (g.length != layout.length || g.any((r) => r.length != w)) {
+        throw FormatException('Level $id: $name must match layout size');
+      }
+      for (final row in g) {
+        for (final ch in row.split('')) {
+          if (ch != '.' && !ok(ch)) {
+            throw FormatException('Level $id: bad $name char "$ch"');
+          }
+        }
+      }
+    }
+
+    grid('filters', filters, (ch) => tileColorFromCode(ch) != null);
+    grid('zones', zones, (ch) => gravityFromArrow(ch) != null);
+    if (goals.any((g) => g.type == GoalType.drop) && buckets <= 0) {
+      throw FormatException('Level $id: a drop goal needs buckets');
+    }
+    if (gravityEvery < 0) {
+      throw FormatException('Level $id: gravityEvery must be >= 0');
     }
     if (colors.length < 3) {
       throw FormatException('Level $id: needs at least 3 colors');
@@ -144,6 +206,11 @@ class LevelDef {
       hard: j['hard'] as bool? ?? false,
       tutorial: j['tutorial'] as String?,
       tutorialArt: j['tutorialArt'] as String?,
+      filters: j['filters'] == null ? null : strings(j['filters']),
+      zones: j['zones'] == null ? null : strings(j['zones']),
+      buckets: (j['buckets'] as num?)?.toInt() ?? 0,
+      bucketsOnBoard: (j['bucketsOnBoard'] as num?)?.toInt() ?? 2,
+      gravityEvery: (j['gravityEvery'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -163,6 +230,11 @@ class LevelDef {
     if (hard) 'hard': true,
     if (tutorial != null) 'tutorial': tutorial,
     if (tutorialArt != null) 'tutorialArt': tutorialArt,
+    if (filters != null) 'filters': filters,
+    if (zones != null) 'zones': zones,
+    if (buckets > 0) 'buckets': buckets,
+    if (bucketsOnBoard != 2) 'bucketsOnBoard': bucketsOnBoard,
+    if (gravityEvery > 0) 'gravityEvery': gravityEvery,
   };
 
   LevelDef copy() => LevelDef.fromJson(toJson());
@@ -179,6 +251,20 @@ class LevelDef {
 
   int get stainCount => countLayout((ch) => ch == 's');
   int get glassCount => countLayout((ch) => '123'.contains(ch));
+  int get lockCount => countLayout((ch) => ch == 'k' || ch == 'K');
+  int get inkCount => countLayout((ch) => ch == 'i');
+  bool get hasZones => zones?.any((r) => r.contains(RegExp('[v^<>]'))) ?? false;
+  bool get hasFilters =>
+      filters?.any((r) => r.contains(RegExp('[^.]'))) ?? false;
+
+  /// Whether gravity can change during this level (switch tiles, timed
+  /// shifts, a non-default direction or zones): unlocks Gravity Flip.
+  bool get usesGravity =>
+      gravity != Gravity.down ||
+      switchChance > 0 ||
+      gravityEvery > 0 ||
+      hasZones ||
+      (tiles?.any((r) => r.contains('g')) ?? false);
 
   /// Episode index (0-based) for a level; 15 levels per episode.
   int get episode => (id - 1) ~/ 15;

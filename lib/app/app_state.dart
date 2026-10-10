@@ -6,20 +6,63 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum BoosterType { brush, freeSwap, colorSplash }
+enum BoosterType {
+  brush,
+  freeSwap,
+  colorSplash,
+  gravityFlip,
+
+  /// Pre-level boosters: the level starts with this special on the board.
+  startLine,
+  startBomb,
+  startPrism,
+}
 
 extension BoosterInfo on BoosterType {
   String get label => const {
     BoosterType.brush: 'Brush',
     BoosterType.freeSwap: 'Free Swap',
     BoosterType.colorSplash: 'Color Splash',
+    BoosterType.gravityFlip: 'Gravity Flip',
+    BoosterType.startLine: 'Line Blaster',
+    BoosterType.startBomb: 'Paint Bomb',
+    BoosterType.startPrism: 'Prism',
   }[this]!;
 
   String get help => const {
     BoosterType.brush: 'Tap a tile to wipe it away.',
     BoosterType.freeSwap: 'Tap two tiles to swap them.',
     BoosterType.colorSplash: "Tap a tile to paint its whole row in its color.",
+    BoosterType.gravityFlip: 'Pick where tiles fall during your next move.',
+    BoosterType.startLine: 'Start the level with a Line Blaster.',
+    BoosterType.startBomb: 'Start the level with a Paint Bomb.',
+    BoosterType.startPrism: 'Start the level with a Prism.',
   }[this]!;
+
+  bool get isPreLevel =>
+      this == BoosterType.startLine ||
+      this == BoosterType.startBomb ||
+      this == BoosterType.startPrism;
+
+  /// How many a new player gets for free.
+  int get starting => switch (this) {
+    BoosterType.gravityFlip => 2,
+    BoosterType.startLine || BoosterType.startBomb => 2,
+    BoosterType.startPrism => 1,
+    _ => 3,
+  };
+
+  static const inLevel = [
+    BoosterType.brush,
+    BoosterType.freeSwap,
+    BoosterType.colorSplash,
+    BoosterType.gravityFlip,
+  ];
+  static const preLevel = [
+    BoosterType.startLine,
+    BoosterType.startBomb,
+    BoosterType.startPrism,
+  ];
 }
 
 /// Everything that is persisted on the device.
@@ -32,7 +75,9 @@ class SaveData {
 
   /// Epoch ms at which the life currently refilling started charging.
   int lifeClock = 0;
-  Map<BoosterType, int> boosters = {for (final b in BoosterType.values) b: 3};
+  Map<BoosterType, int> boosters = {
+    for (final b in BoosterType.values) b: b.starting,
+  };
   bool haptics = true;
   bool sound = true;
   bool music = true;
@@ -92,7 +137,7 @@ class SaveData {
     final b = j['boosters'];
     if (b is Map) {
       for (final t in BoosterType.values) {
-        s.boosters[t] = max(0, asInt(b[t.name], 3));
+        s.boosters[t] = max(0, asInt(b[t.name], t.starting));
       }
     }
     s.haptics = asBool(j['haptics'], true);
@@ -321,7 +366,8 @@ class AppState extends ChangeNotifier {
     data.coins += coins;
     BoosterType? gift;
     if (firstClear && levelId % 4 == 0) {
-      gift = BoosterType.values[(levelId ~/ 4) % BoosterType.values.length];
+      const gifts = BoosterType.values;
+      gift = gifts[(levelId ~/ 4) % gifts.length];
       data.boosters[gift] = boosterCount(gift) + 1;
     }
     log('level_win', {

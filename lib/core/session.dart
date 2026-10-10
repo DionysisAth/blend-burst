@@ -25,11 +25,15 @@ class GameSession {
 
   final int _initialStains;
   final int _initialGlass;
+  final int _initialLocks;
+  final int _initialInk;
 
   GameSession._(this.level, this.board)
     : movesLeft = level.moves,
       _initialStains = board.stainsLeft,
-      _initialGlass = board.glassLeft;
+      _initialGlass = board.glassLeft,
+      _initialLocks = board.locksLeft,
+      _initialInk = board.inkLeft;
 
   factory GameSession(LevelDef level, {int? seed}) {
     final rng = Random(seed ?? DateTime.now().microsecondsSinceEpoch);
@@ -44,7 +48,9 @@ class GameSession {
       extraMovesBought = s.extraMovesBought,
       status = s.status,
       _initialStains = s._initialStains,
-      _initialGlass = s._initialGlass;
+      _initialGlass = s._initialGlass,
+      _initialLocks = s._initialLocks,
+      _initialInk = s._initialInk;
 
   GameSession clone(Random rng) => GameSession._clone(this, rng);
 
@@ -53,6 +59,11 @@ class GameSession {
     final collected = snap?.collected ?? board.collected;
     final stainsLeft = snap?.stainsLeft ?? board.stainsLeft;
     final glassLeft = snap?.glassLeft ?? board.glassLeft;
+    final locksLeft = snap?.locksLeft ?? board.locksLeft;
+    final inkLeft = snap?.inkLeft ?? board.inkLeft;
+    final dropped = snap?.dropped ?? board.dropped;
+    // Ink grows, so count what was cleared against cleared + remaining.
+    final inkCleared = snap?.inkCleared ?? board.inkClearedTotal;
     return [
       for (final g in level.goals)
         switch (g.type) {
@@ -71,6 +82,17 @@ class GameSession {
             g,
             collected[g.color] ?? 0,
             g.target,
+          ),
+          GoalType.locks => GoalProgress(
+            g,
+            _initialLocks - locksLeft,
+            g.target > 0 ? min(g.target, _initialLocks) : _initialLocks,
+          ),
+          GoalType.ink => GoalProgress(g, inkCleared, inkCleared + inkLeft),
+          GoalType.drop => GoalProgress(
+            g,
+            dropped,
+            g.target > 0 ? g.target : level.buckets,
           ),
         },
     ];
@@ -136,6 +158,13 @@ class GameSession {
   MoveOutcome colorSplash(Pos p) {
     if (status != SessionStatus.playing) return MoveOutcome.none;
     final o = board.colorSplash(p);
+    _afterMove(o);
+    return o;
+  }
+
+  MoveOutcome flipGravity(Gravity g) {
+    if (status != SessionStatus.playing) return MoveOutcome.none;
+    final o = board.flipGravity(g);
     _afterMove(o);
     return o;
   }

@@ -26,6 +26,9 @@ enum Sfx {
   booster,
   praise,
   start,
+  chain,
+  ink,
+  drop,
 }
 
 enum Music { map, game }
@@ -166,6 +169,9 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
     'booster.wav',
     'praise.wav',
     'start.wav',
+    'chain.wav',
+    'ink.wav',
+    'drop.wav',
   ];
 
   void _fail(Object e) {

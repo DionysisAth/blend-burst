@@ -165,17 +165,31 @@ class Tile {
   Special special;
   bool gravitySwitch;
 
+  /// A paint bucket (drop item): colorless, never matched or destroyed;
+  /// collected when it reaches the exit edge in the gravity direction.
+  final bool bucket;
+
   Tile(
     this.id,
     this.color, {
     this.special = Special.none,
     this.gravitySwitch = false,
+    this.bucket = false,
   });
 
-  Tile copy() =>
-      Tile(id, color, special: special, gravitySwitch: gravitySwitch);
+  /// A plain colored tile: no special, not a bucket.
+  bool get isPlain => special == Special.none && !bucket && color != null;
 
-  TileView view(Pos at) => TileView(id, at, color, special, gravitySwitch);
+  Tile copy() => Tile(
+    id,
+    color,
+    special: special,
+    gravitySwitch: gravitySwitch,
+    bucket: bucket,
+  );
+
+  TileView view(Pos at) =>
+      TileView(id, at, color, special, gravitySwitch, bucket: bucket);
 }
 
 /// Immutable picture of a tile, used by snapshots and the renderer.
@@ -185,11 +199,29 @@ class TileView {
   final TileColor? color;
   final Special special;
   final bool gravitySwitch;
+  final bool bucket;
   const TileView(
     this.id,
     this.pos,
     this.color,
     this.special,
-    this.gravitySwitch,
-  );
+    this.gravitySwitch, {
+    this.bucket = false,
+  });
 }
+
+Gravity? gravityFromArrow(String ch) => switch (ch) {
+  'v' => Gravity.down,
+  '^' => Gravity.up,
+  '<' => Gravity.left,
+  '>' => Gravity.right,
+  _ => null,
+};
+
+String arrowOf(Gravity? g) => switch (g) {
+  Gravity.down => 'v',
+  Gravity.up => '^',
+  Gravity.left => '<',
+  Gravity.right => '>',
+  null => '.',
+};
