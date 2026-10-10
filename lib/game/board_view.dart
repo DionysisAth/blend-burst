@@ -502,7 +502,6 @@ class _BoardPainter extends CustomPainter {
         special: f.look.special,
         gravitySwitch: f.look.gravitySwitch,
         time: s.time,
-        opacity: f.opacity,
       );
       canvas.restore();
     }

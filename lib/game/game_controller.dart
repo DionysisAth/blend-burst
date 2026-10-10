@@ -128,7 +128,7 @@ class GameController extends ChangeNotifier {
   }
 
   /// Where a tile should be drawn right now, in fractional cell units, plus
-  /// its scale and opacity. Returns null when the tile is not visible.
+  /// its scale. Returns null when the tile is not visible.
   static TileFrame? frameFor(
     int id,
     BoardSnapshot before,
@@ -196,7 +196,7 @@ class GameController extends ChangeNotifier {
           rotation: t * pi,
         );
       }
-      // Tile being cleared: pop and fade.
+      // Tile being cleared: pop, then shrink away.
       final s = p < 0.25 ? 1 + p : max(0.0, 1.25 - (p - 0.25) / 0.75 * 1.25);
       if (s <= 0.01) return null;
       return TileFrame(
@@ -204,7 +204,6 @@ class GameController extends ChangeNotifier {
         prev.pos.r.toDouble(),
         prev.pos.c.toDouble(),
         scale: s,
-        opacity: (1 - p).clamp(0, 1),
       );
     }
     return null;
@@ -216,7 +215,6 @@ class TileFrame {
   final double r;
   final double c;
   final double scale;
-  final double opacity;
   final double rotation;
   final Pos? entry;
   const TileFrame(
@@ -224,7 +222,6 @@ class TileFrame {
     this.r,
     this.c, {
     this.scale = 1,
-    this.opacity = 1,
     this.rotation = 0,
     this.entry,
   });

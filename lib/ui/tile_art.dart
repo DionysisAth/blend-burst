@@ -141,16 +141,11 @@ class TileArt {
     required Special special,
     bool gravitySwitch = false,
     double time = 0,
-    double opacity = 1,
   }) {
-    if (opacity <= 0 || r <= 0.5) return;
-    final layer = opacity < 1;
-    if (layer) {
-      canvas.saveLayer(
-        Rect.fromCircle(center: c, radius: r * 1.6),
-        Paint()..color = Color.fromRGBO(0, 0, 0, opacity),
-      );
-    }
+    // No per-tile saveLayer/opacity: offscreen layers for dozens of tiles per
+    // frame are slow on phones and crash some GPU emulators. Disappearing
+    // tiles shrink instead of fading.
+    if (r <= 0.5) return;
     switch (special) {
       case Special.prism:
         _prism(canvas, c, r, time);
@@ -173,7 +168,6 @@ class TileArt {
         }
     }
     if (gravitySwitch) _switchBadge(canvas, c, r, time);
-    if (layer) canvas.restore();
   }
 
   /// Cheap drop shadow (a real blur per tile per frame is too slow).
