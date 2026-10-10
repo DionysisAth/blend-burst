@@ -21,6 +21,7 @@ fail() {
   echo "SMOKE TEST FAILED: $*"
   if ! device_ok; then
     echo "!! The emulator itself is gone (not an app crash)."
+    touch "$OUT/EMULATOR_DIED"
     exit 1
   fi
   T=30 A logcat -d > "$OUT/logcat.txt" 2>/dev/null || true
@@ -128,9 +129,16 @@ T=600 A shell monkey -p "$PKG" --pct-touch 55 --pct-motion 45 \
     --pct-anyevent 0 --throttle 60 -s 4242 -v 3000 > "$OUT/monkey.txt" 2>&1
 status=$?
 tail -5 "$OUT/monkey.txt"
+# The monkey also stops when *other* apps (e.g. Google Search) crash on the
+# emulator; only crashes or ANRs of this app count as failures.
+if grep -q -E "// (CRASH|NOT RESPONDING): $PKG" "$OUT/monkey.txt"; then
+  grep -n -A30 -E "// (CRASH|NOT RESPONDING): $PKG" "$OUT/monkey.txt" | head -80
+  fail "monkey: $PKG crashed or stopped responding"
+fi
 if [ $status -ne 0 ] || ! grep -q "Monkey finished" "$OUT/monkey.txt"; then
-  grep -n -B2 -A20 "CRASH\|NOT RESPONDING\|aborted" "$OUT/monkey.txt" | head -80 || true
-  fail "monkey did not finish cleanly (exit $status)"
+  grep -n -E "// (CRASH|NOT RESPONDING)" "$OUT/monkey.txt" | head -5 || true
+  device_ok || fail "emulator died during the monkey run"
+  echo "Monkey stopped early (exit $status) because of another app; continuing."
 fi
 sleep 5
 launch

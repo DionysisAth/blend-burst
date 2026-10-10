@@ -75,7 +75,7 @@ jobs:
           - { api-level: 30, target: aosp_atd, required: false }
           - { api-level: 33, target: google_apis, required: false }
           - { api-level: 34, target: aosp_atd, required: false }
-          - { api-level: 35, target: google_apis, required: false }
+          - { api-level: 35, target: google_apis, required: true }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -107,6 +107,8 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Release APK smoke test + on-device integration test
+        id: attempt1
+        continue-on-error: true
         timeout-minutes: 35
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -118,9 +120,34 @@ jobs:
           disable-animations: true
           script: |
             bash ci/android_smoke_test.sh blend-burst.apk smoke-results
-            adb logcat -c
-            sh -c 'adb logcat -v time > smoke-results/integration-logcat.txt 2>&1 &'
-            timeout 900 flutter test integration_test/app_test.dart -d emulator-5554 --reporter expanded
+            bash ci/integration_test.sh smoke-results
+      # A crash of the app fails the job right away. Only when the emulator
+      # process itself died (it does on some CI images) is it retried once.
+      - name: Retry on a fresh emulator (the emulator died, not the app)
+        id: attempt2
+        if: steps.attempt1.outcome == 'failure' && hashFiles('smoke-results/EMULATOR_DIED') != ''
+        continue-on-error: true
+        timeout-minutes: 35
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          target: ${{ matrix.target }}
+          ram-size: 3072M
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            bash ci/android_smoke_test.sh blend-burst.apk smoke-results/retry
+            bash ci/integration_test.sh smoke-results/retry
+      - name: Result
+        run: |
+          echo "attempt 1: ${{ steps.attempt1.outcome }}, attempt 2: ${{ steps.attempt2.outcome }}"
+          if [ "${{ steps.attempt1.outcome }}" = "success" ] || [ "${{ steps.attempt2.outcome }}" = "success" ]; then
+            echo "Passed"
+          else
+            echo "::error::Emulator tests failed"
+            exit 1
+          fi
       - name: Diagnose
         if: failure()
         run: |
@@ -128,6 +155,7 @@ jobs:
           sudo dmesg | grep -i -E "out of memory|killed process|oom" | tail -20 || true
           echo "--- last device log lines before the failure ---"
           tail -120 smoke-results/integration-logcat.txt || true
+          tail -60 smoke-results/retry/integration-logcat.txt || true
           ls -la /tmp/android-runner/ 2>/dev/null || true
           cp -r /tmp/android-runner smoke-results/emulator-crash 2>/dev/null || true
       - name: Upload screenshots and logs
