@@ -6,9 +6,13 @@ import 'package:flutter/services.dart';
 
 import 'app/ad_service.dart';
 import 'app/app_state.dart';
+import 'app/audio.dart';
 import 'app/level_repository.dart';
 import 'app/scope.dart';
 import 'screens/map_screen.dart';
+import 'ui/game_ui.dart';
+import 'ui/logo.dart';
+import 'ui/tile_art.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,20 +55,46 @@ void installErrorHandlers() {
   }
 }
 
-ThemeData buildTheme() => ThemeData(
-  colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF7B1FA2)),
-  useMaterial3: true,
-);
+ThemeData buildTheme() {
+  final base = ThemeData(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: Palette.grape,
+      primary: Palette.grape,
+    ),
+    useMaterial3: true,
+    fontFamily: 'Fredoka',
+  );
+  return base.copyWith(
+    textTheme: base.textTheme.apply(
+      bodyColor: Palette.ink,
+      displayColor: Palette.ink,
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected)
+            ? Colors.white
+            : const Color(0xFFE6DDF5),
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected)
+            ? Palette.mint
+            : const Color(0xFFB8A9D1),
+      ),
+    ),
+  );
+}
 
 class BlendBurstApp extends StatefulWidget {
   /// Optional pre-built state for tests.
   final AppState? state;
   final AdService ads;
+  final GameAudio? audio;
 
   const BlendBurstApp({
     super.key,
     this.state,
     this.ads = const PlaceholderAdService(),
+    this.audio,
   });
 
   @override
@@ -75,11 +105,20 @@ class _BlendBurstAppState extends State<BlendBurstApp> {
   AppState? _app;
   LevelRepository? _levels;
   Object? _error;
+  late final GameAudio _audio = widget.audio ?? GameAudio.create();
 
   @override
   void initState() {
     super.initState();
+    UiSounds.click = () => _audio.sfx(Sfx.click);
     _load();
+  }
+
+  @override
+  void dispose() {
+    UiSounds.click = null;
+    _audio.dispose();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -89,6 +128,10 @@ class _BlendBurstAppState extends State<BlendBurstApp> {
       final levels = await LevelRepository.load();
       if (widget.state == null) await app.load();
       app.totalLevels = levels.levels.length;
+      _audio.setSound(app.data.sound);
+      _audio.setMusic(app.data.music);
+      // Load sounds in the background; the game never waits for audio.
+      unawaited(_audio.preload());
       if (!mounted) return;
       setState(() {
         _app = app;
@@ -115,6 +158,7 @@ class _BlendBurstAppState extends State<BlendBurstApp> {
       app: app,
       levels: levels,
       ads: widget.ads,
+      audio: _audio,
       child: MaterialApp(
         title: 'Blend Burst',
         debugShowCheckedModeBanner: false,
@@ -133,49 +177,31 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF7B1FA2), Color(0xFFFF7043)],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Blend Burst',
-                style: TextStyle(
-                  fontSize: 44,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 24),
-              if (error == null)
-                const SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: CircularProgressIndicator(color: Colors.white),
-                )
-              else ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 32),
-                  child: Text(
-                    'Could not load the game.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                FilledButton(
-                  onPressed: onRetry,
-                  child: const Text('Try again'),
-                ),
+      body: PaintedBackground(
+        theme: 0,
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const BlendBurstLogo(size: 64),
+                const SizedBox(height: 36),
+                if (error == null)
+                  const SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 5,
+                    ),
+                  )
+                else ...[
+                  const GameText('Could not load the game', size: 22),
+                  const SizedBox(height: 16),
+                  CandyButton.label('Try again', onTap: onRetry, width: 220),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

@@ -34,6 +34,8 @@ class SaveData {
   int lifeClock = 0;
   Map<BoosterType, int> boosters = {for (final b in BoosterType.values) b: 3};
   bool haptics = true;
+  bool sound = true;
+  bool music = true;
   bool hints = true;
   bool tapActivate = true;
   int winStreak = 0;
@@ -53,6 +55,8 @@ class SaveData {
     'lifeClock': lifeClock,
     'boosters': boosters.map((k, v) => MapEntry(k.name, v)),
     'haptics': haptics,
+    'sound': sound,
+    'music': music,
     'hints': hints,
     'tapActivate': tapActivate,
     'winStreak': winStreak,
@@ -92,6 +96,8 @@ class SaveData {
       }
     }
     s.haptics = asBool(j['haptics'], true);
+    s.sound = asBool(j['sound'], true);
+    s.music = asBool(j['music'], true);
     s.hints = asBool(j['hints'], true);
     s.tapActivate = asBool(j['tapActivate'], true);
     s.winStreak = max(0, asInt(j['winStreak'], 0));
@@ -342,6 +348,16 @@ class AppState extends ChangeNotifier {
 
   void setHaptics(bool v) {
     data.haptics = v;
+    _changed();
+  }
+
+  void setSound(bool v) {
+    data.sound = v;
+    _changed();
+  }
+
+  void setMusic(bool v) {
+    data.music = v;
     _changed();
   }
 

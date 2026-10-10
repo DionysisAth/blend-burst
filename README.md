@@ -32,6 +32,13 @@ Android emulators.
   run the bot on it, and copy/paste the level JSON
 - Local save and a local analytics log (Settings → Analytics)
 - Colorblind-friendly: each color has its own shape
+- Music (map and level loops) and sound effects, with Music / Sound / Vibrate
+  toggles in Settings and the pause menu. All audio is synthesized by
+  `tool/audio/synth.py` (`python3 tool/audio/synth.py assets/audio`)
+- Hand-drawn vector art (tiles, specials, boosters, icons), candy-style UI,
+  illustrated tutorial cards for each new mechanic, praise callouts on big
+  cascades
+- Fonts: Fredoka and Lilita One (SIL Open Font License, in `assets/fonts/`)
 
 ## Project layout
 
@@ -39,9 +46,12 @@ Android emulators.
 lib/core/      pure-Dart game engine (no Flutter): board, rules, levels, bot
 lib/game/      animation controller and the board widget (rendering, input)
 lib/screens/   map, game, settings, editor, dialogs
-lib/app/       save data, lives/economy, level loading, ad placeholder
+lib/app/       save data, lives/economy, level loading, audio, ad placeholder
+lib/ui/        tile art, icons, logo, buttons/panels/dialog widgets
+assets/audio/  music and sound effects (WAV)
 assets/levels/ level packs (JSON), one file per episode
-tool/          level_bot.dart: plays levels to measure difficulty
+tool/          level_bot.dart: plays levels to measure difficulty;
+               audio/synth.py: generates every sound and music track
 test/          engine, level and widget tests
 integration_test/  on-device test (runs on the emulators in CI)
 ci/            release-APK smoke test (install, launch, monkey, restart)

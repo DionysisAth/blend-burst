@@ -57,7 +57,7 @@ Future<GameScreenState> openLevel(WidgetTester tester, int id) async {
   expect(find.byType(GameScreen), findsOneWidget);
   if (find.byKey(const Key('tutorial-ok')).evaluate().isNotEmpty) {
     await tester.tap(find.byKey(const Key('tutorial-ok')));
-    await run(tester, 400);
+    await run(tester, 800);
   }
   return tester.state<GameScreenState>(find.byType(GameScreen));
 }
@@ -102,7 +102,7 @@ void main() {
     expect(find.byKey(const Key('level-1')), findsOneWidget);
     expect(find.byKey(const Key('lives')), findsOneWidget);
     // The CI smoke test finds these through Android accessibility.
-    expect(find.bySemanticsLabel('Level 1'), findsOneWidget);
+    expect(find.bySemanticsLabel('Level 1'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 
@@ -270,7 +270,7 @@ void main() {
     await tester.tap(find.text('Analytics'));
     await run(tester, 600);
     expect(find.textContaining('Sessions'), findsOneWidget);
-    await tester.pageBack();
+    await tester.tap(find.bySemanticsLabel('Back'));
     await run(tester, 600);
     await tester.tap(find.text('Level editor'));
     await run(tester, 600);

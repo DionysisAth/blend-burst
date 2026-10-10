@@ -19,7 +19,8 @@
       "goals": [{"type": "score", "target": 7500}],
       "stars": [7500,35000,75500],
       "blending": false,
-      "tutorial": "Swipe a tile into a neighbor to match 3 or more of the same color!"
+      "tutorial": "Swipe a tile into a neighbor to match 3 or more of the same color!",
+      "tutorialArt": "match"
     },
     {
       "id": 2,
@@ -39,7 +40,8 @@
       "goals": [{"type": "score", "target": 12500}],
       "stars": [12500,50000,84500],
       "blending": false,
-      "tutorial": "Match 4 in a line to make a Line Blaster. Match it again to clear a whole row!"
+      "tutorial": "Match 4 in a line to make a Line Blaster. Match it again to clear a whole row!",
+      "tutorialArt": "line"
     },
     {
       "id": 3,
@@ -58,7 +60,8 @@
       ],
       "goals": [{"type": "collect", "color": "purple", "target": 4}],
       "stars": [4500,28500,51000],
-      "tutorial": "Swipe a Red tile into a Blue tile to BLEND them into Purple!"
+      "tutorial": "Swipe a Red tile into a Blue tile to BLEND them into Purple!",
+      "tutorialArt": "blendRB"
     },
     {
       "id": 4,
@@ -77,7 +80,8 @@
       ],
       "goals": [{"type": "collect", "color": "green", "target": 6}],
       "stars": [5500,33500,71000],
-      "tutorial": "Blue + Yellow = Green. Match 3 Greens for a big paint splash!"
+      "tutorial": "Blue + Yellow = Green. Match 3 Greens for a big paint splash!",
+      "tutorialArt": "blendBY"
     },
     {
       "id": 5,
@@ -96,7 +100,8 @@
       ],
       "goals": [{"type": "collect", "color": "orange", "target": 5}, {"type": "score", "target": 15000}],
       "stars": [15000,56000,110000],
-      "tutorial": "Red + Yellow = Orange. Secondary-color matches clear their neighbors too."
+      "tutorial": "Red + Yellow = Orange. Secondary-color matches clear their neighbors too.",
+      "tutorialArt": "blendRY"
     },
     {
       "id": 6,
@@ -115,7 +120,8 @@
       ],
       "goals": [{"type": "score", "target": 35000}],
       "stars": [35000,63500,90500],
-      "tutorial": "Match in an L or T shape to make a Paint Bomb that clears a 3x3 area."
+      "tutorial": "Match in an L or T shape to make a Paint Bomb that clears a 3x3 area.",
+      "tutorialArt": "bomb"
     },
     {
       "id": 7,
@@ -134,7 +140,8 @@
       ],
       "goals": [{"type": "stains"}],
       "stars": [9000,29000,37500],
-      "tutorial": "Paint stains hide under tiles. Make matches on top of them to clean them up!"
+      "tutorial": "Paint stains hide under tiles. Make matches on top of them to clean them up!",
+      "tutorialArt": "stain"
     },
     {
       "id": 8,
@@ -171,7 +178,8 @@
       ],
       "goals": [{"type": "collect", "color": "red", "target": 40}, {"type": "collect", "color": "blue", "target": 40}],
       "stars": [16500,46000,57000],
-      "tutorial": "Match 5 in a line to make a Prism. Swap it with any tile to clear every tile of that color!"
+      "tutorial": "Match 5 in a line to make a Prism. Swap it with any tile to clear every tile of that color!",
+      "tutorialArt": "prism"
     },
     {
       "id": 10,
@@ -209,7 +217,8 @@
       ],
       "goals": [{"type": "collect", "color": "purple", "target": 7}, {"type": "score", "target": 20000}],
       "stars": [20000,40000,52000],
-      "tutorial": "Blend a secondary with the primary it's missing (Purple + Yellow, Green + Red, Orange + Blue) to make a White Burst!"
+      "tutorial": "Blend a secondary with the primary it's missing (Purple + Yellow, Green + Red, Orange + Blue) to make a White Burst!",
+      "tutorialArt": "whiteburst"
     },
     {
       "id": 12,

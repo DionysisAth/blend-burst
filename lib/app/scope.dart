@@ -2,18 +2,21 @@ import 'package:flutter/widgets.dart';
 
 import 'ad_service.dart';
 import 'app_state.dart';
+import 'audio.dart';
 import 'level_repository.dart';
 
 /// Makes the app state, levels and services available to every screen.
 class AppScope extends InheritedNotifier<AppState> {
   final LevelRepository levels;
   final AdService ads;
+  final GameAudio audio;
 
   const AppScope({
     super.key,
     required AppState app,
     required this.levels,
     required this.ads,
+    required this.audio,
     required super.child,
   }) : super(notifier: app);
 

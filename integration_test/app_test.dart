@@ -125,7 +125,7 @@ void main() {
     await run(tester, 1000);
     await tester.pageBack();
     await run(tester, 800);
-    await tester.pageBack();
+    await tester.tap(find.bySemanticsLabel('Back'));
     expect(await waitFor(tester, find.byType(MapScreen)), isTrue);
   });
 }

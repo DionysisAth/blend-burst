@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 
 import '../app/app_state.dart';
+import '../app/audio.dart';
 import '../app/scope.dart';
 import '../core/board.dart';
 import '../core/level.dart';
@@ -10,6 +12,8 @@ import '../core/models.dart';
 import '../core/session.dart';
 import '../game/board_view.dart';
 import '../game/game_controller.dart';
+import '../ui/game_ui.dart';
+import '../ui/icons.dart';
 import '../ui/tile_art.dart';
 import '../ui/widgets.dart';
 import 'dialogs.dart';
@@ -33,6 +37,8 @@ class GameScreen extends StatefulWidget {
 }
 
 class GameScreenState extends State<GameScreen> {
+  static int _alive = 0;
+
   late final GameSession session;
   late final GameController controller;
   late final AppScope _scope;
@@ -48,23 +54,28 @@ class GameScreenState extends State<GameScreen> {
   bool _failed = false;
 
   AppState get app => _scope.app;
+  GameAudio get audio => _scope.audio;
   LevelDef get level => widget.level;
 
   @override
   void initState() {
     super.initState();
+    _alive++;
     _scope = AppScope.read(context);
     session = GameSession(level, seed: widget.seed);
     controller = GameController(session);
     controller.onIdle = _onIdle;
     controller.addListener(_onController);
     if (!widget.testMode) app.startLevel(level.id);
+    audio.music(Music.game);
     _restartHintTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) => _showTutorial());
   }
 
   @override
   void dispose() {
+    _alive--;
+    if (_alive == 0) audio.music(Music.map);
     _hintTimer?.cancel();
     controller.removeListener(_onController);
     controller.onIdle = null;
@@ -81,26 +92,16 @@ class GameScreenState extends State<GameScreen> {
   // ------------------------------------------------------------- tutorial
 
   Future<void> _showTutorial() async {
+    if (!mounted) return;
     final text = level.tutorial;
-    if (!mounted || text == null) return;
-    if (!widget.testMode && app.data.tutorialsSeen.contains(level.id)) return;
-    _dialogOpen = true;
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(level.name),
-        content: Text(text, style: const TextStyle(fontSize: 17)),
-        actions: [
-          FilledButton(
-            key: const Key('tutorial-ok'),
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Got it!'),
-          ),
-        ],
-      ),
-    );
-    _dialogOpen = false;
-    if (!widget.testMode) app.markTutorialSeen(level.id);
+    final seen = !widget.testMode && app.data.tutorialsSeen.contains(level.id);
+    if (text != null && !seen) {
+      _dialogOpen = true;
+      await showTutorialCard(context, level);
+      _dialogOpen = false;
+      if (!widget.testMode) app.markTutorialSeen(level.id);
+    }
+    if (mounted) audio.sfx(Sfx.start);
     _restartHintTimer();
   }
 
@@ -146,6 +147,7 @@ class GameScreenState extends State<GameScreen> {
         if (session.board.tileAt(p) == null) return;
         final first = freeSwapFirst;
         if (first == null) {
+          audio.sfx(Sfx.click);
           setState(() => freeSwapFirst = p);
         } else if (first == p) {
           setState(() => freeSwapFirst = null);
@@ -163,6 +165,7 @@ class GameScreenState extends State<GameScreen> {
   void _useBooster(BoosterType type, MoveOutcome o) {
     if (o.steps.isEmpty) return;
     if (!widget.testMode) app.useBooster(type, level.id);
+    audio.sfx(Sfx.booster);
     setState(() {
       activeBooster = null;
       freeSwapFirst = null;
@@ -172,6 +175,7 @@ class GameScreenState extends State<GameScreen> {
 
   Future<void> _selectBooster(BoosterType type) async {
     if (busy) return;
+    audio.sfx(Sfx.click);
     if (activeBooster == type) {
       setState(() {
         activeBooster = null;
@@ -182,16 +186,22 @@ class GameScreenState extends State<GameScreen> {
     if (!widget.testMode && app.boosterCount(type) <= 0) {
       final buy = await confirm(
         context,
-        'Out of ${type.label}',
+        'Get ${type.label}',
         'Buy one ${type.label} for ${AppState.boosterCost} coins?',
         ok: 'Buy',
       );
       if (!buy || !mounted) return;
       if (!app.buyBooster(type)) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(const SnackBar(content: Text('Not enough coins')));
+        await confirm(
+          context,
+          'Not enough coins',
+          'Win levels to earn more coins!',
+          ok: 'OK',
+          cancel: 'Close',
+        );
         return;
       }
+      audio.sfx(Sfx.coin);
     }
     setState(() {
       activeBooster = type;
@@ -218,6 +228,9 @@ class GameScreenState extends State<GameScreen> {
           _finaleStarted = true;
           final steps = session.finale();
           if (steps.isNotEmpty) {
+            audio.sfx(Sfx.praise);
+            // The finale is a reward, not a wait: play it fast.
+            controller.speed = 2.2;
             controller.play(steps);
             return;
           }
@@ -236,43 +249,15 @@ class GameScreenState extends State<GameScreen> {
         ? null
         : app.completeLevel(level.id, stars, score, session.movesLeft);
     final next = _scope.levels.byId(level.id + 1);
+    audio.sfx(Sfx.win);
     _dialogOpen = true;
-    final choice = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Level complete!', textAlign: TextAlign.center),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            StarRow(stars: stars, size: 48),
-            const SizedBox(height: 12),
-            Text(
-              'Score $score',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-            ),
-            if (reward != null) ...[
-              const SizedBox(height: 8),
-              Text('+${reward.coins} coins'),
-              if (reward.booster != null)
-                Text('Bonus: +1 ${reward.booster!.label}!'),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            key: const Key('win-map'),
-            onPressed: () => Navigator.of(ctx).pop('map'),
-            child: Text(widget.testMode ? 'Back to editor' : 'Map'),
-          ),
-          if (!widget.testMode && next != null)
-            FilledButton(
-              key: const Key('win-next'),
-              onPressed: () => Navigator.of(ctx).pop('next'),
-              child: const Text('Next level'),
-            ),
-        ],
-      ),
+    final choice = await showWinDialog(
+      context,
+      stars: stars,
+      score: score,
+      reward: reward,
+      hasNext: next != null,
+      testMode: widget.testMode,
     );
     _dialogOpen = false;
     if (!mounted) return;
@@ -299,49 +284,15 @@ class GameScreenState extends State<GameScreen> {
 
   Future<void> _showOutOfMoves() async {
     final cost = AppState.extraMovesCost(session.extraMovesBought);
-    final goals = session.progress();
+    audio.sfx(Sfx.lose, volume: 0.7);
     _dialogOpen = true;
-    final choice = await showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Out of moves!', textAlign: TextAlign.center),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('So close! Keep going?'),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [for (final g in goals) GoalChip(progress: g)],
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            key: const Key('give-up'),
-            onPressed: () => Navigator.of(ctx).pop('quit'),
-            child: const Text('Give up'),
-          ),
-          if (!_adUsed)
-            TextButton(
-              key: const Key('ad-moves'),
-              onPressed: () => Navigator.of(ctx).pop('ad'),
-              child: const Text('Watch ad: +5'),
-            ),
-          FilledButton(
-            key: const Key('buy-moves'),
-            onPressed: widget.testMode || app.coins >= cost
-                ? () => Navigator.of(ctx).pop('coins')
-                : null,
-            child: Text(
-              widget.testMode ? '+5 moves' : '+5 moves ($cost coins)',
-            ),
-          ),
-        ],
-      ),
+    final choice = await showOutOfMovesDialog(
+      context,
+      goals: session.progress(),
+      cost: cost,
+      canAfford: app.coins >= cost,
+      adAvailable: !_adUsed,
+      testMode: widget.testMode,
     );
     _dialogOpen = false;
     if (!mounted) return;
@@ -351,6 +302,7 @@ class GameScreenState extends State<GameScreen> {
           if (!widget.testMode) {
             app.logAndSave('extra_moves', {'level': level.id, 'cost': cost});
           }
+          audio.sfx(Sfx.coin);
           setState(() => session.addMoves(5));
           _restartHintTimer();
         }
@@ -362,6 +314,7 @@ class GameScreenState extends State<GameScreen> {
           if (!widget.testMode) {
             app.logAndSave('ad_reward', {'reward': 'moves', 'level': level.id});
           }
+          audio.sfx(Sfx.booster);
           setState(() => session.addMoves(5));
           _restartHintTimer();
         } else {
@@ -383,33 +336,14 @@ class GameScreenState extends State<GameScreen> {
       return;
     }
     _dialogOpen = true;
-    final retry = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Level failed'),
-        content: Text(
-          widget.testMode
-              ? 'Try again?'
-              : 'You lost a life. Lives left: ${app.lives}',
-        ),
-        actions: [
-          TextButton(
-            key: const Key('fail-map'),
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(widget.testMode ? 'Back to editor' : 'Map'),
-          ),
-          FilledButton(
-            key: const Key('fail-retry'),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
+    final retry = await showFailDialog(
+      context,
+      livesLeft: app.lives,
+      testMode: widget.testMode,
     );
     _dialogOpen = false;
     if (!mounted) return;
-    if (retry == true) {
+    if (retry) {
       await _openLevel(level);
     } else {
       Navigator.of(context).pop();
@@ -420,32 +354,10 @@ class GameScreenState extends State<GameScreen> {
     if (_dialogOpen || _ended) return;
     final willLose = !widget.testMode && session.movesUsed > 0;
     _dialogOpen = true;
-    final quit = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Paused'),
-        content: Text(
-          willLose
-              ? 'Quitting now costs a life.'
-              : 'Take a break or leave the level.',
-        ),
-        actions: [
-          TextButton(
-            key: const Key('pause-quit'),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(willLose ? 'Quit (-1 life)' : 'Quit'),
-          ),
-          FilledButton(
-            key: const Key('pause-resume'),
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Resume'),
-          ),
-        ],
-      ),
-    );
+    final quit = await showPauseDialog(context, willLose: willLose);
     _dialogOpen = false;
     if (!mounted) return;
-    if (quit == true) {
+    if (quit) {
       controller.finishAll();
       if (willLose) {
         await _fail('quit');
@@ -476,30 +388,21 @@ class GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Palette.episode(level.episode);
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _pause();
       },
       child: Scaffold(
-        body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: colors,
-            ),
-          ),
+        body: PaintedBackground(
+          theme: level.episode,
           child: SafeArea(
             child: Column(
               children: [
-                _topBar(),
-                _goalsRow(),
-                _scoreBar(),
+                _hud(),
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
                     child: BoardView(
                       key: const Key('board'),
                       controller: controller,
@@ -509,6 +412,7 @@ class GameScreenState extends State<GameScreen> {
                       hint: hint,
                       selected: freeSwapFirst,
                       haptics: app.data.haptics,
+                      audio: audio,
                     ),
                   ),
                 ),
@@ -521,247 +425,398 @@ class GameScreenState extends State<GameScreen> {
     );
   }
 
-  Widget _topBar() {
+  Widget _hud() {
+    final low =
+        session.movesLeft <= 5 && session.status == SessionStatus.playing;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 4, 12, 0),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          IconButton(
-            key: const Key('pause'),
-            onPressed: _pause,
-            icon: const Icon(Icons.pause_circle_filled, size: 34),
-            color: const Color(0xFF4A148C),
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: RoundButton(
+              GameIcons.pause,
+              key: const Key('pause'),
+              onTap: _pause,
+              size: 48,
+              label: 'Pause',
+            ),
           ),
+          const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.testMode ? 'Test: ${level.name}' : 'Level ${level.id}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF4A148C),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 6),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFFFFFFF), Color(0xFFF1E3FF)],
+                ),
+                border: Border.all(color: Palette.plum, width: 4),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x55301040),
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
                   ),
-                ),
-                Row(
-                  children: [
-                    Icon(
-                      _gravityIcon(controller.shown.gravity),
-                      size: 16,
-                      color: const Color(0xFF4A148C),
-                    ),
-                    Text(
-                      ' Gravity ${controller.shown.gravity.name}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF4A148C),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: GameText(
+                            widget.testMode
+                                ? 'Test level'
+                                : 'Level ${level.id}',
+                            size: 16,
+                            color: Palette.sun,
+                          ),
+                        ),
                       ),
+                      const SizedBox(width: 6),
+                      _GravityChip(controller.shown.gravity),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final g in controller.goals)
+                          GoalChip(progress: g, size: 44),
+                      ],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 2),
+                  _scoreBar(),
+                ],
+              ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4A148C),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  'MOVES',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  '${session.movesLeft}',
-                  key: const Key('moves-left'),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(width: 8),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: _MovesBadge(moves: session.movesLeft, low: low),
           ),
         ],
-      ),
-    );
-  }
-
-  IconData _gravityIcon(Gravity g) => switch (g) {
-    Gravity.down => Icons.arrow_downward,
-    Gravity.up => Icons.arrow_upward,
-    Gravity.left => Icons.arrow_back,
-    Gravity.right => Icons.arrow_forward,
-  };
-
-  Widget _goalsRow() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 6,
-        alignment: WrapAlignment.center,
-        children: [for (final g in controller.goals) GoalChip(progress: g)],
       ),
     );
   }
 
   Widget _scoreBar() {
     final s = level.stars;
-    final top = s[2] * 1.1;
+    final top = s[2] * 1.08;
     final score = controller.score;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SizedBox(
-        height: 26,
-        child: LayoutBuilder(
-          builder: (context, box) {
-            final w = box.maxWidth;
-            return Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  top: 8,
-                  bottom: 8,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: (score / top).clamp(0.0, 1.0),
-                      backgroundColor: Colors.white54,
-                      color: const Color(0xFF7B1FA2),
-                    ),
-                  ),
-                ),
-                for (final t in s)
-                  Positioned(
-                    left: (t / top).clamp(0.0, 1.0) * w - 11,
-                    top: 2,
-                    child: Icon(
-                      Icons.star_rounded,
-                      size: 22,
-                      color: score >= t ? Colors.amber : Colors.white,
-                    ),
-                  ),
-                Positioned(
-                  left: 0,
-                  top: -2,
-                  child: Text(
-                    '$score',
-                    key: const Key('score'),
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF4A148C),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
+    final frac = (score / top).clamp(0.0, 1.0);
+    return Row(
+      children: [
+        SizedBox(
+          width: 58,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: GameText('$score', key: const Key('score'), size: 18),
+          ),
         ),
-      ),
+        Expanded(
+          child: SizedBox(
+            height: 34,
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final w = box.maxWidth;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      top: 10,
+                      height: 18,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xAA3B1A63),
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(color: Colors.white, width: 2.5),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(7),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: AnimatedFractionallySizedBox(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOut,
+                              widthFactor: max(frac, 0.02),
+                              heightFactor: 1,
+                              child: const DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Color(0xFFFFE14D),
+                                      Color(0xFFFF8A1F),
+                                      Color(0xFFFF4FA3),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    for (final t in s)
+                      Positioned(
+                        left: (t / top).clamp(0.0, 1.0) * w - 16,
+                        top: 2,
+                        child: AnimatedScale(
+                          scale: score >= t ? 1.15 : 0.9,
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.elasticOut,
+                          child: GameIcon(
+                            score >= t ? GameIcons.star : GameIcons.starEmpty,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+      ],
     );
   }
 
   Widget _boosterBar() {
     final active = activeBooster;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (active != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                active == BoosterType.freeSwap && freeSwapFirst != null
-                    ? 'Now tap the second tile.'
-                    : active.help,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF4A148C),
-                ),
-              ),
+          // Fixed height, so the board does not jump when a booster is
+          // selected.
+          SizedBox(
+            height: 40,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: active == null
+                  ? const SizedBox.shrink()
+                  : FittedBox(
+                      key: ValueKey(active),
+                      fit: BoxFit.scaleDown,
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xEE3B1A63),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Palette.sun, width: 2),
+                        ),
+                        child: Text(
+                          active == BoosterType.freeSwap &&
+                                  freeSwapFirst != null
+                              ? 'Now tap the second tile.'
+                              : active.help,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
             ),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [for (final b in BoosterType.values) _boosterButton(b)],
+            children: [
+              for (final b in BoosterType.values)
+                _BoosterButton(
+                  type: b,
+                  count: widget.testMode ? 99 : app.boosterCount(b),
+                  selected: active == b,
+                  onTap: () => _selectBooster(b),
+                ),
+            ],
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _boosterButton(BoosterType b) {
-    final selected = activeBooster == b;
-    final count = widget.testMode ? 99 : app.boosterCount(b);
-    final icon = switch (b) {
-      BoosterType.brush => Icons.brush,
-      BoosterType.freeSwap => Icons.swap_horiz,
-      BoosterType.colorSplash => Icons.format_color_fill,
+class _GravityChip extends StatelessWidget {
+  final Gravity gravity;
+  const _GravityChip(this.gravity);
+
+  @override
+  Widget build(BuildContext context) {
+    final angle = switch (gravity) {
+      Gravity.down => pi / 2,
+      Gravity.up => -pi / 2,
+      Gravity.left => pi,
+      Gravity.right => 0.0,
     };
-    return GestureDetector(
-      key: Key('booster-${b.name}'),
-      onTap: () => _selectBooster(b),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: 92,
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFFFFEB3B)
-              : Colors.white.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected ? const Color(0xFFF57F17) : Colors.transparent,
-            width: 2,
-          ),
+    return Tooltip(
+      message: 'Gravity ${gravity.name}',
+      child: AnimatedRotation(
+        turns: angle / (2 * pi),
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOutBack,
+        child: const GameIcon(GameIcons.arrow, size: 22),
+      ),
+    );
+  }
+}
+
+class _MovesBadge extends StatelessWidget {
+  final int moves;
+  final bool low;
+  const _MovesBadge({required this.moves, required this.low});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      width: 74,
+      height: 74,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: low
+              ? const [Color(0xFFFF8A8A), Color(0xFFE01E3C)]
+              : const [Color(0xFFC79BFF), Color(0xFF7B3FC4)],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, size: 30, color: const Color(0xFF6A1B9A)),
-                Positioned(
-                  right: -14,
-                  top: -6,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 1,
-                    ),
+        border: Border.all(color: Colors.white, width: 4),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x66301040),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            'MOVES',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
+            ),
+          ),
+          GameText('$moves', key: const Key('moves-left'), size: 30),
+        ],
+      ),
+    );
+  }
+}
+
+class _BoosterButton extends StatelessWidget {
+  final BoosterType type;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+  const _BoosterButton({
+    required this.type,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = switch (type) {
+      BoosterType.brush => const [Color(0xFFFFA3D1), Color(0xFFE8368F)],
+      BoosterType.freeSwap => const [Color(0xFF8FE3FF), Color(0xFF1F8EF0)],
+      BoosterType.colorSplash => const [Color(0xFF9CF5B8), Color(0xFF1FB86B)],
+    };
+    return Semantics(
+      button: true,
+      label: type.label,
+      child: GestureDetector(
+        key: Key('booster-${type.name}'),
+        onTap: onTap,
+        child: AnimatedScale(
+          scale: selected ? 1.12 : 1,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutBack,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 76,
+                    height: 76,
                     decoration: BoxDecoration(
-                      color: count > 0 ? Colors.green : Colors.orange,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      count > 0 ? '$count' : '+',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: colors,
                       ),
+                      border: Border.all(
+                        color: selected ? Palette.sun : Colors.white,
+                        width: selected ? 5 : 4,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: selected
+                              ? const Color(0xAAFFE14D)
+                              : const Color(0x66301040),
+                          blurRadius: selected ? 16 : 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
+                    alignment: Alignment.center,
+                    child: GameIcon(boosterIcon(type), size: 56),
+                  ),
+                  Positioned(
+                    right: -6,
+                    top: -4,
+                    child: count > 0
+                        ? CountBadge('$count')
+                        : const CountBadge('+', color: Color(0xFF22B84C)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                width: 104,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: GameText(
+                    type.label,
+                    size: 15,
+                    family: 'Fredoka',
+                    strokeWidth: 3.5,
                   ),
                 ),
-              ],
-            ),
-            Text(
-              b.label,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );

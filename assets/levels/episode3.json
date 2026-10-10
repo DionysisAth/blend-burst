@@ -19,7 +19,8 @@
       "goals": [{"type": "score", "target": 20000}, {"type": "stains"}],
       "stars": [20000,40500,50500],
       "gravity": "up",
-      "tutorial": "In the Paint Factory, gravity can change! Here tiles fall UP. Watch the arrow on the board edge."
+      "tutorial": "In the Paint Factory, gravity can change! Here tiles fall UP. Watch the arrow on the board edge.",
+      "tutorialArt": "gravityUp"
     },
     {
       "id": 32,
@@ -39,7 +40,8 @@
       "goals": [{"type": "stains"}],
       "stars": [10000,30500,40500],
       "gravity": "left",
-      "tutorial": "Gravity pulls to the left now. New tiles enter from the right."
+      "tutorial": "Gravity pulls to the left now. New tiles enter from the right.",
+      "tutorialArt": "gravityLeft"
     },
     {
       "id": 33,
@@ -88,7 +90,8 @@
         "........"
       ],
       "switchChance": 0.03,
-      "tutorial": "Tiles with a swirl badge are Gravity Switches. Clear one to rotate gravity 90 degrees!"
+      "tutorial": "Tiles with a swirl badge are Gravity Switches. Clear one to rotate gravity 90 degrees!",
+      "tutorialArt": "switch"
     },
     {
       "id": 35,

@@ -53,6 +53,9 @@ class LevelDef {
   bool hard;
   String? tutorial;
 
+  /// Optional illustration for the tutorial card (see TutorialArt).
+  String? tutorialArt;
+
   LevelDef({
     required this.id,
     required this.name,
@@ -68,6 +71,7 @@ class LevelDef {
     this.maxSwitches = 2,
     this.hard = false,
     this.tutorial,
+    this.tutorialArt,
   }) {
     validate();
   }
@@ -139,6 +143,7 @@ class LevelDef {
       maxSwitches: (j['maxSwitches'] as num?)?.toInt() ?? 2,
       hard: j['hard'] as bool? ?? false,
       tutorial: j['tutorial'] as String?,
+      tutorialArt: j['tutorialArt'] as String?,
     );
   }
 
@@ -157,6 +162,7 @@ class LevelDef {
     if (maxSwitches != 2) 'maxSwitches': maxSwitches,
     if (hard) 'hard': true,
     if (tutorial != null) 'tutorial': tutorial,
+    if (tutorialArt != null) 'tutorialArt': tutorialArt,
   };
 
   LevelDef copy() => LevelDef.fromJson(toJson());

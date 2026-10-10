@@ -18,7 +18,8 @@
       ],
       "goals": [{"type": "glass"}],
       "stars": [6000,18000,30500],
-      "tutorial": "Glass blocks break when you make a match next to them, or blast them with specials."
+      "tutorial": "Glass blocks break when you make a match next to them, or blast them with specials.",
+      "tutorialArt": "glass"
     },
     {
       "id": 17,
@@ -55,7 +56,8 @@
       ],
       "goals": [{"type": "glass"}],
       "stars": [7500,23000,32500],
-      "tutorial": "Some glass has 2 layers. Hit it twice!"
+      "tutorial": "Some glass has 2 layers. Hit it twice!",
+      "tutorialArt": "glass2"
     },
     {
       "id": 19,
@@ -111,7 +113,8 @@
       ],
       "goals": [{"type": "collect", "color": "purple", "target": 60}],
       "stars": [18000,57500,78500],
-      "tutorial": "Purple tiles now grow on the board. Blend more to collect faster!"
+      "tutorial": "Purple tiles now grow on the board. Blend more to collect faster!",
+      "tutorialArt": "secondary"
     },
     {
       "id": 22,
