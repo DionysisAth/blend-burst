@@ -50,33 +50,36 @@ class BlendBurstLogo extends StatelessWidget {
     return Semantics(
       label: 'Blend Burst',
       child: ExcludeSemantics(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Transform.rotate(
-                  angle: -0.3,
-                  child: MiniTile(color: TileColor.red, size: size * 0.8),
-                ),
-                MiniTile(
-                  color: null,
-                  special: Special.whiteBurst,
-                  size: size * 1.1,
-                ),
-                Transform.rotate(
-                  angle: 0.3,
-                  child: MiniTile(color: TileColor.blue, size: size * 0.8),
-                ),
-              ],
-            ),
-            _word('Blend', 0),
-            Transform.translate(
-              offset: Offset(0, -size * 0.18),
-              child: _word('Burst', 3),
-            ),
-          ],
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Transform.rotate(
+                    angle: -0.3,
+                    child: MiniTile(color: TileColor.red, size: size * 0.8),
+                  ),
+                  MiniTile(
+                    color: null,
+                    special: Special.whiteBurst,
+                    size: size * 1.1,
+                  ),
+                  Transform.rotate(
+                    angle: 0.3,
+                    child: MiniTile(color: TileColor.blue, size: size * 0.8),
+                  ),
+                ],
+              ),
+              _word('Blend', 0),
+              Transform.translate(
+                offset: Offset(0, -size * 0.18),
+                child: _word('Burst', 3),
+              ),
+            ],
+          ),
         ),
       ),
     );

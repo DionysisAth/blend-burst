@@ -323,22 +323,25 @@ class _WinPanelState extends State<_WinPanel>
                         vertical: 10,
                         horizontal: 12,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const GameIcon(GameIcons.coin, size: 34),
-                          const SizedBox(width: 6),
-                          GameText('+${widget.reward!.coins}', size: 24),
-                          if (widget.reward!.booster != null) ...[
-                            const SizedBox(width: 18),
-                            GameIcon(
-                              boosterIcon(widget.reward!.booster!),
-                              size: 34,
-                            ),
-                            const SizedBox(width: 4),
-                            const GameText('+1', size: 24),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const GameIcon(GameIcons.coin, size: 34),
+                            const SizedBox(width: 6),
+                            GameText('+${widget.reward!.coins}', size: 24),
+                            if (widget.reward!.booster != null) ...[
+                              const SizedBox(width: 18),
+                              GameIcon(
+                                boosterIcon(widget.reward!.booster!),
+                                size: 34,
+                              ),
+                              const SizedBox(width: 4),
+                              const GameText('+1', size: 24),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ],
@@ -609,15 +612,25 @@ class SoundToggles extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        toggle(GameIcons.music, 'Music', app.data.music, (v) {
-          app.setMusic(v);
-          scope.audio.setMusic(v);
-        }),
-        toggle(GameIcons.sound, 'Sound', app.data.sound, (v) {
-          app.setSound(v);
-          scope.audio.setSound(v);
-        }),
-        toggle(GameIcons.vibrate, 'Vibrate', app.data.haptics, app.setHaptics),
+        for (final t in [
+          toggle(GameIcons.music, 'Music', app.data.music, (v) {
+            app.setMusic(v);
+            scope.audio.setMusic(v);
+          }),
+          toggle(GameIcons.sound, 'Sound', app.data.sound, (v) {
+            app.setSound(v);
+            scope.audio.setSound(v);
+          }),
+          toggle(
+            GameIcons.vibrate,
+            'Vibrate',
+            app.data.haptics,
+            app.setHaptics,
+          ),
+        ])
+          Flexible(
+            child: FittedBox(fit: BoxFit.scaleDown, child: t),
+          ),
       ],
     );
   }

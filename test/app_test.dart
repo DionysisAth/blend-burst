@@ -228,9 +228,12 @@ void main() {
   });
 
   testWidgets('every level opens and plays a few moves', (tester) async {
-    // A small 360dp-wide phone, to catch layout overflows.
-    await boot(tester, prefs: unlockedAll, size: const Size(990, 1980));
-    for (final id in [1, 3, 7, 11, 16, 21, 25, 31, 32, 33, 34, 40]) {
+    // A small 320dp-wide phone, to catch layout overflows. The list covers
+    // every level that shows a tutorial card.
+    await boot(tester, prefs: unlockedAll, size: const Size(880, 1760));
+    for (final id in [
+      1, 2, 3, 4, 5, 6, 7, 9, 11, 16, 18, 21, 25, 31, 32, 33, 34, 40, //
+    ]) {
       final game = await openLevel(tester, id);
       for (var i = 0; i < 3; i++) {
         for (var w = 0; w < 100 && game.busy; w++) {

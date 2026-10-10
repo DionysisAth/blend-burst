@@ -656,11 +656,18 @@ class GameScreenState extends State<GameScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               for (final b in BoosterType.values)
-                _BoosterButton(
-                  type: b,
-                  count: widget.testMode ? 99 : app.boosterCount(b),
-                  selected: active == b,
-                  onTap: () => _selectBooster(b),
+                // Each button gets a third of the width and shrinks to fit
+                // on narrow phones.
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: _BoosterButton(
+                      type: b,
+                      count: widget.testMode ? 99 : app.boosterCount(b),
+                      selected: active == b,
+                      onTap: () => _selectBooster(b),
+                    ),
+                  ),
                 ),
             ],
           ),

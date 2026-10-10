@@ -192,8 +192,11 @@ class TutorialArt extends StatelessWidget {
     double size = 48,
   }) => MiniTile(color: c, special: special, gravitySwitch: sw, size: size);
 
-  Widget _row(List<Widget> children) =>
-      Row(mainAxisAlignment: MainAxisAlignment.center, children: children);
+  // Shrinks the whole illustration on narrow screens instead of overflowing.
+  Widget _row(List<Widget> children) => FittedBox(
+    fit: BoxFit.scaleDown,
+    child: Row(mainAxisSize: MainAxisSize.min, children: children),
+  );
 
   @override
   Widget build(BuildContext context) {
