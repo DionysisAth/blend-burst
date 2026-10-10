@@ -67,6 +67,11 @@ jobs:
     # Newer emulator system images have crashed on the CI host while drawing;
     # only the configs marked required gate the release.
     continue-on-error: ${{ !matrix.required }}
+    # The game plays music. With -noaudio the emulator has no audio device
+    # and the guest audio HAL fails every write (pcm_writei I/O errors).
+    # Keep the device and route it to QEMU's silent null backend instead.
+    env:
+      QEMU_AUDIO_DRV: none
     strategy:
       fail-fast: false
       matrix:
@@ -116,7 +121,7 @@ jobs:
           arch: x86_64
           target: ${{ matrix.target }}
           ram-size: 3072M
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -no-boot-anim -camera-back none
           disable-animations: true
           script: |
             bash ci/android_smoke_test.sh blend-burst.apk smoke-results
@@ -134,7 +139,7 @@ jobs:
           arch: x86_64
           target: ${{ matrix.target }}
           ram-size: 3072M
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -no-boot-anim -camera-back none
           disable-animations: true
           script: |
             bash ci/android_smoke_test.sh blend-burst.apk smoke-results/retry
@@ -201,6 +206,6 @@ jobs:
             --target "${{ github.sha }}" \
             --title "Blend Burst build ${{ github.run_number }}" \
             --latest \
-            --notes "Android test build from ${{ github.sha }}. Passed unit, widget, bot, release-APK smoke (monkey) and on-device integration tests on API 29 and 34 emulators.
+            --notes "Android test build from ${{ github.sha }}. Passed unit, widget, bot, release-APK smoke (monkey) and on-device integration tests on API 29 and 35 emulators.
 
           Install: download blend-burst.apk on your phone and open it (allow installs from your browser if asked)."

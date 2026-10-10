@@ -17,8 +17,17 @@ A() { timeout "${T:-60}" adb "$@" < /dev/null; }
 
 device_ok() { [ "$(T=10 A get-state 2>/dev/null)" = "device" ]; }
 
+print_log() {
+  echo "--- device log (app, Flutter, graphics, crashes) ---"
+  grep -a -E "$PKG|flutter|Impeller|impeller|FATAL|F libc|F DEBUG|AndroidRuntime|gralloc|EGL|vulkan|Vulkan|lowmemorykiller|lmkd|am_kill|Process .* died|ActivityManager: Kill" \
+    "$OUT/live-logcat.txt" 2>/dev/null | tail -150 || true
+  echo "--- last 60 device log lines ---"
+  tail -60 "$OUT/live-logcat.txt" 2>/dev/null || true
+}
+
 fail() {
   echo "SMOKE TEST FAILED: $*"
+  print_log
   if ! device_ok; then
     echo "!! The emulator itself is gone (not an app crash)."
     touch "$OUT/EMULATOR_DIED"
@@ -74,6 +83,9 @@ tap_node() {
 T=120 A wait-for-device
 A shell input keyevent 82 || true   # dismiss any lock screen
 A logcat -c || true
+# Stream the device log to a file from the start, so it survives even when
+# the app or the emulator dies before we can dump it.
+adb logcat -v threadtime > "$OUT/live-logcat.txt" 2>&1 < /dev/null &
 T=180 A install -r "$APK" || fail "install failed"
 
 echo "== Launching"
