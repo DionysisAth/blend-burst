@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../core/board.dart';
 import '../core/models.dart';
 import '../ui/tile_art.dart';
+import 'sprites.dart';
 import 'game_controller.dart';
 
 /// Board placement inside the widget: cell size and top-left corner.
@@ -125,6 +126,8 @@ class BoardViewState extends State<BoardView>
   Offset drag = Offset.zero;
   bool _dragDone = false;
   BoardGeometry? geometry;
+  final sprites = SpriteCache();
+  double devicePixelRatio = 1;
 
   GameController get controller => widget.controller;
 
@@ -154,6 +157,7 @@ class BoardViewState extends State<BoardView>
     if (controller.onStepStart == _onStepStart) controller.onStepStart = null;
     _ticker.dispose();
     _repaint.dispose();
+    sprites.clear();
     super.dispose();
   }
 
@@ -371,6 +375,7 @@ class BoardViewState extends State<BoardView>
 
   @override
   Widget build(BuildContext context) {
+    devicePixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
     return LayoutBuilder(
       builder: (context, box) {
         final size = Size(box.maxWidth, box.maxHeight);
@@ -474,6 +479,7 @@ class _BoardPainter extends CustomPainter {
     }
     final gravity = step?.after.gravity ?? before.gravity;
     final radius = cell * 0.42;
+    s.sprites.configure(radius, cell, s.devicePixelRatio);
     final dragPos = s.dragStart;
     for (final f in frames) {
       var center = g.center(f.r, f.c);
@@ -494,15 +500,40 @@ class _BoardPainter extends CustomPainter {
         canvas.rotate(f.rotation);
         canvas.translate(-center.dx, -center.dy);
       }
-      TileArt.paint(
+      final look = f.look;
+      var scale = f.scale * (isDragged ? 1.08 : 1);
+      var spin = 0.0;
+      switch (look.special) {
+        case Special.prism:
+          spin = s.time * 0.6;
+        case Special.whiteBurst:
+          spin = s.time;
+        case Special.bomb:
+          scale *= 1 + 0.05 * sin(s.time * 6);
+        default:
+          break;
+      }
+      final drawn = s.sprites.drawTile(
         canvas,
         center,
-        radius * f.scale * (isDragged ? 1.08 : 1),
-        color: f.look.color,
-        special: f.look.special,
-        gravitySwitch: f.look.gravitySwitch,
-        time: s.time,
+        scale,
+        look.color,
+        look.special,
+        rotation: spin,
       );
+      if (!drawn) {
+        TileArt.paint(
+          canvas,
+          center,
+          radius * scale,
+          color: look.color,
+          special: look.special,
+          time: s.time,
+        );
+      }
+      if (look.gravitySwitch) {
+        TileArt.switchBadge(canvas, center, radius * scale, s.time);
+      }
       canvas.restore();
     }
 
@@ -510,7 +541,10 @@ class _BoardPainter extends CustomPainter {
     for (var r = 0; r < g.rows; r++) {
       for (var c = 0; c < g.cols; c++) {
         final layers = obstacles.glass[r * g.cols + c];
-        if (layers > 0) TileArt.glass(canvas, g.cellRect(r, c), layers);
+        if (layers > 0 &&
+            !s.sprites.drawGlass(canvas, g.cellRect(r, c), layers)) {
+          TileArt.glass(canvas, g.cellRect(r, c), layers);
+        }
       }
     }
 

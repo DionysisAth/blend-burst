@@ -33,6 +33,8 @@ fail() {
 check_alive() {
   device_ok || fail "emulator stopped responding ($1)"
   if ! T=15 A shell pidof "$PKG" > /dev/null; then
+    sleep 5
+    device_ok || fail "emulator stopped responding ($1)"
     fail "$PKG is not running ($1)"
   fi
   # Only crashes of this app count; emulators often log unrelated ones.

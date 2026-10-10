@@ -167,7 +167,7 @@ class TileArt {
           );
         }
     }
-    if (gravitySwitch) _switchBadge(canvas, c, r, time);
+    if (gravitySwitch) switchBadge(canvas, c, r, time);
   }
 
   /// Cheap drop shadow (a real blur per tile per frame is too slow).
@@ -352,7 +352,7 @@ class TileArt {
     canvas.drawCircle(c, r * 0.18, Paint()..color = const Color(0xFFFFF59D));
   }
 
-  static void _switchBadge(Canvas canvas, Offset c, double r, double time) {
+  static void switchBadge(Canvas canvas, Offset c, double r, double time) {
     final bc = c + Offset(r * 0.58, r * 0.58);
     final br = r * 0.36;
     canvas.drawCircle(bc, br, Paint()..color = Colors.white);
