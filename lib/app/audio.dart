@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter/widgets.dart';
+import 'package:flutter_soloud/flutter_soloud.dart';
 
 enum Sfx {
   swap,
@@ -103,51 +102,29 @@ class SilentAudio implements GameAudio {
   void dispose() {}
 }
 
-/// Plays sounds with audioplayers. Never throws: any audio failure just
-/// turns the sound off for that call (or entirely, if the plugin is missing).
+/// Plays sounds with SoLoud, a game audio engine: every sound is decoded
+/// once into memory and mixed natively, so effects start instantly and no
+/// system media decoder is involved while playing. Never throws: any audio
+/// failure just turns sound off.
 class PlayerAudio with WidgetsBindingObserver implements GameAudio {
   static const _prefix = 'assets/audio/';
-  static const _voices = 10;
+  static const _musicVolume = 0.42;
+  static const _fade = Duration(milliseconds: 600);
 
   @override
   bool soundOn;
   @override
   bool musicOn;
 
-  final AudioCache _cache = AudioCache(prefix: _prefix);
-  final List<AudioPlayer> _sfx = [];
-  AudioPlayer? _musicPlayer;
-  int _next = 0;
+  final SoLoud _engine = SoLoud.instance;
+  final Map<String, AudioSource> _sources = {};
+  Future<void>? _ready;
   bool _broken = false;
   bool _paused = false;
   Music? _wanted;
   Music? _playing;
+  SoundHandle? _musicHandle;
   final Map<String, int> _lastPlayed = {};
-
-  // Sound effects must not take audio focus (that would pause our music on
-  // Android); music takes it so other apps' music stops.
-  static final _sfxContext = AudioContext(
-    android: const AudioContextAndroid(
-      contentType: AndroidContentType.sonification,
-      usageType: AndroidUsageType.game,
-      audioFocus: AndroidAudioFocus.none,
-    ),
-    iOS: AudioContextIOS(
-      category: AVAudioSessionCategory.ambient,
-      options: const {},
-    ),
-  );
-  static final _musicContext = AudioContext(
-    android: const AudioContextAndroid(
-      contentType: AndroidContentType.music,
-      usageType: AndroidUsageType.game,
-      audioFocus: AndroidAudioFocus.gain,
-    ),
-    iOS: AudioContextIOS(
-      category: AVAudioSessionCategory.ambient,
-      options: const {},
-    ),
-  );
 
   PlayerAudio({bool sound = true, bool music = true})
     : soundOn = sound,
@@ -193,55 +170,50 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
 
   void _fail(Object e) {
     debugPrint('Audio disabled: $e');
-    if (e is MissingPluginException) _broken = true;
+    _broken = true;
   }
 
-  Future<void> _guard(Future<void> Function() f) async {
-    if (_broken) return;
+  bool get _live => !_broken && _engine.isInitialized;
+
+  @override
+  Future<void> preload() => _ready ??= _start();
+
+  Future<void> _start() async {
     try {
-      await f();
+      await _engine.init();
+      _engine.setMaxActiveVoiceCount(24);
     } catch (e) {
       _fail(e);
+      return;
     }
-  }
-
-  Future<AudioPlayer> _voice() async {
-    if (_sfx.length < _voices) {
-      final p = AudioPlayer(playerId: 'sfx${_sfx.length}');
-      p.audioCache = _cache;
-      _sfx.add(p);
-      await p.setAudioContext(_sfxContext);
-      await p.setPlayerMode(PlayerMode.lowLatency);
-      await p.setReleaseMode(ReleaseMode.stop);
-      return p;
+    // Music first, so the map track can start as soon as possible.
+    for (final file in [
+      for (final m in Music.values) 'music_${m.name}.wav',
+      ...sfxFiles,
+    ]) {
+      try {
+        _sources[file] = await _engine.loadAsset('$_prefix$file');
+      } catch (e) {
+        debugPrint('Could not load $file: $e');
+      }
+      if (file.startsWith('music_')) _sync();
     }
-    final p = _sfx[_next % _sfx.length];
-    _next++;
-    return p;
   }
 
   void _play(String file, double volume) {
-    if (!soundOn || _broken || _paused) return;
+    if (!soundOn || !_live || _paused) return;
+    final source = _sources[file];
+    if (source == null) return;
     // Don't stack the same sound within 40 ms (big cascades).
     final now = DateTime.now().millisecondsSinceEpoch;
     if (now - (_lastPlayed[file] ?? 0) < 40) return;
     _lastPlayed[file] = now;
-    unawaited(
-      _guard(() async {
-        final p = await _voice();
-        await p.play(AssetSource(file), volume: volume.clamp(0.0, 1.0));
-      }),
-    );
-  }
-
-  @override
-  Future<void> preload() => _guard(() async {
-    await _cache.loadAll(sfxFiles);
-    // Warm up the first voices so the first sounds play without delay.
-    for (var i = 0; i < 3; i++) {
-      await _voice();
+    try {
+      _engine.play(source, volume: volume.clamp(0.0, 1.0));
+    } catch (e) {
+      _fail(e);
     }
-  });
+  }
 
   @override
   void sfx(Sfx s, {double volume = 1}) {
@@ -275,27 +247,29 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
     _sync();
   }
 
+  /// Cross-fades to the wanted track (or to silence).
   void _sync() {
+    if (!_live) return;
     final target = (musicOn && !_paused) ? _wanted : null;
     if (target == _playing) return;
-    _playing = target;
-    unawaited(
-      _guard(() async {
-        final player = _musicPlayer ??= AudioPlayer(playerId: 'music')
-          ..audioCache = _cache;
-        if (target == null) {
-          await player.pause();
-          return;
-        }
-        await player.setAudioContext(_musicContext);
-        await player.setReleaseMode(ReleaseMode.loop);
-        await player.stop();
-        await player.play(
-          AssetSource('music_${target.name}.wav'),
-          volume: 0.42,
-        );
-      }),
-    );
+    final source = target == null ? null : _sources['music_${target.name}.wav'];
+    if (target != null && source == null) return; // still loading
+    try {
+      final old = _musicHandle;
+      if (old != null) {
+        _engine.fadeVolume(old, 0, _fade);
+        _engine.scheduleStop(old, _fade);
+      }
+      _musicHandle = null;
+      _playing = target;
+      if (source != null) {
+        final h = _engine.play(source, volume: 0, looping: true);
+        _engine.fadeVolume(h, _musicVolume, _fade);
+        _musicHandle = h;
+      }
+    } catch (e) {
+      _fail(e);
+    }
   }
 
   @override
@@ -303,11 +277,17 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
     final paused = state != AppLifecycleState.resumed;
     if (paused == _paused) return;
     _paused = paused;
-    if (paused) {
-      _playing = null;
-      unawaited(_guard(() async => _musicPlayer?.pause()));
-    } else {
-      _sync();
+    if (!_live) return;
+    final h = _musicHandle;
+    if (h == null) {
+      if (!paused) _sync();
+      return;
+    }
+    try {
+      // Pause in place, so the track resumes where it was.
+      _engine.setPause(h, paused);
+    } catch (e) {
+      _fail(e);
     }
   }
 
@@ -316,8 +296,8 @@ class PlayerAudio with WidgetsBindingObserver implements GameAudio {
     try {
       WidgetsBinding.instance.removeObserver(this);
     } catch (_) {}
-    for (final p in [..._sfx, ?_musicPlayer]) {
-      unawaited(_guard(() => p.dispose()));
-    }
+    try {
+      if (_engine.isInitialized) _engine.deinit();
+    } catch (_) {}
   }
 }
