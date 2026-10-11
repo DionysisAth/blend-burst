@@ -371,5 +371,21 @@ void main() {
       await _write('$ios/${e.key}', e.value, paintFull);
     }
     await _write('store/icon-512.png', 512, paintFull);
+    // Feature graphic base (the title is added by tool/store/compose.py).
+    final rec = ui.PictureRecorder();
+    final canvas = Canvas(rec);
+    canvas.save();
+    canvas.translate(-262, -262);
+    paintBackground(canvas, 1024 + 524);
+    canvas.restore();
+    canvas.save();
+    canvas.translate(1024 - 330 - 300, 250 - 300);
+    paintForeground(canvas, 600);
+    canvas.restore();
+    final img = await rec.endRecording().toImage(1024, 500);
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    File('tool/store/feature_base.png')
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(data!.buffer.asUint8List());
   });
 }

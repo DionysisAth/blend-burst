@@ -78,10 +78,10 @@ Android emulators.
 These parts are built as replaceable interfaces with local stand-ins, so the
 game is fully playable now:
 
-- **Real purchases**: `lib/app/store.dart` (`Store`). The test build's
-  `TestStore` completes purchases for free. Needs Google Play / App Store
-  developer accounts, products set up in the consoles, the `in_app_purchase`
-  plugin and server-side receipt checks.
+- **Purchases**: Google Play billing is in (`lib/app/play_store.dart`), with
+  the products created by `tool/play/products.py`. Purchases are checked on
+  the device only; a server could verify them later. iOS still uses the
+  free `TestStore`.
 - **Google Play Games** (cloud save and leaderboards, `lib/app/cloud.dart`):
   built and tested, but switched off until the game is set up in the Play
   Console. See "Setting up Google Play Games" below.
@@ -113,6 +113,33 @@ app exists in AdMob: then put its app ID in `ios/Runner/Info.plist`
 (`GADApplicationIdentifier`, currently Google's sample ID) and its units in
 `AdUnits`.
 
+## Publishing to Google Play
+
+The app is `com.nwbn.blendburst`. Releases go through the **Google Play
+release** workflow (Actions → Google Play release → Run workflow: pick the
+track, `completed` or `draft`, and the release notes). It builds the bundle
+with real ads, signs it with the upload key and uploads it.
+
+It needs three repository secrets (Settings → Secrets and variables →
+Actions):
+
+| Secret | What |
+|---|---|
+| `PLAY_UPLOAD_KEYSTORE_BASE64` | the upload keystore, base64 (`base64 -w0 upload.jks`) |
+| `PLAY_UPLOAD_PASSWORD` | its password (the store and the key use the same one) |
+| `PLAY_SERVICE_ACCOUNT_JSON` | the Play Console service account key (the whole JSON) |
+
+Keep the upload keystore and the service account key out of git. Without
+the secrets the workflow attaches an unsigned bundle to a GitHub release
+instead.
+
+The store listing (texts in `store/listing`, icon, feature graphic and
+screenshots in `store/`) is uploaded by `python3 tool/play/listing.py`, and
+the in-app products by `python3 tool/play/products.py` (both read the key
+from `PLAY_SERVICE_ACCOUNT_FILE` or `PLAY_SERVICE_ACCOUNT_JSON`).
+Regenerate the screenshots with `flutter test tool/store/shots_test.dart
+--update-goldens` and `python3 tool/store/compose.py`.
+
 ## Setting up Google Play Games
 
 Until these steps are done the game never calls Play Games: Settings says
@@ -120,9 +147,10 @@ cloud save is coming later and the Ranks button explains the same.
 
 1. In the Play Console, open the app → **Play Games Services → Setup and
    management → Configuration**, create the game project and link the
-   Android app (package `com.nwbn.blendburst`) with the SHA-1 of the
-   signing key. For sideloaded test builds that is the key in
-   `android/app/dev-release.keystore`
+   Android app (package `com.nwbn.blendburst`). Add one Android credential
+   per signing key: the **app signing key** SHA-1 (Play Console → Test and
+   release → App integrity), the upload key SHA-1, and, for the CI test
+   APKs, the dev key in `android/app/dev-release.keystore`
    (`keytool -list -v -keystore android/app/dev-release.keystore -storepass blendburst`).
 2. Turn on **Saved games** in the game project's properties.
 3. Create three leaderboards: Total stars, Levels completed, Total score
@@ -206,6 +234,7 @@ flutter test tool/icon/icon_test.dart          # redraw the app icons
 flutter run                                    # on a device or emulator
 ```
 
-Release APKs are signed with a development key that is committed to the
-repo (`android/app/dev-release.keystore`), so each new build installs over
-the previous one. Before publishing to Google Play, switch to a private upload key.
+Test APKs from CI are signed with a development key that is committed to
+the repo (`android/app/dev-release.keystore`), so each new build installs
+over the previous one. Google Play builds are signed with the private
+upload key instead (see "Publishing to Google Play").
