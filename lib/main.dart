@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app/ad_service.dart';
+import 'app/admob.dart';
 import 'app/app_state.dart';
 import 'app/audio.dart';
 import 'app/cloud.dart';
@@ -90,7 +91,9 @@ ThemeData buildTheme() {
 class BlendBurstApp extends StatefulWidget {
   /// Optional pre-built state for tests.
   final AppState? state;
-  final AdService ads;
+
+  /// Ads (AdMob on Android; a placeholder in tests and elsewhere).
+  final AdService? ads;
   final GameAudio? audio;
   final Notifier? notifier;
 
@@ -100,7 +103,7 @@ class BlendBurstApp extends StatefulWidget {
   const BlendBurstApp({
     super.key,
     this.state,
-    this.ads = const PlaceholderAdService(),
+    this.ads,
     this.audio,
     this.notifier,
     this.games,
@@ -115,6 +118,11 @@ class _BlendBurstAppState extends State<BlendBurstApp>
   AppState? _app;
   LevelRepository? _levels;
   CloudSync? _cloud;
+  late final AdService _ads =
+      widget.ads ??
+      (_inTests || !AdUnits.supported
+          ? const PlaceholderAdService()
+          : AdMobAds());
   Object? _error;
   late final GameAudio _audio = widget.audio ?? GameAudio.create();
   late final Notifier _notifier = widget.notifier ?? LocalNotifier();
@@ -185,7 +193,10 @@ class _BlendBurstAppState extends State<BlendBurstApp>
       // Cloud save and leaderboards start once the map is up; the game
       // never waits for them.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(cloud.start());
+        if (!mounted) return;
+        unawaited(cloud.start());
+        final ads = _ads;
+        if (ads is AdMobAds) unawaited(ads.start());
       });
     } catch (e, st) {
       debugPrint('Startup failed: $e\n$st');
@@ -207,7 +218,7 @@ class _BlendBurstAppState extends State<BlendBurstApp>
     return AppScope(
       app: app,
       levels: levels,
-      ads: widget.ads,
+      ads: _ads,
       audio: _audio,
       reminders: _notifier,
       cloud: _cloud,

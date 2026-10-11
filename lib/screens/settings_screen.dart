@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../app/admob.dart';
 import '../app/economy.dart';
 import '../app/metrics.dart';
 import '../app/scope.dart';
@@ -211,6 +212,19 @@ class SettingsScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
                 ),
               ),
+              if (scope.ads case final AdMobAds ads)
+                ValueListenableBuilder<bool>(
+                  valueListenable: ads.privacyOptionsRequired,
+                  builder: (context, required, _) => required
+                      ? link(
+                          GameIcons.check,
+                          CandyColors.blue,
+                          'Privacy choices',
+                          'Change your ad consent',
+                          ads.showPrivacyOptions,
+                        )
+                      : const SizedBox.shrink(),
+                ),
               link(
                 GameIcons.retry,
                 CandyColors.red,

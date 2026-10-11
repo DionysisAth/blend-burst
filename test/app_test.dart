@@ -10,6 +10,7 @@ import 'package:blend_burst/main.dart';
 import 'package:blend_burst/screens/editor_screen.dart';
 import 'package:blend_burst/screens/game_screen.dart';
 import 'package:blend_burst/screens/map_screen.dart';
+import 'package:blend_burst/ui/game_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -279,18 +280,30 @@ void main() {
       }
       await run(tester, 4000);
       expect(game.session.board.checkInvariants(), isNull, reason: 'level $id');
-      // Leave via the pause menu (or whatever end dialog is showing).
-      if (find.byKey(const Key('pause-quit')).evaluate().isEmpty &&
-          find.byKey(const Key('win-map')).evaluate().isEmpty) {
-        await tester.tap(find.byKey(const Key('pause')));
-        await run(tester, 400);
+      // Leave via the pause menu, or whatever end dialog or ad break is
+      // showing (a quick win can land on the every-3rd-win ad break).
+      for (
+        var t = 0;
+        t < 40 && find.byType(GameScreen).evaluate().isNotEmpty;
+        t++
+      ) {
+        final exit = [
+          'ad-done',
+          'reward-ok',
+          'win-map',
+          'fail-map',
+          'pause-quit',
+        ].map((k) => find.byKey(Key(k))).where((f) => f.evaluate().isNotEmpty);
+        if (exit.isNotEmpty) {
+          final f = exit.first;
+          if (tester.widget<CandyButton>(f).onTap != null) await tester.tap(f);
+        } else if (find.byKey(const Key('pause')).evaluate().isNotEmpty &&
+            !game.busy) {
+          await tester.tap(find.byKey(const Key('pause')));
+        }
+        await run(tester, 500);
       }
-      if (find.byKey(const Key('win-map')).evaluate().isNotEmpty) {
-        await tester.tap(find.byKey(const Key('win-map')));
-      } else {
-        await tester.tap(find.byKey(const Key('pause-quit')));
-      }
-      await run(tester, 1000);
+      await run(tester, 600);
       expect(find.byType(MapScreen), findsOneWidget, reason: 'level $id');
       // Refill lives so the next level can start.
       final app = AppScope.read(tester.element(find.byType(MapScreen))).app;

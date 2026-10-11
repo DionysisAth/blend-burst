@@ -15,6 +15,11 @@
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
             android:value="false" />
+        <!-- AdMob app ID (the ad unit IDs are in lib/app/admob.dart). The
+             ads SDK stops the app at launch if this is missing. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-1774874652706103~9899382144" />
         <!-- Google Play Games (cloud save, leaderboards). The ID is set in
              res/values/games.xml; the SDK is only started once it is. -->
         <meta-data

@@ -82,8 +82,6 @@ game is fully playable now:
   `TestStore` completes purchases for free. Needs Google Play / App Store
   developer accounts, products set up in the consoles, the `in_app_purchase`
   plugin and server-side receipt checks.
-- **Real ads**: `lib/app/ad_service.dart` (`AdService`). Needs an ads account
-  (e.g. AdMob) and its SDK; the placeholder shows a fake ad screen.
 - **Google Play Games** (cloud save and leaderboards, `lib/app/cloud.dart`):
   built and tested, but switched off until the game is set up in the Play
   Console. See "Setting up Google Play Games" below.
@@ -93,6 +91,27 @@ game is fully playable now:
   (e.g. Firebase Analytics) is needed to see them across all players.
 - **Remote push** (e.g. "a friend sent you a life"): needs a push service.
   Local reminders already work without one.
+
+## Ads (AdMob)
+
+`lib/app/admob.dart` shows AdMob rewarded videos (extra moves, a life, the
+doubled daily gift, the shop's free booster) and interstitials (every 3rd
+win, never for players who bought anything). Google's consent form is shown
+first where the law requires it, and Settings then offers "Privacy choices".
+
+Builds show Google's **test ads** unless built with `REAL_ADS`, so testing
+never touches the live ad units (tapping your own live ads can get the
+AdMob account suspended). For the Play Store build:
+
+```
+flutter build appbundle --dart-define=REAL_ADS=true
+```
+
+The AdMob app ID is in `android/app/src/main/AndroidManifest.xml` and the ad
+unit IDs in `AdUnits` (`lib/app/admob.dart`). iOS ads are off until an iOS
+app exists in AdMob: then put its app ID in `ios/Runner/Info.plist`
+(`GADApplicationIdentifier`, currently Google's sample ID) and its units in
+`AdUnits`.
 
 ## Setting up Google Play Games
 

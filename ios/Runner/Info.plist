@@ -66,5 +66,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Google's sample AdMob app ID: the ads SDK requires one at launch.
+	     Replace it with the iOS app ID once an iOS app exists in AdMob
+	     (ads stay off on iOS until then, see lib/app/admob.dart). -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 </dict>
 </plist>
