@@ -7,7 +7,7 @@ set -uo pipefail
 
 APK="$1"
 OUT="${2:-smoke}"
-PKG="com.dionysisath.blend_burst"
+PKG="com.nwbn.blendburst"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$OUT"
 

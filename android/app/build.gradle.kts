@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.dionysisath.blend_burst"
+    namespace = "com.nwbn.blendburst"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -17,7 +17,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.dionysisath.blend_burst"
+        applicationId = "com.nwbn.blendburst"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

@@ -1,4 +1,4 @@
-package com.dionysisath.blend_burst
+package com.nwbn.blendburst
 
 import android.util.Log
 import com.google.android.gms.common.ConnectionResult

@@ -101,7 +101,7 @@ cloud save is coming later and the Ranks button explains the same.
 
 1. In the Play Console, open the app → **Play Games Services → Setup and
    management → Configuration**, create the game project and link the
-   Android app (package `com.dionysisath.blend_burst`) with the SHA-1 of the
+   Android app (package `com.nwbn.blendburst`) with the SHA-1 of the
    signing key. For sideloaded test builds that is the key in
    `android/app/dev-release.keystore`
    (`keytool -list -v -keystore android/app/dev-release.keystore -storepass blendburst`).
