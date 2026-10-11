@@ -279,17 +279,15 @@ class TileArt {
         _bomb(canvas, c, r, color ?? TileColor.red);
       case Special.lineH:
       case Special.lineV:
+        _lineBlaster(
+          canvas,
+          c,
+          r,
+          color ?? TileColor.red,
+          special == Special.lineH,
+        );
       case Special.none:
         _gem(canvas, c, r, color ?? TileColor.red);
-        if (special.isLine) {
-          _blasterBand(
-            canvas,
-            c,
-            r,
-            color ?? TileColor.red,
-            special == Special.lineH,
-          );
-        }
     }
     if (gravitySwitch) switchBadge(canvas, c, r, time);
   }
@@ -506,7 +504,9 @@ class TileArt {
     }
   }
 
-  static void _blasterBand(
+  /// Line Blaster: a candy-striped double arrow in the color of the match
+  /// that made it, pointing along the line it clears.
+  static void _lineBlaster(
     Canvas canvas,
     Offset c,
     double r,
@@ -514,145 +514,78 @@ class TileArt {
     bool horizontal,
   ) {
     final base = Palette.of(color);
-    final dark = Palette.shade(base, -0.3);
-    canvas.save();
-    canvas.translate(c.dx, c.dy);
-    if (!horizontal) canvas.rotate(pi / 2);
-    // A glowing trail along the blast direction.
-    final band = Rect.fromCenter(
-      center: Offset.zero,
-      width: r * 1.9,
-      height: r * 0.3,
-    );
-    final rr = RRect.fromRectAndRadius(band, Radius.circular(r * 0.15));
-    canvas.drawRRect(
-      rr.inflate(r * 0.08),
-      _blur(Colors.white.withValues(alpha: 0.75), r * 0.14),
-    );
-    canvas.drawRRect(
-      rr,
+    // Points of a vertical arrow; swapped for a horizontal one.
+    Offset p(double along, double across) => horizontal
+        ? c + Offset(along * r, across * r)
+        : c + Offset(across * r, along * r);
+    const shaft = 0.31, head = 0.68, neck = 0.32, tip = 0.98;
+    final pts = [
+      p(-tip, 0),
+      p(-neck, head),
+      p(-neck, shaft),
+      p(neck, shaft),
+      p(neck, head),
+      p(tip, 0),
+      p(neck, -head),
+      p(neck, -shaft),
+      p(-neck, -shaft),
+      p(-neck, -head),
+    ];
+    final arrow = _roundedPoly(pts, r * 0.1);
+    // Aura in the tile color.
+    canvas.drawCircle(
+      c,
+      r * 1.08,
       Paint()
-        ..shader = ui.Gradient.linear(
-          band.topCenter,
-          band.bottomCenter,
-          [Colors.white, Palette.shade(base, 0.45), Colors.white],
-          const [0, 0.5, 1],
+        ..shader = ui.Gradient.radial(
+          c,
+          r * 1.08,
+          [
+            Palette.shade(base, 0.3).withValues(alpha: 0.7),
+            Palette.shade(base, 0.3).withValues(alpha: 0.0),
+          ],
+          const [0.45, 1.0],
         ),
     );
-    // Engine glow where the two tails meet.
-    canvas.drawCircle(
-      Offset.zero,
-      r * 0.2,
-      _blur(const Color(0xFFFFD25A), r * 0.08),
+    _jelly(canvas, arrow, c, r * 0.95, base);
+    // Diagonal candy stripes across the shaft.
+    canvas.save();
+    canvas.clipPath(arrow);
+    canvas.clipRect(
+      Rect.fromPoints(
+        p(-neck - 0.02, -shaft - 0.1),
+        p(neck + 0.02, shaft + 0.1),
+      ),
     );
-    for (final s in [-1.0, 1.0]) {
-      _rocket(canvas, r, s, base, dark);
-    }
-    canvas.drawCircle(
-      Offset.zero,
-      r * 0.09,
-      Paint()..color = const Color(0xFFFFF4C8),
-    );
-    canvas.restore();
-  }
-
-  /// A small rocket pointing along +x ([s] = 1) or -x ([s] = -1), its tail
-  /// near the tile center. Drawn in the blaster's local frame.
-  static void _rocket(
-    Canvas canvas,
-    double r,
-    double s,
-    Color base,
-    Color dark,
-  ) {
-    Offset p(double x, double y) => Offset(s * x * r, y * r);
-    final outline = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = r * 0.045
-      ..strokeJoin = StrokeJoin.round
-      ..color = dark;
-    // Flame.
-    final flame = Path()
-      ..moveTo(p(0.2, -0.1).dx, p(0.2, -0.1).dy)
-      ..quadraticBezierTo(p(0.1, -0.08).dx, p(0.1, -0.08).dy, p(0.03, 0).dx, 0)
-      ..quadraticBezierTo(
-        p(0.1, 0.08).dx,
-        p(0.1, 0.08).dy,
-        p(0.2, 0.1).dx,
-        p(0.2, 0.1).dy,
-      )
-      ..close();
-    canvas.drawPath(flame, Paint()..color = const Color(0xFFFF8A2A));
-    // Fins.
-    for (final y in [-1.0, 1.0]) {
-      final fin = Path()
-        ..moveTo(p(0.26, 0.15 * y).dx, p(0.26, 0.15 * y).dy)
-        ..lineTo(p(0.14, 0.36 * y).dx, p(0.14, 0.36 * y).dy)
-        ..lineTo(p(0.24, 0.37 * y).dx, p(0.24, 0.37 * y).dy)
-        ..lineTo(p(0.46, 0.15 * y).dx, p(0.46, 0.15 * y).dy)
+    final stripe = Paint()..color = Colors.white.withValues(alpha: 0.92);
+    final shadow = Paint()
+      ..color = Palette.shade(base, -0.28).withValues(alpha: 0.35);
+    for (var k = -3; k <= 3; k++) {
+      final o = k * 0.26;
+      Path band(double shift) => Path()
+        ..moveTo(p(o - 0.07 + shift, -0.5).dx, p(o - 0.07 + shift, -0.5).dy)
+        ..lineTo(p(o + 0.07 + shift, -0.5).dx, p(o + 0.07 + shift, -0.5).dy)
+        ..lineTo(p(o + 0.27 + shift, 0.5).dx, p(o + 0.27 + shift, 0.5).dy)
+        ..lineTo(p(o + 0.13 + shift, 0.5).dx, p(o + 0.13 + shift, 0.5).dy)
         ..close();
-      canvas.drawPath(fin, Paint()..color = base);
-      canvas.drawPath(fin, outline);
+      canvas.drawPath(band(0.035), shadow);
+      canvas.drawPath(band(0), stripe);
     }
-    // Body with a rounded nose.
-    final body = Path()
-      ..moveTo(p(0.2, -0.185).dx, p(0.2, -0.185).dy)
-      ..lineTo(p(0.66, -0.185).dx, p(0.66, -0.185).dy)
-      ..quadraticBezierTo(
-        p(0.88, -0.17).dx,
-        p(0.88, -0.17).dy,
-        p(0.98, 0).dx,
-        0,
-      )
-      ..quadraticBezierTo(
-        p(0.88, 0.17).dx,
-        p(0.88, 0.17).dy,
-        p(0.66, 0.185).dx,
-        p(0.66, 0.185).dy,
-      )
-      ..lineTo(p(0.2, 0.185).dx, p(0.2, 0.185).dy)
-      ..close();
-    canvas.drawPath(
-      body,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          Offset(0, -r * 0.185),
-          Offset(0, r * 0.185),
-          [Colors.white, const Color(0xFFE9E4F2)],
-        ),
-    );
-    // Colored nose cone.
-    canvas.save();
-    canvas.clipPath(body);
+    // Shine along the shaft.
     canvas.drawRect(
-      Rect.fromPoints(p(0.72, -0.2), p(1.05, 0.2)),
-      Paint()..color = base,
-    );
-    canvas.drawRect(
-      Rect.fromPoints(p(0.2, -0.2), p(0.27, 0.2)),
-      Paint()..color = base,
+      Rect.fromPoints(p(-neck, -shaft * 0.75), p(neck, -shaft * 0.35)),
+      Paint()..color = Colors.white.withValues(alpha: 0.28),
     );
     canvas.restore();
-    canvas.drawPath(body, outline);
-    // Porthole.
-    canvas.drawCircle(
-      p(0.5, 0),
-      r * 0.085,
-      Paint()..color = const Color(0xFF7FD3FF),
-    );
-    canvas.drawCircle(
-      p(0.5, 0),
-      r * 0.085,
+    canvas.drawPath(
+      arrow,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = r * 0.035
-        ..color = dark,
+        ..strokeWidth = r * 0.075
+        ..strokeJoin = StrokeJoin.round
+        ..color = Palette.shade(base, -0.32),
     );
-    canvas.drawCircle(
-      p(0.48, -0.025),
-      r * 0.025,
-      Paint()..color = Colors.white,
-    );
+    _sparkle(canvas, p(-0.62, -0.18), r * 0.15, Colors.white);
   }
 
   static void _bomb(Canvas canvas, Offset c, double r, TileColor color) {

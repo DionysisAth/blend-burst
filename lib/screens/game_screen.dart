@@ -148,9 +148,9 @@ class GameScreenState extends State<GameScreen> {
 
   Future<void> _showTutorial() async {
     if (!mounted) return;
-    final text = level.tutorial;
-    final seen = !widget.testMode && app.data.tutorialsSeen.contains(level.id);
-    if (text != null && !seen) {
+    // Shown every time the level starts, so a new mechanic is never missed
+    // after the card was skipped once.
+    if (level.tutorial != null) {
       _dialogOpen = true;
       await showTutorialCard(context, level);
       _dialogOpen = false;

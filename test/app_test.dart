@@ -218,6 +218,33 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a level with a tutorial shows it every time it starts', (
+    tester,
+  ) async {
+    await boot(tester, prefs: unlockedAll);
+    for (var round = 0; round < 2; round++) {
+      final node = find.byKey(const Key('level-2'));
+      unawaited(Scrollable.ensureVisible(tester.element(node), alignment: 0.5));
+      await run(tester, 300);
+      await tester.tap(node);
+      await run(tester, 400);
+      await tester.tap(find.byKey(const Key('play-level')));
+      await run(tester, 600);
+      expect(
+        find.byKey(const Key('tutorial-ok')),
+        findsOneWidget,
+        reason: 'round $round',
+      );
+      await tester.tap(find.byKey(const Key('tutorial-ok')));
+      await run(tester, 800);
+      await tester.tap(find.byKey(const Key('pause')));
+      await run(tester, 400);
+      await tester.tap(find.byKey(const Key('pause-quit')));
+      await run(tester, 1000);
+      expect(find.byType(MapScreen), findsOneWidget);
+    }
+  });
+
   testWidgets('quitting mid-level costs a life', (tester) async {
     await boot(tester);
     final game = await openLevel(tester, 1);

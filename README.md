@@ -35,7 +35,8 @@ Android emulators.
   clear ink, deliver paint buckets
 - Obstacles: paint stains, glass (1–3 layers), chains (1–2 links), spreading
   ink, color filters, paint buckets that must reach the exit
-- Illustrated tutorial cards for every new mechanic
+- Illustrated tutorial cards for every new mechanic, shown each time the
+  level starts
 - Move limits and star thresholds tuned by a bot that plays every level
 
 **Boosters**
