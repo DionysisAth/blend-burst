@@ -122,8 +122,21 @@ void main() {
     expect(await waitFor(tester, find.byType(MapScreen)), isTrue);
     await run(tester, 1000);
 
+    // Play Games is not set up in this build: the Ranks button explains
+    // that instead of calling it.
+    await tester.tap(find.byKey(const Key('side-ranks')));
+    expect(await waitFor(tester, find.textContaining('not set up')), isTrue);
+    await tester.tap(find.text('OK'));
+    await run(tester, 800);
+
     await tester.tap(find.byKey(const Key('settings')));
-    expect(await waitFor(tester, find.text('Level editor')), isTrue);
+    expect(await waitFor(tester, find.text('Google Play Games')), isTrue);
+    await tester.scrollUntilVisible(
+      find.text('Level editor'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await run(tester, 500);
     await tester.tap(find.text('Level editor'));
     expect(await waitFor(tester, find.byType(EditorScreen)), isTrue);
     await run(tester, 1000);

@@ -1315,8 +1315,8 @@ class Board {
     if (ta.special != Special.none && tb.special != Special.none) {
       return MoveKind.combo;
     }
-    const strong = {Special.prism, Special.whiteBurst};
-    if (strong.contains(ta.special) || strong.contains(tb.special)) {
+    // A swiped special always moves and then fires where it landed.
+    if (ta.special != Special.none || tb.special != Special.none) {
       return MoveKind.special;
     }
     _swapTiles(a, b);
@@ -1527,16 +1527,17 @@ class Board {
         acts.add(_Act(_ActKind.cross3, moved, t1.color));
       }
     } else {
-      // A prism or white burst swapped with a normal tile takes its color.
+      // One special and a normal tile: the special fires at its new cell.
+      // A prism or white burst takes the partner's color.
       final (sp, sPos, partner) = s1 != Special.none
           ? (t1, moved, t2)
           : (t2, other, t1);
       gained += _consume(sPos, sp, pre, 1);
-      acts.add(
-        sp.special == Special.prism
-            ? _Act(_ActKind.prism, sPos, partner.color)
-            : _Act(_ActKind.whiteBurst, sPos, partner.color),
-      );
+      acts.add(switch (sp.special) {
+        Special.prism => _Act(_ActKind.prism, sPos, partner.color),
+        Special.whiteBurst => _Act(_ActKind.whiteBurst, sPos, partner.color),
+        _ => _Act.fromTile(sp, sPos),
+      });
     }
     _runWaves(
       out,

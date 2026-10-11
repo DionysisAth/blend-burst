@@ -125,6 +125,10 @@ class SaveData {
   /// Remote config text cached from the previous launch.
   String remoteConfig = '';
 
+  /// Epoch ms of the last change, to tell which copy is newer when the
+  /// cloud save is merged.
+  int savedAt = 0;
+
   Map<String, dynamic> toJson() => {
     'v': 1,
     'unlocked': unlocked,
@@ -166,6 +170,7 @@ class SaveData {
     'counters': counters,
     'notifications': notifications,
     'remoteConfig': remoteConfig,
+    'savedAt': savedAt,
   };
 
   /// Tolerant parser: anything missing or malformed falls back to defaults.
@@ -239,6 +244,7 @@ class SaveData {
     s.notifications = asBool(j['notifications'], false);
     final rc = j['remoteConfig'];
     if (rc is String) s.remoteConfig = rc;
+    s.savedAt = asInt(j['savedAt'], 0);
     final ev = j['events'];
     if (ev is List) {
       s.events = ev
@@ -247,6 +253,70 @@ class SaveData {
           .toList();
     }
     return s;
+  }
+
+  /// Parses a save from text, or null if it is not one.
+  static SaveData? tryParse(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map || !decoded.containsKey('unlocked')) return null;
+      return fromJson(Map<String, dynamic>.from(decoded));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  SaveData copy() => fromJson(jsonDecode(jsonEncode(toJson())));
+
+  bool get isFresh => stars.isEmpty && unlocked <= 1;
+
+  /// Combines this device's save with the cloud copy.
+  ///
+  /// Progress never goes backwards: levels, stars, best scores, tutorials
+  /// and purchases are the best of both. Coins, lives, boosters and the
+  /// live-ops state come from the newer copy (a fresh install counts as
+  /// older than any real progress). Settings stay as on this device.
+  static SaveData merge(SaveData local, SaveData cloud) {
+    final cloudNewer =
+        local.isFresh || (!cloud.isFresh && cloud.savedAt > local.savedAt);
+    final out = (cloudNewer ? cloud : local).copy();
+    final other = cloudNewer ? local : cloud;
+    void maxInto(Map<int, int> into, Map<int, int> from) {
+      from.forEach((k, v) => into[k] = max(v, into[k] ?? 0));
+    }
+
+    out.unlocked = max(out.unlocked, other.unlocked);
+    maxInto(out.stars, other.stars);
+    maxInto(out.best, other.best);
+    maxInto(out.attempts, other.attempts);
+    maxInto(out.wins, other.wins);
+    out.tutorialsSeen.addAll(other.tutorialsSeen);
+    out.purchases.addAll(other.purchases);
+    out.adsRemoved = out.adsRemoved || other.adsRemoved;
+    if (out.seasonNo == other.seasonNo) {
+      out.premiumPass = out.premiumPass || other.premiumPass;
+    }
+    out.unlimitedUntil = max(out.unlimitedUntil, other.unlimitedUntil);
+    out.playDays.addAll(other.playDays);
+    if (other.firstDay >= 0 &&
+        (out.firstDay < 0 || other.firstDay < out.firstDay)) {
+      out.firstDay = other.firstDay;
+    }
+    out.sessions = max(out.sessions, other.sessions);
+    other.counters.forEach(
+      (k, v) => out.counters[k] = max(v, out.counters[k] ?? 0),
+    );
+    // Device settings and local-only data.
+    out.haptics = local.haptics;
+    out.sound = local.sound;
+    out.music = local.music;
+    out.hints = local.hints;
+    out.tapActivate = local.tapActivate;
+    out.notifications = local.notifications;
+    out.remoteConfig = local.remoteConfig;
+    out.events = List.of(local.events);
+    out.savedAt = max(local.savedAt, cloud.savedAt);
+    return out;
   }
 }
 
@@ -359,6 +429,14 @@ class AppState extends ChangeNotifier {
     _changed();
   }
 
+  /// Replaces all progress (after merging the cloud save).
+  void replaceData(SaveData merged) {
+    data = merged;
+    if (totalLevels > 0) data.unlocked = min(data.unlocked, totalLevels);
+    _tickLives();
+    _changed();
+  }
+
   void _persist() {
     final prefs = _prefs;
     if (prefs == null) return;
@@ -377,6 +455,7 @@ class AppState extends ChangeNotifier {
   bool _notifyScheduled = false;
 
   void _changed() {
+    data.savedAt = _now().millisecondsSinceEpoch;
     _persist();
     // Screens may change state while widgets are building (e.g. in
     // initState). Notifying then is an error, so wait for the frame to end.

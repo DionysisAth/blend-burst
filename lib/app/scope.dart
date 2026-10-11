@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'ad_service.dart';
 import 'app_state.dart';
 import 'audio.dart';
+import 'cloud.dart';
 import 'level_repository.dart';
 import 'notifications.dart';
 import 'store.dart';
@@ -15,6 +16,10 @@ class AppScope extends InheritedNotifier<AppState> {
   final Store store;
   final Notifier reminders;
 
+  /// Cloud save and leaderboards; null in widget tests that build screens
+  /// directly.
+  final CloudSync? cloud;
+
   const AppScope({
     super.key,
     required AppState app,
@@ -23,6 +28,7 @@ class AppScope extends InheritedNotifier<AppState> {
     required this.audio,
     this.store = const TestStore(),
     this.reminders = const NoNotifier(),
+    this.cloud,
     required super.child,
   }) : super(notifier: app);
 

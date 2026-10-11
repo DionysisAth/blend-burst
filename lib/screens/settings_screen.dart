@@ -6,6 +6,7 @@ import '../app/scope.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
+import 'cloud_ui.dart';
 import 'dialogs.dart';
 import 'editor_screen.dart';
 
@@ -143,6 +144,12 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
+          if (scope.cloud != null)
+            const _Card(
+              children: [
+                CloudCard(labelStyle: _labelStyle, subStyle: _subStyle),
+              ],
+            ),
           _Card(
             children: [
               sw(
@@ -210,13 +217,19 @@ class SettingsScreen extends StatelessWidget {
                 'Reset progress',
                 'Start over from level 1',
                 () async {
+                  final cloud = scope.cloud;
                   final ok = await confirm(
                     context,
                     'Reset?',
-                    'All stars, coins and boosters will be lost.',
+                    cloud != null && cloud.signedIn
+                        ? 'All stars, coins and boosters will be lost, '
+                              'here and in your cloud save.'
+                        : 'All stars, coins and boosters will be lost.',
                     ok: 'Reset',
                   );
-                  if (ok) app.resetProgress();
+                  if (!ok) return;
+                  app.resetProgress();
+                  await cloud?.replaceCloud();
                 },
               ),
             ],

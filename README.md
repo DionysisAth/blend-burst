@@ -20,7 +20,8 @@ Android emulators.
   its missing primary makes a **White Burst**
 - Specials: Line Blaster (4 in a line or a 2×2 square), Paint Bomb (L/T
   shape), Prism (5 in a line), White Burst, plus combos when two specials are
-  swapped together
+  swapped together. Swiping a special always moves it and fires it where it
+  lands
 - Secondary-color matches splash onto the neighboring tiles
 - Gravity: fixed down/up/left/right levels, gravity switch tiles, gravity
   zones (cells that pull in their own direction) and timed gravity that turns
@@ -55,6 +56,8 @@ Android emulators.
 - Ad breaks every 3rd win, never for players who bought anything
 
 **Retention and tech**
+- Cloud save and leaderboards (total stars, levels completed, total score)
+  through Google Play Games, switched off until it is set up (see below)
 - Opt-in reminders (Settings → Reminders): lives full, daily gift, event ending
 - Share a screenshot after a "Spectacular!" combo or a win
 - Remote config (`remote_config.json` in this repo): move limits per level,
@@ -80,12 +83,46 @@ game is fully playable now:
   plugin and server-side receipt checks.
 - **Real ads**: `lib/app/ad_service.dart` (`AdService`). Needs an ads account
   (e.g. AdMob) and its SDK; the placeholder shows a fake ad screen.
-- **Cloud save, teams, friends, leaderboard races, friend life gifts**: need a
-  backend with player accounts (e.g. Firebase or PlayFab).
+- **Google Play Games** (cloud save and leaderboards, `lib/app/cloud.dart`):
+  built and tested, but switched off until the game is set up in the Play
+  Console. See "Setting up Google Play Games" below.
+- **Teams, friends, leaderboard races, friend life gifts**: need a backend
+  with player accounts (e.g. Firebase or PlayFab).
 - **Shared analytics**: the metrics are computed on each device; a backend
   (e.g. Firebase Analytics) is needed to see them across all players.
 - **Remote push** (e.g. "a friend sent you a life"): needs a push service.
   Local reminders already work without one.
+
+## Setting up Google Play Games
+
+Until these steps are done the game never calls Play Games: Settings says
+cloud save is coming later and the Ranks button explains the same.
+
+1. In the Play Console, open the app → **Play Games Services → Setup and
+   management → Configuration**, create the game project and link the
+   Android app (package `com.dionysisath.blend_burst`) with the SHA-1 of the
+   signing key. For sideloaded test builds that is the key in
+   `android/app/dev-release.keystore`
+   (`keytool -list -v -keystore android/app/dev-release.keystore -storepass blendburst`).
+2. Turn on **Saved games** in the game project's properties.
+3. Create three leaderboards: Total stars, Levels completed, Total score
+   (all "higher is better").
+4. Put the project ID (the number on the Configuration page) in
+   `android/app/src/main/res/values/games.xml` and the three leaderboard IDs
+   in `GamesConfig` at the top of `lib/app/cloud.dart`.
+5. While the game is unpublished, add your Google account as a tester under
+   **Testers**.
+
+How syncing works: on launch (and when signing in from Settings), the cloud
+copy is merged with the progress on the phone. Levels, stars, best scores,
+tutorials and purchases are the best of both. Coins, lives and boosters come
+from whichever copy changed last. The merged copy is uploaded again 45
+seconds after a change and whenever the app goes to the background. If the
+cloud copy cannot be read, nothing is uploaded, so a phone with a bad
+connection can never overwrite progress made on another one.
+
+For iOS, set the Game Center leaderboard IDs in `GamesConfig` and set
+`iosEnabled` to true once Game Center and iCloud are on for the app.
 
 ## Project layout
 
@@ -100,7 +137,8 @@ assets/audio/  music and sound effects (OGG)
 assets/levels/ level packs (JSON), one file per episode
 tool/          level_bot.dart: plays levels to measure difficulty;
                levels/make_levels.py: designs levels 41-120;
-               audio/synth.py: generates every sound and music track
+               audio/synth.py: generates every sound and music track;
+               icon/icon_test.dart: draws the app icon (all sizes)
 test/          engine, level and widget tests
 integration_test/  on-device test (runs on the emulators in CI)
 ci/            release-APK smoke test (install, launch, monkey, restart)
@@ -144,6 +182,7 @@ dart run tool/level_bot.dart --tune --level 50,54   # only some levels
 python3 tool/levels/make_levels.py             # regenerate levels 41-120
                                                # (keeps tuning of unchanged ones)
 dart run tool/level_bot.dart --calibrate       # re-tune star thresholds
+flutter test tool/icon/icon_test.dart          # redraw the app icons
 flutter run                                    # on a device or emulator
 ```
 

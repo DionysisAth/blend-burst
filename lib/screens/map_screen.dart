@@ -15,6 +15,7 @@ import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
 import '../ui/widgets.dart';
+import 'cloud_ui.dart';
 import 'dialogs.dart';
 import 'game_screen.dart';
 import 'live_ops_screens.dart';
@@ -245,6 +246,16 @@ class _MapScreenState extends State<MapScreen>
                           ? '${app.seasonClaimable}'
                           : null,
                       onTap: () => _push(const SeasonPassScreen()),
+                    ),
+                    _SideButton(
+                      key: const Key('side-ranks'),
+                      icon: GameIcons.podium,
+                      label: 'Ranks',
+                      colors: CandyColors.blue,
+                      onTap: () {
+                        scope.audio.sfx(Sfx.click);
+                        openLeaderboards(context);
+                      },
                     ),
                   ],
                 ),

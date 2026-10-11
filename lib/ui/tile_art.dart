@@ -514,63 +514,145 @@ class TileArt {
     bool horizontal,
   ) {
     final base = Palette.of(color);
-    final len = r * 2.05, thick = r * 0.46;
-    final band = horizontal
-        ? Rect.fromCenter(center: c, width: len, height: thick)
-        : Rect.fromCenter(center: c, width: thick, height: len);
-    final rr = RRect.fromRectAndRadius(band, Radius.circular(thick / 2));
+    final dark = Palette.shade(base, -0.3);
+    canvas.save();
+    canvas.translate(c.dx, c.dy);
+    if (!horizontal) canvas.rotate(pi / 2);
+    // A glowing trail along the blast direction.
+    final band = Rect.fromCenter(
+      center: Offset.zero,
+      width: r * 1.9,
+      height: r * 0.3,
+    );
+    final rr = RRect.fromRectAndRadius(band, Radius.circular(r * 0.15));
     canvas.drawRRect(
-      rr.inflate(r * 0.06),
-      _blur(Colors.white.withValues(alpha: 0.7), r * 0.12),
+      rr.inflate(r * 0.08),
+      _blur(Colors.white.withValues(alpha: 0.75), r * 0.14),
     );
     canvas.drawRRect(
       rr,
       Paint()
-        ..shader = (horizontal
-            ? ui.Gradient.linear(
-                band.topCenter,
-                band.bottomCenter,
-                [Colors.white, Palette.shade(base, 0.38), Colors.white],
-                const [0, 0.5, 1],
-              )
-            : ui.Gradient.linear(
-                band.centerLeft,
-                band.centerRight,
-                [Colors.white, Palette.shade(base, 0.38), Colors.white],
-                const [0, 0.5, 1],
-              )),
+        ..shader = ui.Gradient.linear(
+          band.topCenter,
+          band.bottomCenter,
+          [Colors.white, Palette.shade(base, 0.45), Colors.white],
+          const [0, 0.5, 1],
+        ),
     );
-    canvas.drawRRect(
-      rr,
+    // Engine glow where the two tails meet.
+    canvas.drawCircle(
+      Offset.zero,
+      r * 0.2,
+      _blur(const Color(0xFFFFD25A), r * 0.08),
+    );
+    for (final s in [-1.0, 1.0]) {
+      _rocket(canvas, r, s, base, dark);
+    }
+    canvas.drawCircle(
+      Offset.zero,
+      r * 0.09,
+      Paint()..color = const Color(0xFFFFF4C8),
+    );
+    canvas.restore();
+  }
+
+  /// A small rocket pointing along +x ([s] = 1) or -x ([s] = -1), its tail
+  /// near the tile center. Drawn in the blaster's local frame.
+  static void _rocket(
+    Canvas canvas,
+    double r,
+    double s,
+    Color base,
+    Color dark,
+  ) {
+    Offset p(double x, double y) => Offset(s * x * r, y * r);
+    final outline = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = r * 0.045
+      ..strokeJoin = StrokeJoin.round
+      ..color = dark;
+    // Flame.
+    final flame = Path()
+      ..moveTo(p(0.2, -0.1).dx, p(0.2, -0.1).dy)
+      ..quadraticBezierTo(p(0.1, -0.08).dx, p(0.1, -0.08).dy, p(0.03, 0).dx, 0)
+      ..quadraticBezierTo(
+        p(0.1, 0.08).dx,
+        p(0.1, 0.08).dy,
+        p(0.2, 0.1).dx,
+        p(0.2, 0.1).dy,
+      )
+      ..close();
+    canvas.drawPath(flame, Paint()..color = const Color(0xFFFF8A2A));
+    // Fins.
+    for (final y in [-1.0, 1.0]) {
+      final fin = Path()
+        ..moveTo(p(0.26, 0.15 * y).dx, p(0.26, 0.15 * y).dy)
+        ..lineTo(p(0.14, 0.36 * y).dx, p(0.14, 0.36 * y).dy)
+        ..lineTo(p(0.24, 0.37 * y).dx, p(0.24, 0.37 * y).dy)
+        ..lineTo(p(0.46, 0.15 * y).dx, p(0.46, 0.15 * y).dy)
+        ..close();
+      canvas.drawPath(fin, Paint()..color = base);
+      canvas.drawPath(fin, outline);
+    }
+    // Body with a rounded nose.
+    final body = Path()
+      ..moveTo(p(0.2, -0.185).dx, p(0.2, -0.185).dy)
+      ..lineTo(p(0.66, -0.185).dx, p(0.66, -0.185).dy)
+      ..quadraticBezierTo(
+        p(0.88, -0.17).dx,
+        p(0.88, -0.17).dy,
+        p(0.98, 0).dx,
+        0,
+      )
+      ..quadraticBezierTo(
+        p(0.88, 0.17).dx,
+        p(0.88, 0.17).dy,
+        p(0.66, 0.185).dx,
+        p(0.66, 0.185).dy,
+      )
+      ..lineTo(p(0.2, 0.185).dx, p(0.2, 0.185).dy)
+      ..close();
+    canvas.drawPath(
+      body,
+      Paint()
+        ..shader = ui.Gradient.linear(
+          Offset(0, -r * 0.185),
+          Offset(0, r * 0.185),
+          [Colors.white, const Color(0xFFE9E4F2)],
+        ),
+    );
+    // Colored nose cone.
+    canvas.save();
+    canvas.clipPath(body);
+    canvas.drawRect(
+      Rect.fromPoints(p(0.72, -0.2), p(1.05, 0.2)),
+      Paint()..color = base,
+    );
+    canvas.drawRect(
+      Rect.fromPoints(p(0.2, -0.2), p(0.27, 0.2)),
+      Paint()..color = base,
+    );
+    canvas.restore();
+    canvas.drawPath(body, outline);
+    // Porthole.
+    canvas.drawCircle(
+      p(0.5, 0),
+      r * 0.085,
+      Paint()..color = const Color(0xFF7FD3FF),
+    );
+    canvas.drawCircle(
+      p(0.5, 0),
+      r * 0.085,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = r * 0.05
-        ..color = Palette.shade(base, -0.25),
+        ..strokeWidth = r * 0.035
+        ..color = dark,
     );
-    // Chevrons pointing outwards.
-    for (final s in [-1.0, 1.0]) {
-      for (final k in [0.42, 0.72]) {
-        final tip = horizontal
-            ? c + Offset(s * r * (k + 0.2), 0)
-            : c + Offset(0, s * r * (k + 0.2));
-        final back = horizontal
-            ? c + Offset(s * r * k, 0)
-            : c + Offset(0, s * r * k);
-        final side = horizontal ? Offset(0, r * 0.15) : Offset(r * 0.15, 0);
-        canvas.drawPath(
-          Path()
-            ..moveTo(back.dx + side.dx, back.dy + side.dy)
-            ..lineTo(tip.dx, tip.dy)
-            ..lineTo(back.dx - side.dx, back.dy - side.dy),
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = r * 0.09
-            ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round
-            ..color = Palette.shade(base, -0.2),
-        );
-      }
-    }
+    canvas.drawCircle(
+      p(0.48, -0.025),
+      r * 0.025,
+      Paint()..color = Colors.white,
+    );
   }
 
   static void _bomb(Canvas canvas, Offset c, double r, TileColor color) {

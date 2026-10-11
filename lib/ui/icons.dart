@@ -39,6 +39,8 @@ enum GameIcons {
   gift,
   trophy,
   ticket,
+  podium,
+  cloud,
 }
 
 class GameIcon extends StatelessWidget {
@@ -494,7 +496,89 @@ class IconArt {
         _trophy(canvas);
       case GameIcons.ticket:
         _ticket(canvas);
+      case GameIcons.podium:
+        _podium(canvas);
+      case GameIcons.cloud:
+        _cloud(canvas);
     }
+  }
+
+  /// Leaderboards: a three-step podium with a star over first place.
+  static void _podium(Canvas canvas) {
+    const steps = [
+      (Rect.fromLTWH(8, 52, 28, 38), [Color(0xFFF4F6FF), Color(0xFFAEB6D0)]),
+      (Rect.fromLTWH(64, 62, 28, 28), [Color(0xFFFFD6A8), Color(0xFFD9823A)]),
+      (Rect.fromLTWH(34, 38, 32, 52), [Color(0xFFFFF0A0), Color(0xFFF2A50C)]),
+    ];
+    for (final (r, colors) in steps) {
+      final rr = RRect.fromRectAndRadius(r, const Radius.circular(5));
+      canvas.drawRRect(
+        rr.shift(const Offset(0, 4)),
+        _fill(const Color(0x40301040)),
+      );
+      canvas.drawRRect(rr, _grad(r, colors));
+      canvas.drawRRect(rr, _stroke(const Color(0xFF5B2A86), 4));
+    }
+    // Rank marks: one, two and three dots.
+    final dot = _fill(const Color(0xFF5B2A86));
+    canvas.drawCircle(const Offset(50, 56), 4.5, dot);
+    for (final x in [17.0, 27.0]) {
+      canvas.drawCircle(Offset(x, 68), 3.5, dot);
+    }
+    for (final x in [70.0, 78.0, 86.0]) {
+      canvas.drawCircle(Offset(x, 76), 3, dot);
+    }
+    final star = starPath(50, 20, 15, 5);
+    canvas.drawPath(
+      star.shift(const Offset(0, 3)),
+      _fill(const Color(0x40301040)),
+    );
+    canvas.drawPath(
+      star,
+      _grad(const Rect.fromLTWH(35, 5, 30, 30), [
+        const Color(0xFFFFF6B0),
+        const Color(0xFFFFB81E),
+      ]),
+    );
+    canvas.drawPath(star, _stroke(const Color(0xFFB36B00), 3.5));
+  }
+
+  /// Cloud save: a puffy cloud with an up arrow.
+  static void _cloud(Canvas canvas) {
+    final cloud = Path()
+      ..addOval(Rect.fromCircle(center: const Offset(32, 58), radius: 20))
+      ..addOval(Rect.fromCircle(center: const Offset(54, 44), radius: 26))
+      ..addOval(Rect.fromCircle(center: const Offset(74, 60), radius: 18))
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          const Rect.fromLTWH(14, 56, 76, 24),
+          const Radius.circular(12),
+        ),
+      );
+    final shape = Path.combine(PathOperation.union, cloud, Path());
+    canvas.drawPath(
+      shape.shift(const Offset(0, 4)),
+      _fill(const Color(0x40301040)),
+    );
+    canvas.drawPath(
+      shape,
+      _grad(const Rect.fromLTWH(10, 18, 80, 62), [
+        Colors.white,
+        const Color(0xFFBFE6FF),
+      ]),
+    );
+    canvas.drawPath(shape, _stroke(const Color(0xFF1F6FB8), 4));
+    final arrow = Path()
+      ..moveTo(50, 36)
+      ..lineTo(64, 52)
+      ..lineTo(56, 52)
+      ..lineTo(56, 68)
+      ..lineTo(44, 68)
+      ..lineTo(44, 52)
+      ..lineTo(36, 52)
+      ..close();
+    canvas.drawPath(arrow, _fill(const Color(0xFF2E9BFF)));
+    canvas.drawPath(arrow, _stroke(const Color(0xFF1F6FB8), 3));
   }
 
   /// Hard currency: a faceted gold gem.

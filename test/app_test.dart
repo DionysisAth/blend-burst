@@ -364,14 +364,39 @@ void main() {
 
   testWidgets('settings, analytics and the level editor open', (tester) async {
     await boot(tester);
+    await tester.tap(find.byKey(const Key('side-ranks')));
+    await run(tester, 600);
+    expect(find.textContaining('not set up'), findsOneWidget);
+    await tester.tap(find.text('OK'));
+    await run(tester, 600);
     await tester.tap(find.byKey(const Key('settings')));
     await run(tester, 600);
     expect(find.text('Settings'), findsOneWidget);
+    // Play Games is not set up in tests: the card says so.
+    expect(find.text('Google Play Games'), findsOneWidget);
+    expect(find.byKey(const Key('cloud-sign-in')), findsNothing);
+    await tester.tap(find.byKey(const Key('cloud-leaderboards')));
+    await run(tester, 600);
+    expect(find.textContaining('not set up'), findsOneWidget);
+    await tester.tap(find.text('OK'));
+    await run(tester, 600);
+    await tester.scrollUntilVisible(
+      find.text('Analytics'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await run(tester, 300);
     await tester.tap(find.text('Analytics'));
     await run(tester, 600);
     expect(find.text('Key metrics'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('Back'));
     await run(tester, 600);
+    await tester.scrollUntilVisible(
+      find.text('Level editor'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await run(tester, 300);
     await tester.tap(find.text('Level editor'));
     await run(tester, 600);
     expect(find.byType(EditorScreen), findsOneWidget);

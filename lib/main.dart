@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'app/ad_service.dart';
 import 'app/app_state.dart';
 import 'app/audio.dart';
+import 'app/cloud.dart';
 import 'app/level_repository.dart';
 import 'app/notifications.dart';
 import 'app/scope.dart';
@@ -92,12 +94,16 @@ class BlendBurstApp extends StatefulWidget {
   final GameAudio? audio;
   final Notifier? notifier;
 
+  /// Play Games / Game Center connection (a fake in tests).
+  final GamesBackend? games;
+
   const BlendBurstApp({
     super.key,
     this.state,
     this.ads = const PlaceholderAdService(),
     this.audio,
     this.notifier,
+    this.games,
   });
 
   @override
@@ -108,6 +114,7 @@ class _BlendBurstAppState extends State<BlendBurstApp>
     with WidgetsBindingObserver {
   AppState? _app;
   LevelRepository? _levels;
+  CloudSync? _cloud;
   Object? _error;
   late final GameAudio _audio = widget.audio ?? GameAudio.create();
   late final Notifier _notifier = widget.notifier ?? LocalNotifier();
@@ -124,10 +131,12 @@ class _BlendBurstAppState extends State<BlendBurstApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final app = _app;
-    if (app == null || !app.data.notifications) return;
-    // Reminders only make sense while the game is not on screen.
+    if (app == null) return;
     final away =
         state == AppLifecycleState.paused || state == AppLifecycleState.hidden;
+    if (away) unawaited(_cloud?.flush());
+    if (!app.data.notifications) return;
+    // Reminders only make sense while the game is not on screen.
     if (away && !_inBackground) {
       _inBackground = true;
       unawaited(_notifier.schedule(app.reminders()));
@@ -141,6 +150,7 @@ class _BlendBurstAppState extends State<BlendBurstApp>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     UiSounds.click = null;
+    _cloud?.dispose();
     _audio.dispose();
     super.dispose();
   }
@@ -164,9 +174,18 @@ class _BlendBurstAppState extends State<BlendBurstApp>
       // Load sounds in the background; the game never waits for audio.
       unawaited(_audio.preload());
       if (!mounted) return;
+      final cloud = _cloud ??= CloudSync(
+        widget.games ?? (_inTests ? const NoGames() : PlayGames()),
+        app,
+      );
       setState(() {
         _app = app;
         _levels = levels;
+      });
+      // Cloud save and leaderboards start once the map is up; the game
+      // never waits for them.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(cloud.start());
       });
     } catch (e, st) {
       debugPrint('Startup failed: $e\n$st');
@@ -191,6 +210,7 @@ class _BlendBurstAppState extends State<BlendBurstApp>
       ads: widget.ads,
       audio: _audio,
       reminders: _notifier,
+      cloud: _cloud,
       child: MaterialApp(
         title: 'Blend Burst',
         debugShowCheckedModeBanner: false,
@@ -198,6 +218,14 @@ class _BlendBurstAppState extends State<BlendBurstApp>
         home: const MapScreen(),
       ),
     );
+  }
+}
+
+bool get _inTests {
+  try {
+    return !kIsWeb && Platform.environment.containsKey('FLUTTER_TEST');
+  } catch (_) {
+    return false;
   }
 }
 

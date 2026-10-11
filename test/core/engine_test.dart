@@ -391,6 +391,37 @@ void main() {
       expect(b.checkInvariants(), isNull);
     });
 
+    test('a swiped line blaster fires from the cell it moved to', () {
+      final b = boardOf(background());
+      b.tileAt(const Pos(3, 3))!.special = Special.lineH;
+      final blaster = b.tileAt(const Pos(3, 3))!.id;
+      expect(b.classify(const Pos(3, 3), const Pos(4, 3)), MoveKind.special);
+      final o = b.swipe(const Pos(3, 3), const Pos(4, 3));
+      expect(o.usedMove, isTrue);
+      final effect = o.steps
+          .expand((s) => s.effects)
+          .firstWhere((e) => e.kind == EffectKind.lineH);
+      expect(effect.at, const Pos(4, 3));
+      final firstClear = o.steps.firstWhere((s) => s.kind == StepKind.clear);
+      final rows = firstClear.cleared.map((c) => c.at.r).toSet();
+      expect(rows, {4});
+      expect(firstClear.cleared.length, 8);
+      expect(firstClear.cleared.any((c) => c.id == blaster), isTrue);
+      expect(b.checkInvariants(), isNull);
+    });
+
+    test('swiping a tile into a paint bomb fires the bomb where it lands', () {
+      final b = boardOf(background());
+      b.tileAt(const Pos(4, 4))!.special = Special.bomb;
+      final o = b.swipe(const Pos(3, 4), const Pos(4, 4));
+      expect(o.kind, MoveKind.special);
+      final effect = o.steps
+          .expand((s) => s.effects)
+          .firstWhere((e) => e.kind == EffectKind.bomb);
+      expect(effect.at, const Pos(3, 4));
+      expect(b.checkInvariants(), isNull);
+    });
+
     test('two specials swapped together combine', () {
       final b = boardOf(background());
       b.tiles[0]!.special = Special.lineH;
