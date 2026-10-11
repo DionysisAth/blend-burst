@@ -30,21 +30,39 @@ android {
         versionName = flutter.versionName
     }
 
+    // Release signing, picked by environment variables:
+    // - BB_UPLOAD_KEYSTORE (+ BB_UPLOAD_PASSWORD, BB_UPLOAD_ALIAS): the
+    //   private Google Play upload key, used by the Play Store workflow. It
+    //   is never committed.
+    // - BB_UNSIGNED=1: no signing (the bundle is signed afterwards).
+    // - otherwise: the development key below, committed so every test APK
+    //   from CI installs over the previous one. Never used for Google Play.
+    val uploadKeystore = System.getenv("BB_UPLOAD_KEYSTORE")
+    val unsigned = System.getenv("BB_UNSIGNED") == "1"
     signingConfigs {
-        // Sideload/testing key committed to the repo so every CI build can be
-        // installed over the previous one. Replace with a private upload key
-        // (kept out of git) before publishing to Google Play.
         create("dev") {
             storeFile = file("dev-release.keystore")
             storePassword = "blendburst"
             keyAlias = "blendburst"
             keyPassword = "blendburst"
         }
+        if (uploadKeystore != null) {
+            create("upload") {
+                storeFile = file(uploadKeystore)
+                storePassword = System.getenv("BB_UPLOAD_PASSWORD")
+                keyAlias = System.getenv("BB_UPLOAD_ALIAS") ?: "upload"
+                keyPassword = System.getenv("BB_UPLOAD_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("dev")
+            signingConfig = when {
+                uploadKeystore != null -> signingConfigs.getByName("upload")
+                unsigned -> null
+                else -> signingConfigs.getByName("dev")
+            }
             // Keeps the classes the notification plugin stores with Gson.
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

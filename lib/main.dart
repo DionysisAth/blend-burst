@@ -12,7 +12,9 @@ import 'app/audio.dart';
 import 'app/cloud.dart';
 import 'app/level_repository.dart';
 import 'app/notifications.dart';
+import 'app/play_store.dart';
 import 'app/scope.dart';
+import 'app/store.dart';
 import 'screens/map_screen.dart';
 import 'ui/game_ui.dart';
 import 'ui/logo.dart';
@@ -100,6 +102,9 @@ class BlendBurstApp extends StatefulWidget {
   /// Play Games / Game Center connection (a fake in tests).
   final GamesBackend? games;
 
+  /// Real-money purchases (Google Play billing on Android).
+  final Store? store;
+
   const BlendBurstApp({
     super.key,
     this.state,
@@ -107,6 +112,7 @@ class BlendBurstApp extends StatefulWidget {
     this.audio,
     this.notifier,
     this.games,
+    this.store,
   });
 
   @override
@@ -118,6 +124,7 @@ class _BlendBurstAppState extends State<BlendBurstApp>
   AppState? _app;
   LevelRepository? _levels;
   CloudSync? _cloud;
+  Store? _store;
   late final AdService _ads =
       widget.ads ??
       (_inTests || !AdUnits.supported
@@ -159,6 +166,8 @@ class _BlendBurstAppState extends State<BlendBurstApp>
     WidgetsBinding.instance.removeObserver(this);
     UiSounds.click = null;
     _cloud?.dispose();
+    final store = _store;
+    if (store is PlayStore) store.dispose();
     _audio.dispose();
     super.dispose();
   }
@@ -186,6 +195,11 @@ class _BlendBurstAppState extends State<BlendBurstApp>
         widget.games ?? (_inTests ? const NoGames() : PlayGames()),
         app,
       );
+      final store = _store ??=
+          widget.store ??
+          (_inTests || !PlayStore.supported
+              ? const TestStore()
+              : PlayStore(app));
       setState(() {
         _app = app;
         _levels = levels;
@@ -195,6 +209,7 @@ class _BlendBurstAppState extends State<BlendBurstApp>
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         unawaited(cloud.start());
+        if (store is PlayStore) unawaited(store.start());
         final ads = _ads;
         if (ads is AdMobAds) unawaited(ads.start());
       });
@@ -222,6 +237,7 @@ class _BlendBurstAppState extends State<BlendBurstApp>
       audio: _audio,
       reminders: _notifier,
       cloud: _cloud,
+      store: _store ?? const TestStore(),
       child: MaterialApp(
         title: 'Blend Burst',
         debugShowCheckedModeBanner: false,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app/admob.dart';
 import '../app/economy.dart';
@@ -84,6 +85,8 @@ class _Card extends StatelessWidget {
     ),
   );
 }
+
+const privacyPolicyUrl = 'https://www.nwbn.online/blendburst/privacy-policy';
 
 const _labelStyle = TextStyle(
   fontWeight: FontWeight.w700,
@@ -226,6 +229,20 @@ class SettingsScreen extends StatelessWidget {
                       : const SizedBox.shrink(),
                 ),
               link(
+                GameIcons.lock,
+                CandyColors.purple,
+                'Privacy policy',
+                'How the game handles your data',
+                () async {
+                  try {
+                    await launchUrl(
+                      Uri.parse(privacyPolicyUrl),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  } catch (_) {}
+                },
+              ),
+              link(
                 GameIcons.retry,
                 CandyColors.red,
                 'Reset progress',
@@ -251,7 +268,7 @@ class SettingsScreen extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.all(16),
             child: Text(
-              'Blend Burst • MVP build\nMusic and sounds are synthesized for this game.',
+              'Blend Burst by NWBN • nwbn.online\nMusic and sounds are made for this game.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,

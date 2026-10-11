@@ -292,9 +292,10 @@ class _ShopScreenState extends State<ShopScreen> {
     if (!app.canBuy(p)) return;
     switch (p.pay) {
       case PayWith.money:
+        // The store delivers the item itself (also if the payment
+        // completes later).
         final ok = await scope.store.buy(context, p);
         if (!ok || !mounted) return;
-        app.completePurchase(p);
       case PayWith.ad:
         final ok = await scope.ads.showRewarded(context, reward: p.subtitle);
         if (!ok || !mounted) return;
@@ -414,6 +415,7 @@ class _ShopItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scope = AppScope.of(context);
     final p = product;
     final icon = switch (p.id) {
       'starter' => GameIcons.gift,
@@ -490,7 +492,12 @@ class _ShopItem extends StatelessWidget {
                           const GameIcon(GameIcons.video, size: 22),
                           const SizedBox(width: 2),
                         ],
-                        GameText(p.priceLabel, size: 18),
+                        GameText(
+                          p.pay == PayWith.money
+                              ? scope.store.priceOf(p)
+                              : p.priceLabel,
+                          size: 18,
+                        ),
                       ],
                     ),
                   ),
@@ -729,8 +736,7 @@ class SeasonPassScreen extends StatelessWidget {
                     icon: GameIcons.ticket,
                     onTap: () async {
                       final p = productById('pass');
-                      final ok = await scope.store.buy(context, p);
-                      if (ok) app.completePurchase(p);
+                      await scope.store.buy(context, p);
                     },
                   )
                 else

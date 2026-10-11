@@ -99,6 +99,9 @@ class SaveData {
   int unlimitedUntil = 0;
   bool adsRemoved = false;
   Set<String> purchases = {};
+
+  /// Google Play order IDs already delivered (so none is granted twice).
+  Set<String> orders = {};
   int dailyStreak = 0;
   int dailyLast = -1000;
   int eventWeek = -1;
@@ -153,6 +156,7 @@ class SaveData {
     'unlimitedUntil': unlimitedUntil,
     'adsRemoved': adsRemoved,
     'purchases': purchases.toList(),
+    'orders': orders.toList(),
     'dailyStreak': dailyStreak,
     'dailyLast': dailyLast,
     'eventWeek': eventWeek,
@@ -221,6 +225,8 @@ class SaveData {
     s.adsRemoved = asBool(j['adsRemoved'], false);
     final bought = j['purchases'];
     if (bought is List) s.purchases = bought.whereType<String>().toSet();
+    final orders = j['orders'];
+    if (orders is List) s.orders = orders.whereType<String>().toSet();
     s.dailyStreak = max(0, asInt(j['dailyStreak'], 0));
     s.dailyLast = asInt(j['dailyLast'], -1000);
     s.eventWeek = asInt(j['eventWeek'], -1);
@@ -292,6 +298,7 @@ class SaveData {
     maxInto(out.wins, other.wins);
     out.tutorialsSeen.addAll(other.tutorialsSeen);
     out.purchases.addAll(other.purchases);
+    out.orders.addAll(other.orders);
     out.adsRemoved = out.adsRemoved || other.adsRemoved;
     if (out.seasonNo == other.seasonNo) {
       out.premiumPass = out.premiumPass || other.premiumPass;
@@ -693,7 +700,10 @@ class AppState extends ChangeNotifier {
   }
 
   /// Delivers a real-money purchase after the store confirmed it.
-  void completePurchase(Product p) {
+  /// [order] is the store's order ID, remembered so it is never delivered
+  /// twice.
+  void completePurchase(Product p, {String? order}) {
+    if (order != null) data.orders.add(order);
     data.purchases.add(p.id);
     // Any purchase also turns off ad breaks.
     data.adsRemoved = true;
@@ -703,6 +713,17 @@ class AppState extends ChangeNotifier {
     }
     log('purchase', {'product': p.id, 'price': p.price});
     grant(p.reward, 'purchase:${p.id}');
+  }
+
+  /// A one-time item the store reports as already owned (e.g. after a
+  /// reinstall): it is remembered, but its contents are not granted again.
+  void restorePurchase(Product p, String order) {
+    data.orders.add(order);
+    if (data.purchases.add(p.id)) {
+      data.adsRemoved = true;
+      log('purchase_restored', {'product': p.id});
+    }
+    _changed();
   }
 
   bool get spentMoney => data.purchases.isNotEmpty;

@@ -4,20 +4,25 @@ import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
 import 'economy.dart';
+import 'scope.dart';
 
-/// Real-money purchases (App Store / Google Play billing).
-///
-/// This build has no store accounts connected, so [TestStore] completes
-/// every purchase for free after saying so. A billing implementation (for
-/// example with the in_app_purchase plugin and receipt validation) replaces
-/// it without touching the shop screens.
+/// Real-money purchases. On Android this is Google Play billing
+/// (`PlayStore`); tests and other platforms use [TestStore], which completes
+/// every purchase for free after saying so.
 abstract class Store {
-  /// Shows the purchase flow; true when [product] was bought.
+  /// Shows the purchase flow and delivers [product] to the player. True
+  /// when it was bought and delivered.
   Future<bool> buy(BuildContext context, Product product);
+
+  /// The price to show, localized by the store when it knows it.
+  String priceOf(Product product);
 }
 
 class TestStore implements Store {
   const TestStore();
+
+  @override
+  String priceOf(Product product) => product.priceLabel;
 
   @override
   Future<bool> buy(BuildContext context, Product product) async {
@@ -57,6 +62,8 @@ class TestStore implements Store {
         ),
       ),
     );
-    return ok ?? false;
+    if (ok != true || !context.mounted) return false;
+    AppScope.read(context).app.completePurchase(product);
+    return true;
   }
 }
