@@ -173,7 +173,13 @@ class _MapScreenState extends State<MapScreen>
                         ),
                         ..._decorations(repo, w, total),
                         for (final e in repo.episodes) _banner(e, w, total),
-                        for (var i = 0; i < levels.length; i++)
+                        // The current level goes last so its "you are
+                        // here" pin is drawn over the nodes above it.
+                        for (final i in [
+                          for (var i = 0; i < levels.length; i++)
+                            if (levels[i].id != current) i,
+                          if (current >= 1) current - 1,
+                        ])
                           Positioned(
                             left: points[i].dx - 44,
                             top: points[i].dy - 44,
