@@ -6,7 +6,7 @@ Google Play converts them for other countries.
 """
 import sys
 
-from play_api import API, ApiError, call
+from play_api import API, PACKAGE, ApiError, call
 
 PRODUCTS = [
     # id, title, description, price (USD cents)
@@ -20,25 +20,52 @@ PRODUCTS = [
 ]
 
 
-def body(sku, title, desc, cents):
-    return {
-        'packageName': 'com.nwbn.blendburst',
-        'sku': sku,
-        'status': 'active',
-        'purchaseType': 'managedUser',
-        'defaultLanguage': 'en-US',
-        'defaultPrice': {'priceMicros': str(cents * 10000), 'currency': 'USD'},
-        'listings': {'en-US': {'title': title, 'description': desc}},
+def money(cents):
+    return {'currencyCode': 'USD', 'units': str(cents // 100),
+            'nanos': (cents % 100) * 10_000_000}
+
+
+def upsert(sku, title, desc, cents):
+    conv = call('POST', f'{API}/pricing:convertRegionPrices',
+                {'price': money(cents)})
+    version = conv['regionVersion']['version']
+    regions = [
+        {'regionCode': code, 'price': r['price'], 'availability': 'AVAILABLE'}
+        for code, r in sorted(conv['convertedRegionPrices'].items())
+    ]
+    other = conv.get('convertedOtherRegionsPrice', {})
+    option = {
+        'purchaseOptionId': 'default',
+        # Legacy compatible: what the in_app_purchase plugin buys.
+        'buyOption': {'legacyCompatible': True, 'multiQuantityEnabled': False},
+        'regionalPricingAndAvailabilityConfigs': regions,
     }
+    if other:
+        option['newRegionsConfig'] = {
+            'usdPrice': other['usdPrice'],
+            'eurPrice': other['eurPrice'],
+            'availability': 'AVAILABLE',
+        }
+    body = {
+        'packageName': PACKAGE,
+        'productId': sku,
+        'listings': [{'languageCode': 'en-US', 'title': title, 'description': desc}],
+        'purchaseOptions': [option],
+    }
+    call('PATCH', f'{API}/onetimeproducts/{sku}'
+         f'?allowMissing=true&regionsVersion.version={version}'
+         '&updateMask=listings,purchaseOptions', body)
+    call('POST', f'{API}/oneTimeProducts/{sku}/purchaseOptions:batchUpdateStates', {
+        'requests': [{'activatePurchaseOptionRequest': {
+            'packageName': PACKAGE, 'productId': sku, 'purchaseOptionId': 'default'}}],
+    })
 
 
 def main():
     for sku, title, desc, cents in PRODUCTS:
-        b = body(sku, title, desc, cents)
         try:
-            call('PUT', f'{API}/inappproducts/{sku}?autoConvertMissingPrices=true'
-                 '&allowMissing=true', b)
-            print(f'{sku}: ok')
+            upsert(sku, title, desc, cents)
+            print(f'{sku}: active at ${cents / 100:.2f}')
         except ApiError as e:
             print(f'{sku}: {e}', file=sys.stderr)
             sys.exit(1)
