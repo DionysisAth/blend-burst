@@ -71,6 +71,7 @@ class GameScreenState extends State<GameScreen> {
 
   void _onSpectacular() {
     if (widget.testMode || !mounted) return;
+    app.logAndSave('spectacular');
     _shareTimer?.cancel();
     // May be reported mid-frame by the board; update after it.
     scheduleMicrotask(() {

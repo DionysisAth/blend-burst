@@ -57,8 +57,9 @@ Android emulators.
 - Ad breaks every 3rd win, never for players who bought anything
 
 **Retention and tech**
-- Cloud save and leaderboards (total stars, levels completed, total score)
-  through Google Play Games, switched off until it is set up (see below)
+- Cloud save, leaderboards (total stars, levels completed, total score) and
+  12 achievements through Google Play Games, switched off until it is set up
+  (see below)
 - Opt-in reminders (Settings → Reminders): lives full, daily gift, event ending
 - Share a screenshot after a "Spectacular!" combo or a win
 - Remote config (`remote_config.json` in this repo): move limits per level,
@@ -153,13 +154,15 @@ cloud save is coming later and the Ranks button explains the same.
    APKs, the dev key in `android/app/dev-release.keystore`
    (`keytool -list -v -keystore android/app/dev-release.keystore -storepass blendburst`).
 2. Turn on **Saved games** in the game project's properties.
-3. Create three leaderboards: Total stars, Levels completed, Total score
-   (all "higher is better").
-4. Put the project ID (the number on the Configuration page) in
-   `android/app/src/main/res/values/games.xml` and the three leaderboard IDs
-   in `GamesConfig` at the top of `lib/app/cloud.dart`.
-5. While the game is unpublished, add your Google account as a tester under
-   **Testers**.
+3. Run `python3 tool/play/games_setup.py --project <project ID>` (the number
+   on the Configuration page). It creates the three leaderboards (Total
+   Stars, Levels Completed, Total Score) and the 12 achievements from
+   `lib/app/achievements.dart`, and writes their IDs into
+   `lib/app/games_ids.dart` and `res/values/games.xml`. Icons for all of them
+   are in `store/games/` (drawn by `flutter test tool/icon/games_icons_test.dart`)
+   to upload in the Play Console.
+4. In the Play Console, publish the Play Games changes (Play Games Services
+   → Review and publish). While the game is unpublished, add testers there.
 
 How syncing works: on launch (and when signing in from Settings), the cloud
 copy is merged with the progress on the phone. Levels, stars, best scores,

@@ -40,6 +40,12 @@ class FakeGames implements GamesBackend {
 
   @override
   Future<void> submit(Board board, int value) async => submitted[board] = value;
+  final unlocked = <String>{};
+  @override
+  Future<void> unlock(String key) async => unlocked.add(key);
+  @override
+  Future<bool> showAchievements() async => true;
+
   @override
   Future<bool> showLeaderboards() async {
     shown++;

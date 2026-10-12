@@ -25,6 +25,25 @@ Future<void> openLeaderboards(BuildContext context) async {
   );
 }
 
+/// Opens the Play Games achievements, or explains why it can't.
+Future<void> openAchievements(BuildContext context) async {
+  final cloud = AppScope.read(context).cloud;
+  final problem = cloud == null
+      ? CloudSync.notSetUp
+      : await cloud.openAchievements();
+  if (problem == null || !context.mounted) return;
+  await confirm(
+    context,
+    'Achievements',
+    problem == CloudSync.notSetUp
+        ? 'Achievements need Google Play Games, which is not set up for '
+              'this version yet. They will appear in a later update.'
+        : problem,
+    ok: 'OK',
+    cancel: 'Close',
+  );
+}
+
 String _ago(DateTime t) {
   final d = DateTime.now().difference(t);
   if (d.inMinutes < 1) return 'just now';
@@ -142,6 +161,18 @@ class CloudCard extends StatelessWidget {
                 ],
               ),
             ),
+            if (cloud.status != CloudStatus.unavailable)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                child: CandyButton.label(
+                  'Achievements',
+                  key: const Key('cloud-achievements'),
+                  height: 46,
+                  fontSize: 19,
+                  colors: CandyColors.purple,
+                  onTap: () => openAchievements(context),
+                ),
+              ),
           ],
         );
       },

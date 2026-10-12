@@ -6,21 +6,22 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:games_services/games_services.dart';
 
+import 'achievements.dart';
 import 'app_state.dart';
+import 'games_ids.dart';
 
 /// Google Play Games (Android) and Game Center (iOS) settings.
 ///
-/// Fill these in once the game is set up in the Play Console
-/// (Play Games Services -> Leaderboards) and App Store Connect. On Android
-/// the project ID also goes in
-/// `android/app/src/main/res/values/games.xml` (`game_services_project_id`).
-/// Until then cloud save and leaderboards stay switched off, and the game
-/// says so instead of calling Play Games.
+/// The Android IDs come from games_ids.dart, which
+/// tool/play/games_setup.py writes after creating the leaderboards and
+/// achievements in the Play Console. The project ID also goes in
+/// `android/app/src/main/res/values/games.xml`; while it is 0, cloud save
+/// and leaderboards stay switched off and the game says so.
 class GamesConfig {
   /// Leaderboard IDs from the Play Console (they look like "CgkI...").
-  static const androidStars = '';
-  static const androidLevels = '';
-  static const androidScore = '';
+  static final androidStars = playLeaderboards['stars'] ?? '';
+  static final androidLevels = playLeaderboards['levels'] ?? '';
+  static final androidScore = playLeaderboards['score'] ?? '';
 
   /// Leaderboard IDs from App Store Connect.
   static const iosStars = 'blendburst.stars';
@@ -55,8 +56,14 @@ abstract class GamesBackend {
   Future<bool> save(String name, String data);
   Future<void> submit(Board board, int value);
 
+  /// Unlocks the achievement with this key (see achievements.dart).
+  Future<void> unlock(String key);
+
   /// Opens the leaderboards screen. False if it could not be shown.
   Future<bool> showLeaderboards();
+
+  /// Opens the achievements screen. False if it could not be shown.
+  Future<bool> showAchievements();
 }
 
 /// Used where the services can never work (tests, desktop).
@@ -78,6 +85,10 @@ class NoGames implements GamesBackend {
   Future<bool> save(String name, String data) async => false;
   @override
   Future<void> submit(Board board, int value) async {}
+  @override
+  Future<void> unlock(String key) async {}
+  @override
+  Future<bool> showAchievements() async => false;
   @override
   Future<bool> showLeaderboards() async => false;
 }
@@ -174,6 +185,26 @@ class PlayGames implements GamesBackend {
           iOSLeaderboardID: id,
           value: value,
         ),
+      ),
+    );
+  }
+
+  @override
+  Future<bool> showAchievements() async {
+    final ok = await _guard(() async {
+      await GamesServices.showAchievements();
+      return true;
+    }, timeout: const Duration(minutes: 10));
+    return ok ?? false;
+  }
+
+  @override
+  Future<void> unlock(String key) async {
+    final id = Platform.isIOS ? '' : (playAchievements[key] ?? '');
+    if (id.isEmpty) return;
+    await _guard(
+      () => GamesServices.unlock(
+        achievement: Achievement(androidID: id, iOSID: id),
       ),
     );
   }
@@ -342,7 +373,16 @@ class CloudSync extends ChangeNotifier {
       await backend.submit(e.key, e.value);
       _posted[e.key] = e.value;
     }
+    for (final a in achievements) {
+      if (_unlocked.contains(a.key) || !a.earned(app.data)) continue;
+      await backend.unlock(a.key);
+      _unlocked.add(a.key);
+    }
   }
+
+  /// Achievements unlocked this session (Play Games ignores repeats, this
+  /// just avoids the calls).
+  final _unlocked = <String>{};
 
   void _onAppChanged() {
     if (!signedIn || _syncing) return;
@@ -366,6 +406,18 @@ class CloudSync extends ChangeNotifier {
     unawaited(_postScores());
     if (!await backend.showLeaderboards()) {
       return 'Could not open the leaderboards.';
+    }
+    return null;
+  }
+
+  /// Opens the achievements, signing in first if needed. Returns a message
+  /// to show when they cannot be opened.
+  Future<String?> openAchievements() async {
+    if (!_available) return notSetUp;
+    if (!signedIn && !await signIn()) return 'Sign in to Play Games first.';
+    unawaited(_postScores());
+    if (!await backend.showAchievements()) {
+      return 'Could not open the achievements.';
     }
     return null;
   }
