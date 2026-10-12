@@ -4,6 +4,7 @@
 // leaves the level and visits settings, the editor, the shop, the event and
 // the season pass, and schedules (then cancels) a reminder notification.
 import 'package:blend_burst/app/notifications.dart';
+import 'package:blend_burst/app/scope.dart';
 import 'package:blend_burst/core/models.dart';
 import 'package:blend_burst/core/session.dart';
 import 'package:blend_burst/game/board_view.dart';
@@ -124,10 +125,17 @@ void main() {
 
     // Play Games is not set up in this build: the Ranks button explains
     // that instead of calling it.
-    await tester.tap(find.byKey(const Key('side-ranks')));
-    expect(await waitFor(tester, find.textContaining('not set up')), isTrue);
-    await tester.tap(find.text('OK'));
-    await run(tester, 800);
+    // Where Play Games can't start (no Google Play services), the Ranks
+    // button explains that instead of calling it. Where it can, tapping it
+    // would open Google's sign-in screen, so only check it is there.
+    final cloud = AppScope.read(tester.element(find.byType(MapScreen))).cloud;
+    expect(find.byKey(const Key('side-ranks')), findsOneWidget);
+    if (cloud != null && !cloud.available) {
+      await tester.tap(find.byKey(const Key('side-ranks')));
+      expect(await waitFor(tester, find.textContaining('not set up')), isTrue);
+      await tester.tap(find.text('OK'));
+      await run(tester, 800);
+    }
 
     await tester.tap(find.byKey(const Key('settings')));
     expect(await waitFor(tester, find.text('Google Play Games')), isTrue);

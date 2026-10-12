@@ -3,5 +3,5 @@
     <!-- Google Play Games project ID: the number shown in the Play Console
          under Play Games Services -> Setup and management -> Configuration.
          While it is 0, cloud save and leaderboards stay switched off. -->
-    <string name="game_services_project_id" translatable="false">0</string>
+    <string name="game_services_project_id" translatable="false">852527019771</string>
 </resources>

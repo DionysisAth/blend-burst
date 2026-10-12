@@ -69,7 +69,8 @@ def main():
                     'scoreOrder': 'LARGER_IS_BETTER',
                     'draft': {
                         'name': bundle(name),
-                        'scoreFormat': {'numberFormatType': 'NUMERIC'},
+                        'scoreFormat': {'numberFormatType': 'NUMERIC',
+                                    'numDecimalPlaces': 0},
                         'sortRank': rank,
                     },
                 })
