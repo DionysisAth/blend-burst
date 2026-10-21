@@ -7,7 +7,8 @@
     <application
         android:label="Blend Burst"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:localeConfig="@xml/locales_config">
         <!-- Render with Skia. Impeller's OpenGL ES backend (used wherever
              Vulkan is unavailable: emulators and many older phones) brought
              the emulators down seconds after launch; Skia passes every
