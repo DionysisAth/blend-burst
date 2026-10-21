@@ -31,17 +31,6 @@ extension TileColorInfo on TileColor {
     TileColor.brown: 'N',
     TileColor.gray: 'K',
   }[this]!;
-
-  String get label => const {
-    TileColor.red: 'Red',
-    TileColor.blue: 'Blue',
-    TileColor.yellow: 'Yellow',
-    TileColor.purple: 'Purple',
-    TileColor.green: 'Green',
-    TileColor.orange: 'Orange',
-    TileColor.brown: 'Umber',
-    TileColor.gray: 'Charcoal',
-  }[this]!;
 }
 
 TileColor? tileColorFromCode(String code) {

@@ -2,7 +2,8 @@
 // season pass and the shop catalog. No widgets, and time always comes in
 // as a parameter, so every rule is unit-testable.
 
-import 'app_state.dart' show BoosterType;
+import '../l10n/l10n.dart';
+import 'app_state.dart' show BoosterType, BoosterInfo;
 
 /// Something the player receives.
 class Reward {
@@ -37,6 +38,16 @@ class Reward {
       boosters.isEmpty &&
       unlimitedMinutes == 0;
 
+  /// What it contains, for players (in the current language).
+  String get label => [
+    if (coins > 0) tr.rewardCoins(coins),
+    if (gold > 0) tr.rewardGold(gold),
+    if (lives > 0) tr.rewardLives(lives),
+    if (unlimitedMinutes > 0) tr.rewardUnlimited(unlimitedMinutes),
+    for (final e in boosters.entries) tr.rewardBooster(e.value, e.key.label),
+  ].join(', ');
+
+  /// For analytics logs (always English).
   @override
   String toString() => [
     if (coins > 0) '$coins coins',
@@ -207,8 +218,6 @@ enum PayWith { money, gold, coins, ad }
 /// A shop item. [price] is in cents for money, otherwise in gold/coins.
 class Product {
   final String id;
-  final String title;
-  final String subtitle;
   final PayWith pay;
   final int price;
   final Reward reward;
@@ -217,8 +226,6 @@ class Product {
   final bool once;
   const Product(
     this.id,
-    this.title,
-    this.subtitle,
     this.pay,
     this.price,
     this.reward, {
@@ -230,7 +237,43 @@ class Product {
       '\$${price ~/ 100}.${(price % 100).toString().padLeft(2, '0')}',
     PayWith.gold => '$price',
     PayWith.coins => '$price',
-    PayWith.ad => 'Free',
+    PayWith.ad => tr.free,
+  };
+
+  /// Name shown in the shop (in the current language).
+  String get title => switch (id) {
+    'starter' => tr.productStarterTitle,
+    'gold50' => tr.productGold50Title,
+    'gold130' => tr.productGold130Title,
+    'gold350' => tr.productGold350Title,
+    'gold800' => tr.productGold800Title,
+    'noads' => tr.productNoAdsTitle,
+    'pass' => tr.productPassTitle,
+    'refill' => tr.productRefillTitle,
+    'unl30' || 'unl60' || 'unl180' => tr.productUnlimitedTitle,
+    'boosterpack' => tr.productBoosterPackTitle,
+    'startpack' => tr.productStartPackTitle,
+    'freebooster' => tr.productFreeBoosterTitle,
+    _ => id,
+  };
+
+  /// What it gives, under the name (in the current language).
+  String get subtitle => switch (id) {
+    'starter' => tr.productStarterSubtitle,
+    'gold50' ||
+    'gold130' ||
+    'gold350' ||
+    'gold800' => tr.rewardGold(reward.gold),
+    'noads' => tr.productNoAdsSubtitle,
+    'pass' => tr.productPassSubtitle,
+    'refill' => tr.productRefillSubtitle(reward.lives),
+    'unl30' => tr.productUnl30Subtitle,
+    'unl60' => tr.productUnl60Subtitle,
+    'unl180' => tr.productUnl180Subtitle,
+    'boosterpack' => tr.productBoosterPackSubtitle,
+    'startpack' => tr.productStartPackSubtitle,
+    'freebooster' => tr.productFreeBoosterSubtitle,
+    _ => reward.label,
   };
 }
 
@@ -244,8 +287,6 @@ const allBoostersOne = {
 const shopProducts = [
   Product(
     'starter',
-    'Starter Pack',
-    '100 gold, 3 of every booster, 1 hour unlimited lives',
     PayWith.money,
     99,
     Reward(
@@ -263,92 +304,18 @@ const shopProducts = [
     ),
     once: true,
   ),
-  Product(
-    'gold50',
-    'Pouch of Gold',
-    '50 gold',
-    PayWith.money,
-    99,
-    Reward(gold: 50),
-  ),
-  Product(
-    'gold130',
-    'Bag of Gold',
-    '130 gold',
-    PayWith.money,
-    199,
-    Reward(gold: 130),
-  ),
-  Product(
-    'gold350',
-    'Chest of Gold',
-    '350 gold',
-    PayWith.money,
-    499,
-    Reward(gold: 350),
-  ),
-  Product(
-    'gold800',
-    'Vault of Gold',
-    '800 gold',
-    PayWith.money,
-    999,
-    Reward(gold: 800),
-  ),
-  Product(
-    'noads',
-    'Remove Ads',
-    'No more ad breaks between levels',
-    PayWith.money,
-    299,
-    Reward(),
-    once: true,
-  ),
-  Product(
-    'pass',
-    'Premium Pass',
-    'Unlocks the premium season track',
-    PayWith.money,
-    499,
-    Reward(),
-    once: true,
-  ),
-  Product(
-    'refill',
-    'Lives Refill',
-    'Refill all 5 lives',
-    PayWith.gold,
-    20,
-    Reward(lives: 5),
-  ),
-  Product(
-    'unl30',
-    'Unlimited Lives',
-    '30 minutes of free play',
-    PayWith.gold,
-    30,
-    Reward(unlimitedMinutes: 30),
-  ),
-  Product(
-    'unl60',
-    'Unlimited Lives',
-    '1 hour of free play',
-    PayWith.gold,
-    50,
-    Reward(unlimitedMinutes: 60),
-  ),
-  Product(
-    'unl180',
-    'Unlimited Lives',
-    '3 hours of free play',
-    PayWith.gold,
-    120,
-    Reward(unlimitedMinutes: 180),
-  ),
+  Product('gold50', PayWith.money, 99, Reward(gold: 50)),
+  Product('gold130', PayWith.money, 199, Reward(gold: 130)),
+  Product('gold350', PayWith.money, 499, Reward(gold: 350)),
+  Product('gold800', PayWith.money, 999, Reward(gold: 800)),
+  Product('noads', PayWith.money, 299, Reward(), once: true),
+  Product('pass', PayWith.money, 499, Reward(), once: true),
+  Product('refill', PayWith.gold, 20, Reward(lives: 5)),
+  Product('unl30', PayWith.gold, 30, Reward(unlimitedMinutes: 30)),
+  Product('unl60', PayWith.gold, 50, Reward(unlimitedMinutes: 60)),
+  Product('unl180', PayWith.gold, 120, Reward(unlimitedMinutes: 180)),
   Product(
     'boosterpack',
-    'Booster Bundle',
-    '2 of every in-level booster',
     PayWith.gold,
     70,
     Reward(
@@ -362,8 +329,6 @@ const shopProducts = [
   ),
   Product(
     'startpack',
-    'Head Start Bundle',
-    '2 of every pre-level booster',
     PayWith.gold,
     50,
     Reward(
@@ -376,8 +341,6 @@ const shopProducts = [
   ),
   Product(
     'freebooster',
-    'Free Booster',
-    'Watch an ad, once a day',
     PayWith.ad,
     0,
     Reward(boosters: {BoosterType.brush: 1}),

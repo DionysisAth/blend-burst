@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app/cloud.dart';
 import '../app/scope.dart';
+import '../l10n/l10n.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import 'dialogs.dart';
@@ -15,13 +16,10 @@ Future<void> openLeaderboards(BuildContext context) async {
   if (problem == null || !context.mounted) return;
   await confirm(
     context,
-    'Leaderboards',
-    problem == CloudSync.notSetUp
-        ? 'Leaderboards need Google Play Games, which is not set up for '
-              'this version yet. They will appear in a later update.'
-        : problem,
-    ok: 'OK',
-    cancel: 'Close',
+    tr.cloudLeaderboards,
+    problem == CloudSync.notSetUp ? tr.cloudLeaderboardsNotSetUp : problem,
+    ok: tr.ok,
+    cancel: tr.close,
   );
 }
 
@@ -34,22 +32,19 @@ Future<void> openAchievements(BuildContext context) async {
   if (problem == null || !context.mounted) return;
   await confirm(
     context,
-    'Achievements',
-    problem == CloudSync.notSetUp
-        ? 'Achievements need Google Play Games, which is not set up for '
-              'this version yet. They will appear in a later update.'
-        : problem,
-    ok: 'OK',
-    cancel: 'Close',
+    tr.cloudAchievements,
+    problem == CloudSync.notSetUp ? tr.cloudAchievementsNotSetUp : problem,
+    ok: tr.ok,
+    cancel: tr.close,
   );
 }
 
 String _ago(DateTime t) {
   final d = DateTime.now().difference(t);
-  if (d.inMinutes < 1) return 'just now';
-  if (d.inMinutes < 60) return '${d.inMinutes} min ago';
-  if (d.inHours < 24) return '${d.inHours} h ago';
-  return '${d.inDays} d ago';
+  if (d.inMinutes < 1) return tr.cloudJustNow;
+  if (d.inMinutes < 60) return tr.cloudMinAgo(d.inMinutes);
+  if (d.inHours < 24) return tr.cloudHoursAgo(d.inHours);
+  return tr.cloudDaysAgo(d.inDays);
 }
 
 /// Settings card: Play Games sign-in, cloud save and leaderboards.
@@ -72,21 +67,19 @@ class CloudCard extends StatelessWidget {
         final String sub;
         switch (cloud.status) {
           case CloudStatus.unavailable:
-            sub = 'Cloud save and leaderboards are coming in a later update.';
+            sub = tr.cloudComingLater;
           case CloudStatus.signedOut:
-            sub =
-                'Sign in to keep your progress safe in the cloud and '
-                'compete on the leaderboards.';
+            sub = tr.cloudSignInPitch;
           case CloudStatus.busy:
-            sub = 'Signing in…';
+            sub = tr.cloudSigningIn;
           case CloudStatus.signedIn:
             final last = cloud.lastSync;
             sub = [
-              'Signed in as ${cloud.player ?? 'Player'}',
+              tr.cloudSignedInAs(cloud.player ?? tr.cloudPlayer),
               if (cloud.syncing)
-                'Saving…'
+                tr.cloudSaving
               else if (last != null)
-                'Saved ${_ago(last)}',
+                tr.cloudSavedAgo(_ago(last)),
             ].join(' • ');
         }
         final message = cloud.message;
@@ -126,7 +119,7 @@ class CloudCard extends StatelessWidget {
                       cloud.status == CloudStatus.busy)
                     Expanded(
                       child: CandyButton.label(
-                        'Sign in',
+                        tr.cloudSignIn,
                         key: const Key('cloud-sign-in'),
                         height: 46,
                         fontSize: 19,
@@ -138,7 +131,7 @@ class CloudCard extends StatelessWidget {
                   if (cloud.signedIn)
                     Expanded(
                       child: CandyButton.label(
-                        'Save now',
+                        tr.cloudSaveNow,
                         key: const Key('cloud-sync'),
                         height: 46,
                         fontSize: 19,
@@ -150,7 +143,7 @@ class CloudCard extends StatelessWidget {
                     const SizedBox(width: 10),
                   Expanded(
                     child: CandyButton.label(
-                      'Leaderboards',
+                      tr.cloudLeaderboards,
                       key: const Key('cloud-leaderboards'),
                       height: 46,
                       fontSize: 19,
@@ -165,7 +158,7 @@ class CloudCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                 child: CandyButton.label(
-                  'Achievements',
+                  tr.cloudAchievements,
                   key: const Key('cloud-achievements'),
                   height: 46,
                   fontSize: 19,

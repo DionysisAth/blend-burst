@@ -10,6 +10,8 @@ import '../app/level_repository.dart';
 import '../app/scope.dart';
 import '../core/level.dart';
 import '../core/models.dart';
+import '../l10n/content.dart';
+import '../l10n/l10n.dart';
 import '../ui/art_cache.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
@@ -217,7 +219,7 @@ class _MapScreenState extends State<MapScreen>
                     _SideButton(
                       key: const Key('side-daily'),
                       icon: GameIcons.gift,
-                      label: 'Daily',
+                      label: tr.mapDaily,
                       colors: CandyColors.green,
                       badge: app.daily.claimable ? '!' : null,
                       onTap: () async {
@@ -229,14 +231,14 @@ class _MapScreenState extends State<MapScreen>
                     _SideButton(
                       key: const Key('side-shop'),
                       icon: GameIcons.shop,
-                      label: 'Shop',
+                      label: tr.mapShop,
                       colors: CandyColors.yellow,
                       onTap: () => _push(const ShopScreen()),
                     ),
                     _SideButton(
                       key: const Key('side-event'),
                       icon: GameIcons.trophy,
-                      label: 'Event',
+                      label: tr.mapEvent,
                       colors: CandyColors.red,
                       badge: app.eventClaimable > 0
                           ? '${app.eventClaimable}'
@@ -246,7 +248,7 @@ class _MapScreenState extends State<MapScreen>
                     _SideButton(
                       key: const Key('side-pass'),
                       icon: GameIcons.ticket,
-                      label: 'Pass',
+                      label: tr.mapPass,
                       colors: CandyColors.purple,
                       badge: app.seasonClaimable > 0
                           ? '${app.seasonClaimable}'
@@ -256,7 +258,7 @@ class _MapScreenState extends State<MapScreen>
                     _SideButton(
                       key: const Key('side-ranks'),
                       icon: GameIcons.podium,
-                      label: 'Ranks',
+                      label: tr.mapRanks,
                       colors: CandyColors.blue,
                       onTap: () {
                         scope.audio.sfx(Sfx.click);
@@ -278,7 +280,7 @@ class _MapScreenState extends State<MapScreen>
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(60, 0, 60, 14),
                   child: CandyButton.label(
-                    'Level $current',
+                    tr.levelN(current),
                     key: const Key('play-current'),
                     icon: GameIcons.play,
                     height: 60,
@@ -304,11 +306,15 @@ class _MapScreenState extends State<MapScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Ribbon(e.name, color: Palette.episodeRibbon(e.index), fontSize: 28),
+            Ribbon(
+              episodeName(e),
+              color: Palette.episodeRibbon(e.index),
+              fontSize: 28,
+            ),
             Transform.translate(
               offset: const Offset(0, -4),
               child: GameText(
-                'EPISODE ${e.index + 1}',
+                tr.mapEpisodeN(e.index + 1),
                 size: 14,
                 family: 'Fredoka',
                 strokeWidth: 3.5,
@@ -601,7 +607,7 @@ class _TopBar extends StatelessWidget {
                         text: unlimited != null
                             ? formatDuration(unlimited)
                             : next == null
-                            ? '${app.lives} Full'
+                            ? tr.mapLivesFull(app.lives)
                             : '${app.lives} ${formatDuration(next)}',
                         textKey: const Key('lives'),
                         onTap: () => showOutOfLives(context),
@@ -629,7 +635,7 @@ class _TopBar extends StatelessWidget {
               RoundButton(
                 GameIcons.gear,
                 key: const Key('settings'),
-                label: 'Settings',
+                label: tr.settings,
                 size: 44,
                 colors: CandyColors.blue,
                 onTap: () => Navigator.of(context).push(
@@ -685,7 +691,7 @@ class _LevelNode extends StatelessWidget {
       onTap: onTap,
       child: Semantics(
         button: true,
-        label: 'Level ${level.id}',
+        label: tr.levelN(level.id),
         excludeSemantics: true,
         child: SizedBox(
           width: 88,
@@ -755,8 +761,8 @@ class _LevelNode extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: Colors.white, width: 2),
                     ),
-                    child: const GameText(
-                      'HARD',
+                    child: GameText(
+                      tr.mapHard,
                       size: 11,
                       family: 'Fredoka',
                       strokeWidth: 2.5,

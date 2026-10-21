@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../app/audio.dart';
 import '../app/economy.dart';
 import '../app/scope.dart';
+import '../app/store.dart';
 import '../core/models.dart';
+import '../l10n/l10n.dart';
 import '../ui/art_cache.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
@@ -57,20 +59,21 @@ class RewardView extends StatelessWidget {
   }
 }
 
-String _minutes(int m) => m >= 60 && m % 60 == 0 ? '${m ~/ 60}h' : '${m}m';
+String _minutes(int m) =>
+    m >= 60 && m % 60 == 0 ? tr.timeHours(m ~/ 60) : tr.timeMinutes(m);
 
 String _timeLeft(DateTime end, DateTime now) {
   final d = end.difference(now);
-  if (d.inDays >= 1) return '${d.inDays}d ${d.inHours % 24}h';
-  if (d.inHours >= 1) return '${d.inHours}h ${d.inMinutes % 60}m';
-  return '${d.inMinutes.clamp(0, 59)}m';
+  if (d.inDays >= 1) return tr.timeDaysHours(d.inDays, d.inHours % 24);
+  if (d.inHours >= 1) return tr.timeHoursMinutes(d.inHours, d.inMinutes % 60);
+  return tr.timeMinutes(d.inMinutes.clamp(0, 59));
 }
 
 /// "You got ..." celebration for a claimed reward.
 Future<void> showRewardDialog(
   BuildContext context,
   Reward reward, {
-  String title = 'Reward!',
+  String? title,
 }) {
   AppScope.read(context).audio.sfx(Sfx.coin);
   return showGameDialog<void>(
@@ -80,7 +83,7 @@ Future<void> showRewardDialog(
       clipBehavior: Clip.none,
       children: [
         GamePanel(
-          title: title,
+          title: title ?? tr.rewardTitle,
           ribbonColor: Palette.mint,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -90,7 +93,7 @@ Future<void> showRewardDialog(
               RewardView(reward, size: 40),
               const SizedBox(height: 16),
               CandyButton.label(
-                'Great!',
+                tr.great,
                 key: const Key('reward-ok'),
                 colors: CandyColors.green,
                 onTap: () => Navigator.of(ctx).pop(),
@@ -132,19 +135,19 @@ class _DailyPanel extends StatelessWidget {
       if (doubled) {
         final ok = await scope.ads.showRewarded(
           context,
-          reward: 'double daily reward',
+          reward: tr.dailyDoubleReward,
         );
         if (!ok) return;
       }
       final r = app.claimDaily(doubled: doubled);
       nav.pop();
       if (r != null && context.mounted) {
-        await showRewardDialog(context, r, title: 'Day ${d.index + 1}');
+        await showRewardDialog(context, r, title: tr.dailyDayN(d.index + 1));
       }
     }
 
     return GamePanel(
-      title: 'Daily Gift',
+      title: tr.dailyTitle,
       ribbonColor: Palette.sky,
       onClose: () => Navigator.of(context).pop(),
       child: Column(
@@ -152,8 +155,8 @@ class _DailyPanel extends StatelessWidget {
         children: [
           Text(
             d.claimable
-                ? 'Come back every day for bigger gifts!'
-                : 'Come back tomorrow for day ${(d.index + 1) % 7 + 1}!',
+                ? tr.dailyComeBack
+                : tr.dailyComeBackTomorrow((d.index + 1) % 7 + 1),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontWeight: FontWeight.w600,
@@ -179,7 +182,7 @@ class _DailyPanel extends StatelessWidget {
           const SizedBox(height: 14),
           if (d.claimable) ...[
             CandyButton.label(
-              'Claim',
+              tr.claim,
               key: const Key('daily-claim'),
               colors: CandyColors.green,
               icon: GameIcons.gift,
@@ -187,7 +190,7 @@ class _DailyPanel extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             CandyButton.label(
-              'Watch ad: x2',
+              tr.dailyWatchAdDouble,
               key: const Key('daily-double'),
               colors: CandyColors.blue,
               icon: GameIcons.video,
@@ -197,7 +200,7 @@ class _DailyPanel extends StatelessWidget {
             ),
           ] else
             CandyButton.label(
-              'OK',
+              tr.ok,
               colors: CandyColors.blue,
               onTap: () => Navigator.of(context).pop(),
             ),
@@ -256,7 +259,7 @@ class _DayCell extends StatelessWidget {
         child: Column(
           children: [
             GameText(
-              'Day ${day + 1}',
+              tr.dailyDayN(day + 1),
               size: 14,
               family: 'Fredoka',
               strokeWidth: 3,
@@ -307,8 +310,10 @@ class _ShopScreenState extends State<ShopScreen> {
             !await confirm(
               context,
               p.title,
-              '${p.subtitle} for ${p.price} ${p.pay == PayWith.gold ? 'gold' : 'coins'}?',
-              ok: 'Buy',
+              p.pay == PayWith.gold
+                  ? tr.shopBuyForGold(p.subtitle, p.price)
+                  : tr.shopBuyForCoins(p.subtitle, p.price),
+              ok: tr.buy,
             )) {
           return;
         }
@@ -316,12 +321,10 @@ class _ShopScreenState extends State<ShopScreen> {
         if (!app.buyWithCurrency(p)) {
           await confirm(
             context,
-            'Not enough ${p.pay == PayWith.gold ? 'gold' : 'coins'}',
-            p.pay == PayWith.gold
-                ? 'Get more gold from the gold packs, events and the season pass.'
-                : 'Win levels to earn more coins!',
-            ok: 'OK',
-            cancel: 'Close',
+            p.pay == PayWith.gold ? tr.notEnoughGold : tr.notEnoughCoins,
+            p.pay == PayWith.gold ? tr.shopMoreGold : tr.winLevelsForCoins,
+            ok: tr.ok,
+            cancel: tr.close,
           );
           return;
         }
@@ -351,7 +354,7 @@ class _ShopScreenState extends State<ShopScreen> {
           ),
     ];
     return MenuPage(
-      title: 'Shop',
+      title: tr.shop,
       child: ListView(
         padding: const EdgeInsets.only(bottom: 24),
         children: [
@@ -374,29 +377,29 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
           if (app.canBuy(productById('starter'))) ...[
-            section('Special offer'),
+            section(tr.shopSpecialOffer),
             ...items(['starter']),
           ],
-          section('Gold'),
+          section(tr.gold),
           ...items(['gold50', 'gold130', 'gold350', 'gold800']),
-          section('Lives'),
+          section(tr.shopLives),
           ...items(['refill', 'unl30', 'unl60', 'unl180']),
-          section('Boosters'),
+          section(tr.shopBoosters),
           ...items(['boosterpack', 'startpack', 'freebooster']),
-          section('Extras'),
+          section(tr.shopExtras),
           ...items(['noads', 'pass']),
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              'Test build: no store is connected, so purchases are free and '
-              'only unlock items on this device.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+          if (AppScope.of(context).store is TestStore)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                tr.shopTestBuild,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -473,8 +476,12 @@ class _ShopItem extends StatelessWidget {
           SizedBox(
             width: 88,
             child: owned
-                ? const Center(
-                    child: GameText('Owned', size: 18, color: Palette.mint),
+                ? Center(
+                    child: GameText(
+                      tr.shopOwned,
+                      size: 18,
+                      color: Palette.mint,
+                    ),
                   )
                 : CandyButton(
                     key: Key('buy-${p.id}'),
@@ -522,7 +529,7 @@ class EventScreen extends StatelessWidget {
     final progress = app.eventProgress;
     final top = WeeklyEvent.tiers.last;
     return MenuPage(
-      title: 'Paint Collector',
+      title: tr.eventTitle,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
         children: [
@@ -532,14 +539,19 @@ class EventScreen extends StatelessWidget {
                 MiniTile(color: color, size: 64),
                 const SizedBox(height: 6),
                 GameText(
-                  'Collect ${color.label} tiles!',
+                  tr.eventCollect(color.label),
                   size: 24,
                   color: Palette.sun,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Every ${color.label.toLowerCase()} tile you clear in any level counts. '
-                  'Ends in ${_timeLeft(e.ends, DateTime.now())}.',
+                  tr.eventInfo(
+                    // German capitalizes nouns.
+                    tr.localeName == 'de'
+                        ? color.label
+                        : color.label.toLowerCase(),
+                    _timeLeft(e.ends, DateTime.now()),
+                  ),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
@@ -555,7 +567,7 @@ class EventScreen extends StatelessWidget {
           for (var i = 0; i < WeeklyEvent.tiers.length; i++)
             _TierRow(
               key: Key('event-tier-$i'),
-              label: '${WeeklyEvent.tiers[i]} tiles',
+              label: tr.eventTierTiles(WeeklyEvent.tiers[i]),
               reward: WeeklyEvent.rewards[i],
               reached: progress >= WeeklyEvent.tiers[i],
               claimed: i < app.data.eventClaimed,
@@ -671,11 +683,15 @@ class _TierRow extends StatelessWidget {
           SizedBox(
             width: 92,
             child: claimed
-                ? const Center(
-                    child: GameText('Done', size: 18, color: Palette.mint),
+                ? Center(
+                    child: GameText(
+                      tr.eventDone,
+                      size: 18,
+                      color: Palette.mint,
+                    ),
                   )
                 : CandyButton.label(
-                    'Claim',
+                    tr.claim,
                     colors: CandyColors.green,
                     height: 40,
                     fontSize: 18,
@@ -702,16 +718,16 @@ class SeasonPassScreen extends StatelessWidget {
     final reached = Season.tiersReached(points);
     final premium = app.premiumPass;
     return MenuPage(
-      title: 'Paint Pass',
+      title: tr.passTitle,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(14, 8, 14, 24),
         children: [
           GamePanel(
             child: Column(
               children: [
-                GameText('Season Rewards', size: 26, color: Palette.sun),
+                GameText(tr.passSeasonRewards, size: 26, color: Palette.sun),
                 Text(
-                  'Win levels to earn points. Ends in ${_timeLeft(season.ends, DateTime.now())}.',
+                  tr.passInfo(_timeLeft(season.ends, DateTime.now())),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
@@ -724,13 +740,17 @@ class SeasonPassScreen extends StatelessWidget {
                       ? 1
                       : (points % Season.pointsPerTier) / Season.pointsPerTier,
                   label: reached >= Season.tierCount
-                      ? 'Complete!'
-                      : 'Tier ${reached + 1}: ${points % Season.pointsPerTier} / ${Season.pointsPerTier}',
+                      ? tr.passComplete
+                      : tr.passTierProgress(
+                          reached + 1,
+                          points % Season.pointsPerTier,
+                          Season.pointsPerTier,
+                        ),
                 ),
                 const SizedBox(height: 10),
                 if (!premium)
                   CandyButton.label(
-                    'Unlock Premium',
+                    tr.passUnlockPremium,
                     key: const Key('pass-unlock'),
                     colors: CandyColors.purple,
                     icon: GameIcons.ticket,
@@ -740,8 +760,8 @@ class SeasonPassScreen extends StatelessWidget {
                     },
                   )
                 else
-                  const GameText(
-                    'Premium unlocked!',
+                  GameText(
+                    tr.passPremiumUnlocked,
                     size: 20,
                     color: Palette.mint,
                   ),
@@ -750,12 +770,12 @@ class SeasonPassScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Row(
-            children: const [
-              SizedBox(width: 56),
-              Expanded(child: Center(child: GameText('Free', size: 18))),
+            children: [
+              const SizedBox(width: 56),
+              Expanded(child: Center(child: GameText(tr.free, size: 18))),
               Expanded(
                 child: Center(
-                  child: GameText('Premium', size: 18, color: Palette.sun),
+                  child: GameText(tr.passPremium, size: 18, color: Palette.sun),
                 ),
               ),
             ],

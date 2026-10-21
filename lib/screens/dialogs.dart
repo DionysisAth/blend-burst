@@ -10,6 +10,8 @@ import '../app/scope.dart';
 import '../core/level.dart';
 import '../core/models.dart';
 import '../core/session.dart';
+import '../l10n/content.dart';
+import '../l10n/l10n.dart';
 import '../ui/art_cache.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
@@ -80,7 +82,7 @@ Future<Set<BoosterType>?> showLevelStart(
     context,
     dismissible: true,
     builder: (ctx) => GamePanel(
-      title: 'Level ${level.id}',
+      title: tr.levelN(level.id),
       ribbonColor: level.hard ? const Color(0xFFF0304E) : Palette.candyPink,
       onClose: () => Navigator.of(ctx).pop(false),
       child: Column(
@@ -88,7 +90,7 @@ Future<Set<BoosterType>?> showLevelStart(
         children: [
           StarRow(stars: stars, size: 46, arc: true),
           const SizedBox(height: 6),
-          GameText(level.name, size: 24, color: Palette.sun),
+          GameText(levelName(level), size: 24, color: Palette.sun),
           if (level.hard) ...[
             const SizedBox(height: 6),
             Container(
@@ -97,10 +99,10 @@ Future<Set<BoosterType>?> showLevelStart(
                 color: const Color(0xFFF0304E),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const GameText(
-                'HARD LEVEL',
+              child: GameText(
+                tr.dlgHardLevel,
                 size: 16,
-                stroke: Color(0xFF8A0F25),
+                stroke: const Color(0xFF8A0F25),
               ),
             ),
           ],
@@ -108,9 +110,9 @@ Future<Set<BoosterType>?> showLevelStart(
           InsetBox(
             child: Column(
               children: [
-                const Text(
-                  'Goals',
-                  style: TextStyle(
+                Text(
+                  tr.dlgGoals,
+                  style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
                     color: Palette.plum,
@@ -159,7 +161,7 @@ Future<Set<BoosterType>?> showLevelStart(
             children: [
               const GameIcon(GameIcons.swap, size: 26),
               const SizedBox(width: 6),
-              GameText('${level.moves} moves', size: 20, color: Palette.sky),
+              GameText(tr.dlgMoves(level.moves), size: 20, color: Palette.sky),
             ],
           ),
           if (bonus.isNotEmpty) ...[
@@ -173,7 +175,7 @@ Future<Set<BoosterType>?> showLevelStart(
           ],
           const SizedBox(height: 16),
           CandyButton.label(
-            'Play',
+            tr.play,
             key: const Key('play-level'),
             onTap: () => Navigator.of(ctx).pop(true),
             icon: GameIcons.play,
@@ -211,7 +213,7 @@ class _StreakStrip extends StatelessWidget {
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              child: GameText('Win streak $streak!  Free:', size: 18),
+              child: GameText(tr.dlgWinStreakFree(streak), size: 18),
             ),
           ),
           const SizedBox(width: 6),
@@ -245,18 +247,18 @@ class _PreBoostersState extends State<_PreBoosters> {
     if (app.boosterCount(t) <= 0) {
       final buy = await confirm(
         context,
-        'Get ${t.label}',
-        '${t.help} Buy one for ${AppState.boosterCost} coins?',
-        ok: 'Buy',
+        tr.dlgGetBooster(t.label),
+        tr.dlgBuyBoosterPrompt(t.help, AppState.boosterCost),
+        ok: tr.buy,
       );
       if (!buy || !mounted) return;
       if (!app.buyBooster(t)) {
         await confirm(
           context,
-          'Not enough coins',
-          'Win levels to earn more coins!',
-          ok: 'OK',
-          cancel: 'Close',
+          tr.notEnoughCoins,
+          tr.winLevelsForCoins,
+          ok: tr.ok,
+          cancel: tr.close,
         );
         return;
       }
@@ -271,9 +273,9 @@ class _PreBoostersState extends State<_PreBoosters> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'Start with',
-          style: TextStyle(
+        Text(
+          tr.dlgStartWith,
+          style: const TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 15,
             color: Palette.plum,
@@ -287,7 +289,7 @@ class _PreBoostersState extends State<_PreBoosters> {
               Semantics(
                 button: true,
                 selected: widget.chosen.contains(t),
-                label: 'Start with ${t.label}',
+                label: tr.dlgStartWithBooster(t.label),
                 child: GestureDetector(
                   key: Key('pre-${t.name}'),
                   onTap: () => _toggle(t),
@@ -382,7 +384,7 @@ Future<Gravity?> showGravityPicker(BuildContext context, Gravity current) {
     final isCurrent = g == current;
     return Semantics(
       button: true,
-      label: 'Fall ${g.name}',
+      label: tr.dlgFallDirection(g.name),
       child: GestureDetector(
         key: Key('flip-${g.name}'),
         onTap: isCurrent ? null : () => Navigator.of(ctx).pop(g),
@@ -411,16 +413,16 @@ Future<Gravity?> showGravityPicker(BuildContext context, Gravity current) {
     context,
     dismissible: true,
     builder: (ctx) => GamePanel(
-      title: 'Gravity Flip',
+      title: tr.dlgGravityFlipTitle,
       ribbonColor: Palette.grape,
       onClose: () => Navigator.of(ctx).pop(),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Where should tiles fall during your next move?',
+          Text(
+            tr.dlgGravityFlipQuestion,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.w600,
               color: Palette.ink,
               fontSize: 15,
@@ -449,12 +451,12 @@ Future<void> showTutorialCard(BuildContext context, LevelDef level) async {
   await showGameDialog<void>(
     context,
     builder: (ctx) => GamePanel(
-      title: 'New!',
+      title: tr.dlgTutorialTitle,
       ribbonColor: Palette.sky,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GameText(level.name, size: 24, color: Palette.sun),
+          GameText(levelName(level), size: 24, color: Palette.sun),
           const SizedBox(height: 12),
           if (level.tutorialArt != null) ...[
             InsetBox(
@@ -464,7 +466,7 @@ Future<void> showTutorialCard(BuildContext context, LevelDef level) async {
             const SizedBox(height: 12),
           ],
           Text(
-            level.tutorial ?? '',
+            tutorialText(level) ?? '',
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 18,
@@ -475,7 +477,7 @@ Future<void> showTutorialCard(BuildContext context, LevelDef level) async {
           ),
           const SizedBox(height: 18),
           CandyButton.label(
-            'Got it!',
+            tr.dlgGotIt,
             key: const Key('tutorial-ok'),
             colors: CandyColors.blue,
             onTap: () => Navigator.of(ctx).pop(),
@@ -563,7 +565,7 @@ class _WinPanelState extends State<_WinPanel>
       clipBehavior: Clip.none,
       children: [
         GamePanel(
-          title: 'Level complete!',
+          title: tr.dlgLevelComplete,
           ribbonColor: const Color(0xFF22B84C),
           child: AnimatedBuilder(
             animation: _c,
@@ -606,9 +608,9 @@ class _WinPanelState extends State<_WinPanel>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'SCORE',
-                    style: TextStyle(
+                  Text(
+                    tr.dlgScore,
+                    style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       color: Palette.plum,
                       fontSize: 14,
@@ -646,7 +648,7 @@ class _WinPanelState extends State<_WinPanel>
                     children: [
                       Expanded(
                         child: CandyButton.label(
-                          widget.testMode ? 'Editor' : 'Map',
+                          widget.testMode ? tr.dlgEditor : tr.map,
                           key: const Key('win-map'),
                           colors: CandyColors.blue,
                           icon: GameIcons.map,
@@ -657,7 +659,7 @@ class _WinPanelState extends State<_WinPanel>
                         const SizedBox(width: 12),
                         Expanded(
                           child: CandyButton.label(
-                            'Next',
+                            tr.next,
                             key: const Key('win-next'),
                             icon: GameIcons.play,
                             onTap: () => Navigator.of(context).pop('next'),
@@ -669,7 +671,7 @@ class _WinPanelState extends State<_WinPanel>
                   if (widget.onShare != null) ...[
                     const SizedBox(height: 10),
                     CandyButton.label(
-                      'Share',
+                      tr.share,
                       key: const Key('win-share'),
                       colors: CandyColors.purple,
                       icon: GameIcons.gift,
@@ -725,12 +727,12 @@ Future<String?> showOutOfMovesDialog(
   return showGameDialog<String>(
     context,
     builder: (ctx) => GamePanel(
-      title: 'Out of moves!',
+      title: tr.dlgOutOfMoves,
       ribbonColor: const Color(0xFFFF8A1F),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const GameText('So close!', size: 30, color: Palette.sun),
+          GameText(tr.dlgSoClose, size: 30, color: Palette.sun),
           const SizedBox(height: 10),
           InsetBox(
             child: Wrap(
@@ -752,7 +754,11 @@ Future<String?> showOutOfMovesDialog(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const GameText('+5 moves', size: 24, stroke: Color(0xFFC06E00)),
+                GameText(
+                  tr.dlgPlusMoves(5),
+                  size: 24,
+                  stroke: const Color(0xFFC06E00),
+                ),
                 if (!testMode) ...[
                   const SizedBox(width: 10),
                   const GameIcon(GameIcons.coin, size: 28),
@@ -771,7 +777,7 @@ Future<String?> showOutOfMovesDialog(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const GameText('+5 moves', size: 24),
+                  GameText(tr.dlgPlusMoves(5), size: 24),
                   const SizedBox(width: 10),
                   const GameIcon(GameIcons.gold, size: 28),
                   const SizedBox(width: 2),
@@ -783,7 +789,7 @@ Future<String?> showOutOfMovesDialog(
           if (adAvailable) ...[
             const SizedBox(height: 10),
             CandyButton.label(
-              'Watch ad: +3',
+              tr.dlgWatchAdMoves(3),
               key: const Key('ad-moves'),
               colors: CandyColors.blue,
               icon: GameIcons.video,
@@ -792,7 +798,7 @@ Future<String?> showOutOfMovesDialog(
           ],
           const SizedBox(height: 10),
           CandyButton.label(
-            'Give up',
+            tr.dlgGiveUp,
             key: const Key('give-up'),
             colors: CandyColors.red,
             height: 44,
@@ -815,7 +821,7 @@ Future<bool> showFailDialog(
   final r = await showGameDialog<bool>(
     context,
     builder: (ctx) => GamePanel(
-      title: 'Level failed',
+      title: tr.dlgLevelFailed,
       ribbonColor: const Color(0xFF8A47E8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -823,14 +829,14 @@ Future<bool> showFailDialog(
           const GameIcon(GameIcons.heartBroken, size: 90),
           const SizedBox(height: 6),
           GameText(
-            testMode ? 'Try again?' : 'You lost a life',
+            testMode ? tr.dlgTryAgainQuestion : tr.dlgLostALife,
             size: 26,
             color: Palette.sun,
           ),
           if (!testMode) ...[
             const SizedBox(height: 6),
             Text(
-              'Lives left: $livesLeft',
+              tr.dlgLivesLeft(livesLeft),
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,
@@ -843,7 +849,7 @@ Future<bool> showFailDialog(
             children: [
               Expanded(
                 child: CandyButton.label(
-                  testMode ? 'Editor' : 'Map',
+                  testMode ? tr.dlgEditor : tr.map,
                   key: const Key('fail-map'),
                   colors: CandyColors.blue,
                   icon: GameIcons.map,
@@ -853,7 +859,7 @@ Future<bool> showFailDialog(
               const SizedBox(width: 12),
               Expanded(
                 child: CandyButton.label(
-                  'Retry',
+                  tr.retry,
                   key: const Key('fail-retry'),
                   icon: GameIcons.retry,
                   onTap: () => Navigator.of(ctx).pop(true),
@@ -877,7 +883,7 @@ Future<bool> showPauseDialog(
   final r = await showGameDialog<bool>(
     context,
     builder: (ctx) => GamePanel(
-      title: 'Paused',
+      title: tr.dlgPaused,
       ribbonColor: Palette.grape,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -885,7 +891,7 @@ Future<bool> showPauseDialog(
           const SoundToggles(),
           const SizedBox(height: 14),
           CandyButton.label(
-            'Resume',
+            tr.dlgResume,
             key: const Key('pause-resume'),
             icon: GameIcons.play,
             onTap: () => Navigator.of(ctx).pop(false),
@@ -893,7 +899,7 @@ Future<bool> showPauseDialog(
           ),
           const SizedBox(height: 10),
           CandyButton.label(
-            willLose ? 'Quit (-1 life)' : 'Quit',
+            willLose ? tr.dlgQuitLoseLife : tr.dlgQuit,
             key: const Key('pause-quit'),
             colors: CandyColors.red,
             height: 46,
@@ -956,17 +962,17 @@ class SoundToggles extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         for (final t in [
-          toggle(GameIcons.music, 'Music', app.data.music, (v) {
+          toggle(GameIcons.music, tr.dlgMusic, app.data.music, (v) {
             app.setMusic(v);
             scope.audio.setMusic(v);
           }),
-          toggle(GameIcons.sound, 'Sound', app.data.sound, (v) {
+          toggle(GameIcons.sound, tr.dlgSound, app.data.sound, (v) {
             app.setSound(v);
             scope.audio.setSound(v);
           }),
           toggle(
             GameIcons.vibrate,
-            'Vibrate',
+            tr.dlgVibrate,
             app.data.haptics,
             app.setHaptics,
           ),
@@ -1051,10 +1057,10 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
       }
       final shop = await confirm(
         context,
-        'Not enough gold',
-        'Get gold in the shop?',
-        ok: 'Shop',
-        cancel: 'Close',
+        tr.notEnoughGold,
+        tr.dlgGetGoldInShop,
+        ok: tr.shop,
+        cancel: tr.close,
       );
       if (shop && context.mounted) {
         await Navigator.of(context)
@@ -1084,7 +1090,7 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
         );
 
     return GamePanel(
-      title: full ? 'Lives' : 'More lives',
+      title: full ? tr.dlgLives : tr.dlgMoreLives,
       ribbonColor: const Color(0xFFF0304E),
       onClose: () => Navigator.of(context).pop(false),
       child: Column(
@@ -1104,14 +1110,14 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
           const SizedBox(height: 6),
           if (unlimited != null) ...[
             const GameIcon(GameIcons.unlimited, size: 40),
-            const GameText('Unlimited lives!', size: 24, color: Palette.sun),
+            GameText(tr.dlgUnlimitedLives, size: 24, color: Palette.sun),
             GameText(formatDuration(unlimited), size: 30, color: Palette.sky),
           ] else if (full)
-            const GameText('Your lives are full!', size: 22, color: Palette.sun)
+            GameText(tr.dlgLivesFull, size: 22, color: Palette.sun)
           else ...[
-            const Text(
-              'Next life in',
-              style: TextStyle(
+            Text(
+              tr.dlgNextLifeIn,
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 color: Palette.plum,
                 fontSize: 16,
@@ -1134,7 +1140,11 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const GameText('Refill', size: 24, stroke: Color(0xFFC06E00)),
+                  GameText(
+                    tr.dlgRefill,
+                    size: 24,
+                    stroke: const Color(0xFFC06E00),
+                  ),
                   const SizedBox(width: 10),
                   const GameIcon(GameIcons.coin, size: 28),
                   const SizedBox(width: 2),
@@ -1148,7 +1158,7 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
             ),
             const SizedBox(height: 10),
             CandyButton.label(
-              'Watch ad: +1 life',
+              tr.dlgWatchAdLife,
               colors: CandyColors.blue,
               icon: GameIcons.video,
               fontSize: 20,
@@ -1156,7 +1166,7 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
                 final nav = Navigator.of(context);
                 final ok = await scope.ads.showRewarded(
                   context,
-                  reward: '+1 life',
+                  reward: tr.dlgRewardOneLife,
                 );
                 if (ok) {
                   app.addLives(1);
@@ -1166,17 +1176,17 @@ class _OutOfLivesPanelState extends State<_OutOfLivesPanel> {
               },
             ),
             const SizedBox(height: 10),
-            goldButton('gold-refill', GameIcons.heart, 'Refill', 'refill'),
+            goldButton('gold-refill', GameIcons.heart, tr.dlgRefill, 'refill'),
             const SizedBox(height: 10),
             goldButton(
               'gold-unlimited',
               GameIcons.unlimited,
-              '30 min',
+              tr.dlgMinutes(30),
               'unl30',
             ),
           ] else
             CandyButton.label(
-              'OK',
+              tr.ok,
               onTap: () => Navigator.of(context).pop(false),
               width: 180,
             ),
@@ -1190,8 +1200,8 @@ Future<bool> confirm(
   BuildContext context,
   String title,
   String message, {
-  String ok = 'OK',
-  String cancel = 'Cancel',
+  String? ok,
+  String? cancel,
 }) async {
   final r = await showGameDialog<bool>(
     context,
@@ -1216,7 +1226,7 @@ Future<bool> confirm(
             children: [
               Expanded(
                 child: CandyButton.label(
-                  cancel,
+                  cancel ?? tr.cancel,
                   colors: CandyColors.gray,
                   fontSize: 20,
                   onTap: () => Navigator.of(ctx).pop(false),
@@ -1225,7 +1235,7 @@ Future<bool> confirm(
               const SizedBox(width: 12),
               Expanded(
                 child: CandyButton.label(
-                  ok,
+                  ok ?? tr.ok,
                   fontSize: 20,
                   onTap: () => Navigator.of(ctx).pop(true),
                 ),

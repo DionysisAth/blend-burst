@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
+import '../l10n/l10n.dart';
 import 'economy.dart';
 import 'scope.dart';
 
@@ -30,7 +31,7 @@ class TestStore implements Store {
       context,
       dismissible: true,
       builder: (ctx) => GamePanel(
-        title: 'Test purchase',
+        title: tr.storeTestTitle,
         ribbonColor: Palette.mint,
         onClose: () => Navigator.of(ctx).pop(false),
         child: Column(
@@ -41,9 +42,7 @@ class TestStore implements Store {
             GameText(product.title, size: 24, color: Palette.sun),
             const SizedBox(height: 4),
             Text(
-              '${product.subtitle}\n\nPrice in the stores: ${product.priceLabel}.\n'
-              'This test build has no store connected: you will not be '
-              'charged.',
+              tr.storeTestBody(product.subtitle, product.priceLabel),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
@@ -53,7 +52,7 @@ class TestStore implements Store {
             ),
             const SizedBox(height: 14),
             CandyButton.label(
-              'Get it (free test)',
+              tr.storeTestConfirm,
               key: const Key('store-confirm'),
               colors: CandyColors.green,
               onTap: () => Navigator.of(ctx).pop(true),

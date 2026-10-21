@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/models.dart';
+import '../l10n/l10n.dart';
 import 'economy.dart';
 import 'notifications.dart';
 import 'remote_config.dart';
@@ -23,25 +25,25 @@ enum BoosterType {
 }
 
 extension BoosterInfo on BoosterType {
-  String get label => const {
-    BoosterType.brush: 'Brush',
-    BoosterType.freeSwap: 'Free Swap',
-    BoosterType.colorSplash: 'Color Splash',
-    BoosterType.gravityFlip: 'Gravity Flip',
-    BoosterType.startLine: 'Line Blaster',
-    BoosterType.startBomb: 'Paint Bomb',
-    BoosterType.startPrism: 'Prism',
-  }[this]!;
+  String get label => switch (this) {
+    BoosterType.brush => tr.boosterBrush,
+    BoosterType.freeSwap => tr.boosterFreeSwap,
+    BoosterType.colorSplash => tr.boosterColorSplash,
+    BoosterType.gravityFlip => tr.boosterGravityFlip,
+    BoosterType.startLine => tr.boosterLineBlaster,
+    BoosterType.startBomb => tr.boosterPaintBomb,
+    BoosterType.startPrism => tr.boosterPrism,
+  };
 
-  String get help => const {
-    BoosterType.brush: 'Tap a tile to wipe it away.',
-    BoosterType.freeSwap: 'Tap two tiles to swap them.',
-    BoosterType.colorSplash: "Tap a tile to paint its whole row in its color.",
-    BoosterType.gravityFlip: 'Pick where tiles fall during your next move.',
-    BoosterType.startLine: 'Start the level with a Line Blaster.',
-    BoosterType.startBomb: 'Start the level with a Paint Bomb.',
-    BoosterType.startPrism: 'Start the level with a Prism.',
-  }[this]!;
+  String get help => switch (this) {
+    BoosterType.brush => tr.boosterBrushHelp,
+    BoosterType.freeSwap => tr.boosterFreeSwapHelp,
+    BoosterType.colorSplash => tr.boosterColorSplashHelp,
+    BoosterType.gravityFlip => tr.boosterGravityFlipHelp,
+    BoosterType.startLine => tr.boosterLineBlasterHelp,
+    BoosterType.startBomb => tr.boosterPaintBombHelp,
+    BoosterType.startPrism => tr.boosterPrismHelp,
+  };
 
   bool get isPreLevel =>
       this == BoosterType.startLine ||
@@ -125,6 +127,9 @@ class SaveData {
   /// Opt-in reminders.
   bool notifications = false;
 
+  /// Language code chosen in Settings; null follows the phone's language.
+  String? language;
+
   /// Remote config text cached from the previous launch.
   String remoteConfig = '';
 
@@ -173,6 +178,7 @@ class SaveData {
     'playDays': playDays.toList(),
     'counters': counters,
     'notifications': notifications,
+    if (language != null) 'language': language,
     'remoteConfig': remoteConfig,
     'savedAt': savedAt,
   };
@@ -248,6 +254,7 @@ class SaveData {
       });
     }
     s.notifications = asBool(j['notifications'], false);
+    s.language = j['language'] is String ? j['language'] as String : null;
     final rc = j['remoteConfig'];
     if (rc is String) s.remoteConfig = rc;
     s.savedAt = asInt(j['savedAt'], 0);
@@ -320,6 +327,7 @@ class SaveData {
     out.hints = local.hints;
     out.tapActivate = local.tapActivate;
     out.notifications = local.notifications;
+    out.language = local.language;
     out.remoteConfig = local.remoteConfig;
     out.events = List.of(local.events);
     out.savedAt = max(local.savedAt, cloud.savedAt);
@@ -399,12 +407,7 @@ class AppState extends ChangeNotifier {
     if (next != null && !hasUnlimited) {
       final full = next + lifeRefill * (maxLives - data.lives - 1);
       out.add(
-        Reminder(
-          1,
-          'Your lives are full!',
-          'Come back and blend some colors.',
-          now.add(full),
-        ),
+        Reminder(1, tr.reminderLivesTitle, tr.reminderLivesBody, now.add(full)),
       );
     }
     final e = event;
@@ -412,8 +415,10 @@ class AppState extends ChangeNotifier {
       out.add(
         Reminder(
           2,
-          'Paint Collector ends soon',
-          'Only 3 hours left to collect ${e.colorName} tiles!',
+          tr.reminderEventTitle,
+          tr.reminderEventBody(
+            tileColorFromName(e.colorName)?.label ?? e.colorName,
+          ),
           e.ends.subtract(const Duration(hours: 3)),
         ),
       );
@@ -422,8 +427,8 @@ class AppState extends ChangeNotifier {
     out.add(
       Reminder(
         3,
-        'Your daily gift is ready',
-        'Open Blend Burst to claim it.',
+        tr.reminderDailyTitle,
+        tr.reminderDailyBody,
         daily.claimable ? now.add(const Duration(hours: 20)) : tomorrow,
       ),
     );
@@ -896,6 +901,12 @@ class AppState extends ChangeNotifier {
 
   void setTapActivate(bool v) {
     data.tapActivate = v;
+    _changed();
+  }
+
+  /// [code] null follows the phone's language.
+  void setLanguage(String? code) {
+    data.language = code;
     _changed();
   }
 

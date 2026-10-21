@@ -1,0 +1,1798 @@
+{
+  "@@locale": "en",
+  "ok": "OK",
+  "@ok": {
+    "description": "Button: confirm / dismiss a message."
+  },
+  "cancel": "Cancel",
+  "close": "Close",
+  "back": "Back",
+  "buy": "Buy",
+  "play": "Play",
+  "retry": "Retry",
+  "tryAgain": "Try again",
+  "claim": "Claim",
+  "free": "Free",
+  "@free": {
+    "description": "Price label or season track name: costs nothing."
+  },
+  "share": "Share",
+  "map": "Map",
+  "@map": {
+    "description": "Button: go back to the level map."
+  },
+  "next": "Next",
+  "@next": {
+    "description": "Button: play the next level."
+  },
+  "great": "Great!",
+  "shop": "Shop",
+  "settings": "Settings",
+  "gold": "Gold",
+  "@gold": {
+    "description": "Premium currency name, used as a heading."
+  },
+  "notEnoughCoins": "Not enough coins",
+  "winLevelsForCoins": "Win levels to earn more coins!",
+  "notEnoughGold": "Not enough gold",
+  "levelN": "Level {id}",
+  "@levelN": {
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "language": "Language",
+  "languageSystem": "Phone language",
+  "@languageSystem": {
+    "description": "Language option that follows the phone's system language."
+  },
+  "errorWidget": "Oops, something went wrong here.",
+  "loadFailed": "Could not load the game",
+  "episode1": "Art Studio",
+  "@episode1": {
+    "description": "Name of world (episode) 1 on the level map."
+  },
+  "levelName1": "First Drops",
+  "@levelName1": {
+    "description": "Short, playful title of level 1."
+  },
+  "tutorial1": "Swipe a tile into a neighbor to match 3 or more of the same color!",
+  "@tutorial1": {
+    "description": "Tutorial card text shown at the start of level 1 (teaches a new mechanic; keep it short)."
+  },
+  "levelName2": "Line Up",
+  "@levelName2": {
+    "description": "Short, playful title of level 2."
+  },
+  "tutorial2": "Match 4 in a line, or a 2x2 square, to make a Line Blaster. Swipe it to blast a whole row!",
+  "@tutorial2": {
+    "description": "Tutorial card text shown at the start of level 2 (teaches a new mechanic; keep it short)."
+  },
+  "levelName3": "Mix It Up",
+  "@levelName3": {
+    "description": "Short, playful title of level 3."
+  },
+  "tutorial3": "Swipe a Red tile into a Blue tile to BLEND them into Purple!",
+  "@tutorial3": {
+    "description": "Tutorial card text shown at the start of level 3 (teaches a new mechanic; keep it short)."
+  },
+  "levelName4": "Green Thumb",
+  "@levelName4": {
+    "description": "Short, playful title of level 4."
+  },
+  "tutorial4": "Blue + Yellow = Green. Match 3 Greens for a big paint splash!",
+  "@tutorial4": {
+    "description": "Tutorial card text shown at the start of level 4 (teaches a new mechanic; keep it short)."
+  },
+  "levelName5": "Orange Glow",
+  "@levelName5": {
+    "description": "Short, playful title of level 5."
+  },
+  "tutorial5": "Red + Yellow = Orange. Secondary-color matches clear their neighbors too.",
+  "@tutorial5": {
+    "description": "Tutorial card text shown at the start of level 5 (teaches a new mechanic; keep it short)."
+  },
+  "levelName6": "Paint Bomb",
+  "@levelName6": {
+    "description": "Short, playful title of level 6."
+  },
+  "tutorial6": "Match in an L or T shape to make a Paint Bomb that clears a 3x3 area.",
+  "@tutorial6": {
+    "description": "Tutorial card text shown at the start of level 6 (teaches a new mechanic; keep it short)."
+  },
+  "levelName7": "First Stains",
+  "@levelName7": {
+    "description": "Short, playful title of level 7."
+  },
+  "tutorial7": "Paint stains hide under tiles. Make matches on top of them to clean them up!",
+  "@tutorial7": {
+    "description": "Tutorial card text shown at the start of level 7 (teaches a new mechanic; keep it short)."
+  },
+  "levelName8": "Studio Corners",
+  "@levelName8": {
+    "description": "Short, playful title of level 8."
+  },
+  "levelName9": "Prism Light",
+  "@levelName9": {
+    "description": "Short, playful title of level 9."
+  },
+  "tutorial9": "Match 5 in a line to make a Prism. Swap it with any tile to clear every tile of that color!",
+  "@tutorial9": {
+    "description": "Tutorial card text shown at the start of level 9 (teaches a new mechanic; keep it short)."
+  },
+  "levelName10": "Messy Easel",
+  "@levelName10": {
+    "description": "Short, playful title of level 10."
+  },
+  "levelName11": "White Burst",
+  "@levelName11": {
+    "description": "Short, playful title of level 11."
+  },
+  "tutorial11": "Blend a secondary with the primary it's missing (Purple + Yellow, Green + Red, Orange + Blue) to make a White Burst!",
+  "@tutorial11": {
+    "description": "Tutorial card text shown at the start of level 11 (teaches a new mechanic; keep it short)."
+  },
+  "levelName12": "Palette Knife",
+  "@levelName12": {
+    "description": "Short, playful title of level 12."
+  },
+  "levelName13": "Diamond Canvas",
+  "@levelName13": {
+    "description": "Short, playful title of level 13."
+  },
+  "levelName14": "Color Study",
+  "@levelName14": {
+    "description": "Short, playful title of level 14."
+  },
+  "levelName15": "Gallery Opening",
+  "@levelName15": {
+    "description": "Short, playful title of level 15."
+  },
+  "episode2": "Rainbow Garden",
+  "@episode2": {
+    "description": "Name of world (episode) 2 on the level map."
+  },
+  "levelName16": "Greenhouse",
+  "@levelName16": {
+    "description": "Short, playful title of level 16."
+  },
+  "tutorial16": "Glass blocks break when you make a match next to them, or blast them with specials.",
+  "@tutorial16": {
+    "description": "Tutorial card text shown at the start of level 16 (teaches a new mechanic; keep it short)."
+  },
+  "levelName17": "Window Box",
+  "@levelName17": {
+    "description": "Short, playful title of level 17."
+  },
+  "levelName18": "Double Glazed",
+  "@levelName18": {
+    "description": "Short, playful title of level 18."
+  },
+  "tutorial18": "Some glass has 2 layers. Hit it twice!",
+  "@tutorial18": {
+    "description": "Tutorial card text shown at the start of level 18 (teaches a new mechanic; keep it short)."
+  },
+  "levelName19": "Garden Path",
+  "@levelName19": {
+    "description": "Short, playful title of level 19."
+  },
+  "levelName20": "Thorny Hedge",
+  "@levelName20": {
+    "description": "Short, playful title of level 20."
+  },
+  "levelName21": "Violet Bloom",
+  "@levelName21": {
+    "description": "Short, playful title of level 21."
+  },
+  "tutorial21": "Purple tiles now grow on the board. Blend more to collect faster!",
+  "@tutorial21": {
+    "description": "Tutorial card text shown at the start of level 21 (teaches a new mechanic; keep it short)."
+  },
+  "levelName22": "Sunflowers",
+  "@levelName22": {
+    "description": "Short, playful title of level 22."
+  },
+  "levelName23": "Lily Pond",
+  "@levelName23": {
+    "description": "Short, playful title of level 23."
+  },
+  "levelName24": "Trellis",
+  "@levelName24": {
+    "description": "Short, playful title of level 24."
+  },
+  "levelName25": "Rainbow Gate",
+  "@levelName25": {
+    "description": "Short, playful title of level 25."
+  },
+  "levelName26": "Mixed Bouquet",
+  "@levelName26": {
+    "description": "Short, playful title of level 26."
+  },
+  "levelName27": "Glass Garden",
+  "@levelName27": {
+    "description": "Short, playful title of level 27."
+  },
+  "levelName28": "Seed Rows",
+  "@levelName28": {
+    "description": "Short, playful title of level 28."
+  },
+  "levelName29": "Petal Spiral",
+  "@levelName29": {
+    "description": "Short, playful title of level 29."
+  },
+  "levelName30": "Royal Garden",
+  "@levelName30": {
+    "description": "Short, playful title of level 30."
+  },
+  "episode3": "Paint Factory",
+  "@episode3": {
+    "description": "Name of world (episode) 3 on the level map."
+  },
+  "levelName31": "Rising Paint",
+  "@levelName31": {
+    "description": "Short, playful title of level 31."
+  },
+  "tutorial31": "In the Paint Factory, gravity can change! Here tiles fall UP. Watch the arrow on the board edge.",
+  "@tutorial31": {
+    "description": "Tutorial card text shown at the start of level 31 (teaches a new mechanic; keep it short)."
+  },
+  "levelName32": "Sideways Drip",
+  "@levelName32": {
+    "description": "Short, playful title of level 32."
+  },
+  "tutorial32": "Gravity pulls to the left now. New tiles enter from the right.",
+  "@tutorial32": {
+    "description": "Tutorial card text shown at the start of level 32 (teaches a new mechanic; keep it short)."
+  },
+  "levelName33": "Conveyor",
+  "@levelName33": {
+    "description": "Short, playful title of level 33."
+  },
+  "levelName34": "Switch Gear",
+  "@levelName34": {
+    "description": "Short, playful title of level 34."
+  },
+  "tutorial34": "Tiles with a swirl badge are Gravity Switches. Clear one to rotate gravity 90 degrees!",
+  "@tutorial34": {
+    "description": "Tutorial card text shown at the start of level 34 (teaches a new mechanic; keep it short)."
+  },
+  "levelName35": "Upside Studio",
+  "@levelName35": {
+    "description": "Short, playful title of level 35."
+  },
+  "levelName36": "Spin Cycle",
+  "@levelName36": {
+    "description": "Short, playful title of level 36."
+  },
+  "levelName37": "Paint Mixer",
+  "@levelName37": {
+    "description": "Short, playful title of level 37."
+  },
+  "levelName38": "Pressure Pipes",
+  "@levelName38": {
+    "description": "Short, playful title of level 38."
+  },
+  "levelName39": "Tumble Dryer",
+  "@levelName39": {
+    "description": "Short, playful title of level 39."
+  },
+  "levelName40": "Gravity Storm",
+  "@levelName40": {
+    "description": "Short, playful title of level 40."
+  },
+  "levelName41": "Clockwork",
+  "@levelName41": {
+    "description": "Short, playful title of level 41."
+  },
+  "tutorial41": "These gears turn on their own! Gravity rotates every few moves; the counter by the arrow shows when.",
+  "@tutorial41": {
+    "description": "Tutorial card text shown at the start of level 41 (teaches a new mechanic; keep it short)."
+  },
+  "levelName42": "Flip Switch",
+  "@levelName42": {
+    "description": "Short, playful title of level 42."
+  },
+  "tutorial42": "New booster: Gravity Flip! Choose where tiles fall for your next move.",
+  "@tutorial42": {
+    "description": "Tutorial card text shown at the start of level 42 (teaches a new mechanic; keep it short)."
+  },
+  "levelName43": "Conveyor Belts",
+  "@levelName43": {
+    "description": "Short, playful title of level 43."
+  },
+  "tutorial43": "Arrows on cells are gravity zones: tiles there fall the way the arrow points.",
+  "@tutorial43": {
+    "description": "Tutorial card text shown at the start of level 43 (teaches a new mechanic; keep it short)."
+  },
+  "levelName44": "Spin Dryer",
+  "@levelName44": {
+    "description": "Short, playful title of level 44."
+  },
+  "levelName45": "Factory Finale",
+  "@levelName45": {
+    "description": "Short, playful title of level 45."
+  },
+  "episode4": "Sky Gallery",
+  "@episode4": {
+    "description": "Name of world (episode) 4 on the level map."
+  },
+  "levelName46": "Chained Canvas",
+  "@levelName46": {
+    "description": "Short, playful title of level 46."
+  },
+  "tutorial46": "Chained tiles cannot move. Match them (or blast them) to break the chains!",
+  "@tutorial46": {
+    "description": "Tutorial card text shown at the start of level 46 (teaches a new mechanic; keep it short)."
+  },
+  "levelName47": "Gallery Wall",
+  "@levelName47": {
+    "description": "Short, playful title of level 47."
+  },
+  "levelName48": "Double Bolted",
+  "@levelName48": {
+    "description": "Short, playful title of level 48."
+  },
+  "tutorial48": "Gold padlocks have two chains: break them twice.",
+  "@tutorial48": {
+    "description": "Tutorial card text shown at the start of level 48 (teaches a new mechanic; keep it short)."
+  },
+  "levelName49": "Hanging Frames",
+  "@levelName49": {
+    "description": "Short, playful title of level 49."
+  },
+  "levelName50": "Vault",
+  "@levelName50": {
+    "description": "Short, playful title of level 50."
+  },
+  "levelName51": "Skylight",
+  "@levelName51": {
+    "description": "Short, playful title of level 51."
+  },
+  "levelName52": "Cloud Steps",
+  "@levelName52": {
+    "description": "Short, playful title of level 52."
+  },
+  "levelName53": "Portrait",
+  "@levelName53": {
+    "description": "Short, playful title of level 53."
+  },
+  "levelName54": "Exhibit",
+  "@levelName54": {
+    "description": "Short, playful title of level 54."
+  },
+  "levelName55": "Locked Wing",
+  "@levelName55": {
+    "description": "Short, playful title of level 55."
+  },
+  "levelName56": "Open Air",
+  "@levelName56": {
+    "description": "Short, playful title of level 56."
+  },
+  "levelName57": "Sky Bridge",
+  "@levelName57": {
+    "description": "Short, playful title of level 57."
+  },
+  "levelName58": "Wind Chimes",
+  "@levelName58": {
+    "description": "Short, playful title of level 58."
+  },
+  "levelName59": "Curator",
+  "@levelName59": {
+    "description": "Short, playful title of level 59."
+  },
+  "levelName60": "Grand Gallery",
+  "@levelName60": {
+    "description": "Short, playful title of level 60."
+  },
+  "episode5": "Ink Lagoon",
+  "@episode5": {
+    "description": "Name of world (episode) 5 on the level map."
+  },
+  "levelName61": "Inkwell",
+  "@levelName61": {
+    "description": "Short, playful title of level 61."
+  },
+  "tutorial61": "Ink spreads every move you do not clear any! Match next to it to wipe it out.",
+  "@tutorial61": {
+    "description": "Tutorial card text shown at the start of level 61 (teaches a new mechanic; keep it short)."
+  },
+  "levelName62": "Spill",
+  "@levelName62": {
+    "description": "Short, playful title of level 62."
+  },
+  "levelName63": "Tide Pool",
+  "@levelName63": {
+    "description": "Short, playful title of level 63."
+  },
+  "levelName64": "Squid Trail",
+  "@levelName64": {
+    "description": "Short, playful title of level 64."
+  },
+  "levelName65": "Black Lagoon",
+  "@levelName65": {
+    "description": "Short, playful title of level 65."
+  },
+  "levelName66": "Coral",
+  "@levelName66": {
+    "description": "Short, playful title of level 66."
+  },
+  "levelName67": "Ink Rings",
+  "@levelName67": {
+    "description": "Short, playful title of level 67."
+  },
+  "levelName68": "Shoreline",
+  "@levelName68": {
+    "description": "Short, playful title of level 68."
+  },
+  "levelName69": "Deep Current",
+  "@levelName69": {
+    "description": "Short, playful title of level 69."
+  },
+  "levelName70": "Kraken",
+  "@levelName70": {
+    "description": "Short, playful title of level 70."
+  },
+  "levelName71": "Low Tide",
+  "@levelName71": {
+    "description": "Short, playful title of level 71."
+  },
+  "levelName72": "Bottle Message",
+  "@levelName72": {
+    "description": "Short, playful title of level 72."
+  },
+  "levelName73": "Riptide",
+  "@levelName73": {
+    "description": "Short, playful title of level 73."
+  },
+  "levelName74": "Pearl Diver",
+  "@levelName74": {
+    "description": "Short, playful title of level 74."
+  },
+  "levelName75": "Lagoon Storm",
+  "@levelName75": {
+    "description": "Short, playful title of level 75."
+  },
+  "episode6": "Prism Peaks",
+  "@episode6": {
+    "description": "Name of world (episode) 6 on the level map."
+  },
+  "levelName76": "Tinted Glass",
+  "@levelName76": {
+    "description": "Short, playful title of level 76."
+  },
+  "tutorial76": "Color filters paint any tile that falls into them. Use them to collect colors!",
+  "@tutorial76": {
+    "description": "Tutorial card text shown at the start of level 76 (teaches a new mechanic; keep it short)."
+  },
+  "levelName77": "Rainbow Ridge",
+  "@levelName77": {
+    "description": "Short, playful title of level 77."
+  },
+  "levelName78": "Crystal Cave",
+  "@levelName78": {
+    "description": "Short, playful title of level 78."
+  },
+  "levelName79": "Prism Pass",
+  "@levelName79": {
+    "description": "Short, playful title of level 79."
+  },
+  "levelName80": "Spectrum",
+  "@levelName80": {
+    "description": "Short, playful title of level 80."
+  },
+  "levelName81": "Glacier",
+  "@levelName81": {
+    "description": "Short, playful title of level 81."
+  },
+  "levelName82": "Summit",
+  "@levelName82": {
+    "description": "Short, playful title of level 82."
+  },
+  "levelName83": "Opal Steps",
+  "@levelName83": {
+    "description": "Short, playful title of level 83."
+  },
+  "levelName84": "Lens",
+  "@levelName84": {
+    "description": "Short, playful title of level 84."
+  },
+  "levelName85": "Aurora",
+  "@levelName85": {
+    "description": "Short, playful title of level 85."
+  },
+  "levelName86": "Geode",
+  "@levelName86": {
+    "description": "Short, playful title of level 86."
+  },
+  "levelName87": "Kaleidoscope",
+  "@levelName87": {
+    "description": "Short, playful title of level 87."
+  },
+  "levelName88": "Snowcap",
+  "@levelName88": {
+    "description": "Short, playful title of level 88."
+  },
+  "levelName89": "Prism Heart",
+  "@levelName89": {
+    "description": "Short, playful title of level 89."
+  },
+  "levelName90": "Peak of Colors",
+  "@levelName90": {
+    "description": "Short, playful title of level 90."
+  },
+  "episode7": "Bucket Brigade",
+  "@episode7": {
+    "description": "Name of world (episode) 7 on the level map."
+  },
+  "levelName91": "First Delivery",
+  "@levelName91": {
+    "description": "Short, playful title of level 91."
+  },
+  "tutorial91": "Bring the paint buckets to the exit, the glowing edge in the gravity direction!",
+  "@tutorial91": {
+    "description": "Tutorial card text shown at the start of level 91 (teaches a new mechanic; keep it short)."
+  },
+  "levelName92": "Bucket Line",
+  "@levelName92": {
+    "description": "Short, playful title of level 92."
+  },
+  "levelName93": "Paint Run",
+  "@levelName93": {
+    "description": "Short, playful title of level 93."
+  },
+  "levelName94": "Downhill",
+  "@levelName94": {
+    "description": "Short, playful title of level 94."
+  },
+  "levelName95": "Heavy Load",
+  "@levelName95": {
+    "description": "Short, playful title of level 95."
+  },
+  "levelName96": "Upward Pour",
+  "@levelName96": {
+    "description": "Short, playful title of level 96."
+  },
+  "tutorial96": "Gravity is up here, so the exit is at the top!",
+  "@tutorial96": {
+    "description": "Tutorial card text shown at the start of level 96 (teaches a new mechanic; keep it short)."
+  },
+  "levelName97": "Chained Cargo",
+  "@levelName97": {
+    "description": "Short, playful title of level 97."
+  },
+  "levelName98": "Side Chute",
+  "@levelName98": {
+    "description": "Short, playful title of level 98."
+  },
+  "levelName99": "Ink Spill",
+  "@levelName99": {
+    "description": "Short, playful title of level 99."
+  },
+  "levelName100": "Century",
+  "@levelName100": {
+    "description": "Short, playful title of level 100."
+  },
+  "levelName101": "Turntable",
+  "@levelName101": {
+    "description": "Short, playful title of level 101."
+  },
+  "levelName102": "Switchback",
+  "@levelName102": {
+    "description": "Short, playful title of level 102."
+  },
+  "levelName103": "Funnel",
+  "@levelName103": {
+    "description": "Short, playful title of level 103."
+  },
+  "levelName104": "Color Pipeline",
+  "@levelName104": {
+    "description": "Short, playful title of level 104."
+  },
+  "levelName105": "Brigade Finale",
+  "@levelName105": {
+    "description": "Short, playful title of level 105."
+  },
+  "episode8": "Gravity Galaxy",
+  "@episode8": {
+    "description": "Name of world (episode) 8 on the level map."
+  },
+  "levelName106": "Orbit",
+  "@levelName106": {
+    "description": "Short, playful title of level 106."
+  },
+  "levelName107": "Comet Tail",
+  "@levelName107": {
+    "description": "Short, playful title of level 107."
+  },
+  "levelName108": "Moon Phases",
+  "@levelName108": {
+    "description": "Short, playful title of level 108."
+  },
+  "levelName109": "Black Hole",
+  "@levelName109": {
+    "description": "Short, playful title of level 109."
+  },
+  "levelName110": "Supernova",
+  "@levelName110": {
+    "description": "Short, playful title of level 110."
+  },
+  "levelName111": "Zero G",
+  "@levelName111": {
+    "description": "Short, playful title of level 111."
+  },
+  "levelName112": "Nebula",
+  "@levelName112": {
+    "description": "Short, playful title of level 112."
+  },
+  "levelName113": "Asteroid Belt",
+  "@levelName113": {
+    "description": "Short, playful title of level 113."
+  },
+  "levelName114": "Starlight",
+  "@levelName114": {
+    "description": "Short, playful title of level 114."
+  },
+  "levelName115": "Eclipse",
+  "@levelName115": {
+    "description": "Short, playful title of level 115."
+  },
+  "levelName116": "Gravity Well",
+  "@levelName116": {
+    "description": "Short, playful title of level 116."
+  },
+  "levelName117": "Constellation",
+  "@levelName117": {
+    "description": "Short, playful title of level 117."
+  },
+  "levelName118": "Warp Drive",
+  "@levelName118": {
+    "description": "Short, playful title of level 118."
+  },
+  "levelName119": "Cosmic Canvas",
+  "@levelName119": {
+    "description": "Short, playful title of level 119."
+  },
+  "levelName120": "Blend Burst",
+  "@levelName120": {
+    "description": "Short, playful title of level 120."
+  },
+  "boosterBrush": "Brush",
+  "@boosterBrush": {
+    "description": "Booster that removes one tile. Shown under a small booster icon: keep it short."
+  },
+  "boosterFreeSwap": "Free Swap",
+  "@boosterFreeSwap": {
+    "description": "Booster: swap any two tiles without using a move. Keep it short."
+  },
+  "boosterColorSplash": "Color Splash",
+  "@boosterColorSplash": {
+    "description": "Booster that paints a whole row in one color. Keep it short."
+  },
+  "boosterGravityFlip": "Gravity Flip",
+  "@boosterGravityFlip": {
+    "description": "Booster: choose the direction tiles fall. Keep it short."
+  },
+  "boosterLineBlaster": "Line Blaster",
+  "@boosterLineBlaster": {
+    "description": "Special tile that clears a whole row or column (made by matching 4). Also a pre-level booster. Keep it short."
+  },
+  "boosterPaintBomb": "Paint Bomb",
+  "@boosterPaintBomb": {
+    "description": "Special tile that clears a 3x3 area (made by an L or T match). Keep it short."
+  },
+  "boosterPrism": "Prism",
+  "@boosterPrism": {
+    "description": "Special tile that clears every tile of one color (made by matching 5). Keep it short."
+  },
+  "boosterBrushHelp": "Tap a tile to wipe it away.",
+  "boosterFreeSwapHelp": "Tap two tiles to swap them.",
+  "boosterColorSplashHelp": "Tap a tile to paint its whole row in its color.",
+  "boosterGravityFlipHelp": "Pick where tiles fall during your next move.",
+  "boosterLineBlasterHelp": "Start the level with a Line Blaster.",
+  "boosterPaintBombHelp": "Start the level with a Paint Bomb.",
+  "boosterPrismHelp": "Start the level with a Prism.",
+  "colorRed": "Red",
+  "@colorRed": {
+    "description": "Tile color name. Used alone (e.g. 'Collect 5 {color}', 'Collect {color} tiles!'): use a form that reads well on its own, like a noun for the color."
+  },
+  "colorBlue": "Blue",
+  "colorYellow": "Yellow",
+  "colorPurple": "Purple",
+  "colorGreen": "Green",
+  "colorOrange": "Orange",
+  "colorUmber": "Umber",
+  "@colorUmber": {
+    "description": "Dark brown tile color (cannot be blended)."
+  },
+  "colorCharcoal": "Charcoal",
+  "@colorCharcoal": {
+    "description": "Dark gray tile color (cannot be blended)."
+  },
+  "reminderLivesTitle": "Your lives are full!",
+  "@reminderLivesTitle": {
+    "description": "Phone notification title."
+  },
+  "reminderLivesBody": "Come back and blend some colors.",
+  "reminderEventTitle": "Paint Collector ends soon",
+  "@reminderEventTitle": {
+    "description": "Phone notification. 'Paint Collector' is the name of the weekly event: translate it the same way everywhere."
+  },
+  "reminderEventBody": "Only 3 hours left to collect {color} tiles!",
+  "@reminderEventBody": {
+    "placeholders": {
+      "color": {
+        "type": "String",
+        "example": "Purple"
+      }
+    }
+  },
+  "reminderDailyTitle": "Your daily gift is ready",
+  "reminderDailyBody": "Open Blend Burst to claim it.",
+  "@reminderDailyBody": {
+    "description": "Keep 'Blend Burst' (the game's name) untranslated."
+  },
+  "settingsReminders": "Reminders",
+  "@settingsReminders": {
+    "description": "Settings switch title and the phone's notification channel name."
+  },
+  "notificationChannelHelp": "Full lives and event reminders",
+  "@notificationChannelHelp": {
+    "description": "Description of the notification channel in the phone's settings."
+  },
+  "editorTitle": "Level editor",
+  "@editorTitle": {
+    "description": "Title of the level editor screen."
+  },
+  "editorCustomLevel": "Custom level",
+  "@editorCustomLevel": {
+    "description": "Default name of a new level in the editor."
+  },
+  "editorJsonCopied": "Level JSON copied to clipboard",
+  "editorImportTitle": "Import level JSON",
+  "editorImport": "Import",
+  "@editorImport": {
+    "description": "Button: import a level from pasted JSON."
+  },
+  "editorImported": "Level imported",
+  "editorInvalidLevel": "Invalid level: {error}",
+  "@editorInvalidLevel": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editorBotFailed": "Bot failed: {error}",
+  "@editorBotFailed": {
+    "description": "A computer player test-plays the level; shown when it crashes.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editorLoadLevel": "Load level",
+  "editorImportJson": "Import JSON",
+  "editorCopyJson": "Copy JSON",
+  "editorPlayTest": "Play test",
+  "@editorPlayTest": {
+    "description": "Button: play the level being edited to test it."
+  },
+  "editorToolCell": "Cell",
+  "@editorToolCell": {
+    "description": "Editor brush: a normal playable board cell."
+  },
+  "editorToolHole": "Hole",
+  "@editorToolHole": {
+    "description": "Editor brush: an empty gap in the board."
+  },
+  "editorToolStain": "Stain",
+  "@editorToolStain": {
+    "description": "Editor brush: a paint stain under a tile."
+  },
+  "editorToolGlass": "Glass {layers}",
+  "@editorToolGlass": {
+    "description": "Editor brush: a glass block with this many layers.",
+    "placeholders": {
+      "layers": {
+        "type": "int"
+      }
+    }
+  },
+  "editorToolSwitch": "Gravity switch",
+  "@editorToolSwitch": {
+    "description": "Editor brush: a tile that rotates gravity when cleared."
+  },
+  "editorToolTile": "Tile",
+  "@editorToolTile": {
+    "description": "Editor brush: a tile of the chosen color."
+  },
+  "editorToolRandomTile": "Random tile",
+  "@editorToolRandomTile": {
+    "description": "Editor brush: a tile with a random color."
+  },
+  "editorToolChain": "Chain",
+  "editorToolDoubleChain": "Double chain",
+  "editorToolInk": "Ink",
+  "editorToolBucket": "Bucket",
+  "@editorToolBucket": {
+    "description": "Editor brush: a paint bucket to bring to the exit."
+  },
+  "editorToolFilter": "Color filter",
+  "editorToolZone": "Gravity zone",
+  "editorToolClearOverlay": "Clear filter/zone",
+  "editorName": "Name",
+  "editorRows": "Rows",
+  "editorColumns": "Columns",
+  "editorMoves": "Moves",
+  "editorLevelId": "Level id",
+  "editorBucketsTotal": "Buckets in total",
+  "editorBucketsOnBoard": "Buckets on board at once",
+  "editorGravityEvery": "Gravity turns every N moves (0 = off)",
+  "editorGravity": "Gravity",
+  "editorBlending": "Blending allowed",
+  "@editorBlending": {
+    "description": "Switch: whether tiles of two colors can be mixed in this level."
+  },
+  "editorHard": "Hard level",
+  "editorSwitchChance": "Gravity switch spawn chance: {percent}%",
+  "@editorSwitchChance": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "editorColors": "Colors",
+  "editorGoals": "Goals",
+  "editorAddGoal": "Add goal",
+  "editorStarThresholds": "Star thresholds (score)",
+  "editorStarN": "{n} star",
+  "@editorStarN": {
+    "description": "Label: score needed for 1, 2 or 3 stars.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "editorTutorial": "Tutorial text (optional)",
+  "editorBotTest": "Bot test ({plays} plays)",
+  "@editorBotTest": {
+    "description": "Button: let a computer player try the level several times.",
+    "placeholders": {
+      "plays": {
+        "type": "int"
+      }
+    }
+  },
+  "editorStepper": "{label}: {value}",
+  "@editorStepper": {
+    "description": "A setting name and its number, e.g. \"Rows: 8\".",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "editorTarget": "Target",
+  "@editorTarget": {
+    "description": "Goal amount to reach."
+  },
+  "editorCount": "Count (0 = all)",
+  "editorGoalScore": "score",
+  "@editorGoalScore": {
+    "description": "Goal type in the editor: reach a score."
+  },
+  "editorGoalStains": "stains",
+  "@editorGoalStains": {
+    "description": "Goal type in the editor: clear paint stains."
+  },
+  "editorGoalGlass": "glass",
+  "@editorGoalGlass": {
+    "description": "Goal type in the editor: break glass blocks."
+  },
+  "editorGoalCollect": "collect",
+  "@editorGoalCollect": {
+    "description": "Goal type in the editor: collect tiles of a color."
+  },
+  "editorGoalLocks": "locks",
+  "@editorGoalLocks": {
+    "description": "Goal type in the editor: break chains."
+  },
+  "editorGoalInk": "ink",
+  "@editorGoalInk": {
+    "description": "Goal type in the editor: clear all ink."
+  },
+  "editorGoalDrop": "drop",
+  "@editorGoalDrop": {
+    "description": "Goal type in the editor: bring buckets to the exit."
+  },
+  "dlgHardLevel": "HARD LEVEL",
+  "@dlgHardLevel": {
+    "description": "Small all-caps badge on the level card for a difficult level."
+  },
+  "dlgGoals": "Goals",
+  "@dlgGoals": {
+    "description": "Heading above the level's goals on the level card."
+  },
+  "dlgMoves": "{n, plural, =1{1 move} other{{n} moves}}",
+  "@dlgMoves": {
+    "description": "Number of moves the level gives.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dlgWinStreakFree": "Win streak {n}!  Free:",
+  "@dlgWinStreakFree": {
+    "description": "Strip on the level card; followed by pictures of the free boosters earned. n = wins in a row.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dlgGetBooster": "Get {booster}",
+  "@dlgGetBooster": {
+    "description": "Dialog title offering to buy a booster.",
+    "placeholders": {
+      "booster": {
+        "type": "String",
+        "example": "Paint Bomb"
+      }
+    }
+  },
+  "dlgBuyBoosterPrompt": "{help} Buy one for {cost} coins?",
+  "@dlgBuyBoosterPrompt": {
+    "description": "help = one-sentence description of the booster; cost = price in coins.",
+    "placeholders": {
+      "help": {
+        "type": "String",
+        "example": "Start the level with a Paint Bomb."
+      },
+      "cost": {
+        "type": "int"
+      }
+    }
+  },
+  "dlgStartWith": "Start with",
+  "@dlgStartWith": {
+    "description": "Heading above the pre-level booster choices (boosters you start the level with)."
+  },
+  "dlgStartWithBooster": "Start with {booster}",
+  "@dlgStartWithBooster": {
+    "description": "Accessibility label for a pre-level booster button.",
+    "placeholders": {
+      "booster": {
+        "type": "String",
+        "example": "Prism"
+      }
+    }
+  },
+  "dlgFallDirection": "{dir, select, up{Fall up} down{Fall down} left{Fall left} right{Fall right} other{Fall {dir}}}",
+  "@dlgFallDirection": {
+    "description": "Accessibility label for an arrow button choosing the direction tiles fall.",
+    "placeholders": {
+      "dir": {
+        "type": "String"
+      }
+    }
+  },
+  "dlgGravityFlipTitle": "Gravity Flip",
+  "@dlgGravityFlipTitle": {
+    "description": "Title of the booster dialog that picks the gravity direction (same name as the booster)."
+  },
+  "dlgGravityFlipQuestion": "Where should tiles fall during your next move?",
+  "dlgTutorialTitle": "New!",
+  "@dlgTutorialTitle": {
+    "description": "Ribbon title of the tutorial card that introduces a new mechanic."
+  },
+  "dlgGotIt": "Got it!",
+  "@dlgGotIt": {
+    "description": "Button closing the tutorial card."
+  },
+  "dlgLevelComplete": "Level complete!",
+  "dlgScore": "SCORE",
+  "@dlgScore": {
+    "description": "Small all-caps label above the final score."
+  },
+  "dlgEditor": "Editor",
+  "@dlgEditor": {
+    "description": "Button: go back to the level editor (only when play-testing a level)."
+  },
+  "dlgOutOfMoves": "Out of moves!",
+  "dlgSoClose": "So close!",
+  "dlgPlusMoves": "+{n} moves",
+  "@dlgPlusMoves": {
+    "description": "Button text: buy extra moves. Short.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dlgWatchAdMoves": "Watch ad: +{n}",
+  "@dlgWatchAdMoves": {
+    "description": "Button: watch a video ad to get n extra moves. Keep short.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dlgGiveUp": "Give up",
+  "dlgLevelFailed": "Level failed",
+  "dlgTryAgainQuestion": "Try again?",
+  "dlgLostALife": "You lost a life",
+  "dlgLivesLeft": "Lives left: {n}",
+  "@dlgLivesLeft": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dlgPaused": "Paused",
+  "dlgResume": "Resume",
+  "dlgQuitLoseLife": "Quit (-1 life)",
+  "@dlgQuitLoseLife": {
+    "description": "Button: quit the level, which costs one life."
+  },
+  "dlgQuit": "Quit",
+  "dlgMusic": "Music",
+  "dlgSound": "Sound",
+  "dlgVibrate": "Vibrate",
+  "@dlgVibrate": {
+    "description": "Toggle for vibration (haptic feedback). Short label under a round button."
+  },
+  "dlgGetGoldInShop": "Get gold in the shop?",
+  "dlgLives": "Lives",
+  "@dlgLives": {
+    "description": "Title of the lives panel."
+  },
+  "dlgMoreLives": "More lives",
+  "@dlgMoreLives": {
+    "description": "Title of the lives panel when lives are not full."
+  },
+  "dlgUnlimitedLives": "Unlimited lives!",
+  "dlgLivesFull": "Your lives are full!",
+  "dlgNextLifeIn": "Next life in",
+  "@dlgNextLifeIn": {
+    "description": "Followed by a countdown timer on the next line."
+  },
+  "dlgRefill": "Refill",
+  "@dlgRefill": {
+    "description": "Button: refill all lives. Short."
+  },
+  "dlgWatchAdLife": "Watch ad: +1 life",
+  "@dlgWatchAdLife": {
+    "description": "Button: watch a video ad to get one life."
+  },
+  "dlgRewardOneLife": "+1 life",
+  "@dlgRewardOneLife": {
+    "description": "Reward shown with a video ad."
+  },
+  "dlgMinutes": "{n} min",
+  "@dlgMinutes": {
+    "description": "Duration in minutes, short (button: 30 minutes of unlimited lives).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gameShareCombo": "What a combo on level {id} of Blend Burst!",
+  "@gameShareCombo": {
+    "description": "Text shared with a screenshot after a big combo. Keep the game name 'Blend Burst' untranslated.",
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "gameShareWin": "I beat level {id} of Blend Burst!",
+  "@gameShareWin": {
+    "description": "Text shared with a screenshot after winning a level. Keep the game name 'Blend Burst' untranslated.",
+    "placeholders": {
+      "id": {
+        "type": "int"
+      }
+    }
+  },
+  "gameGetBooster": "Get {booster}",
+  "@gameGetBooster": {
+    "description": "Dialog title offering to buy a booster; {booster} is the booster's name.",
+    "placeholders": {
+      "booster": {
+        "type": "String"
+      }
+    }
+  },
+  "gameBuyBoosterQuestion": "Buy one {booster} for {coins} coins?",
+  "@gameBuyBoosterQuestion": {
+    "placeholders": {
+      "booster": {
+        "type": "String"
+      },
+      "coins": {
+        "type": "int"
+      }
+    }
+  },
+  "gamePlusMoves": "+{n} moves",
+  "@gamePlusMoves": {
+    "description": "Reward label: extra moves for the current level.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gameShareButton": "Share!",
+  "@gameShareButton": {
+    "description": "Small button that pops up after a big combo to share a screenshot (tight space)."
+  },
+  "gamePause": "Pause",
+  "@gamePause": {
+    "description": "Screen-reader label of the pause button."
+  },
+  "gameTestLevel": "Test level",
+  "@gameTestLevel": {
+    "description": "HUD title while play-testing a level from the level editor."
+  },
+  "gameTapSecondTile": "Now tap the second tile.",
+  "@gameTapSecondTile": {
+    "description": "Hint while using the Free Swap booster, after the first tile was picked."
+  },
+  "gameGravityDown": "Gravity down",
+  "@gameGravityDown": {
+    "description": "Tooltip: tiles currently fall downward."
+  },
+  "gameGravityUp": "Gravity up",
+  "@gameGravityUp": {
+    "description": "Tooltip: tiles currently fall upward."
+  },
+  "gameGravityLeft": "Gravity left",
+  "@gameGravityLeft": {
+    "description": "Tooltip: tiles currently fall to the left."
+  },
+  "gameGravityRight": "Gravity right",
+  "@gameGravityRight": {
+    "description": "Tooltip: tiles currently fall to the right."
+  },
+  "gameGravityTurnsIn": "{n, plural, =1{Gravity turns in 1 move} other{Gravity turns in {n} moves}}",
+  "@gameGravityTurnsIn": {
+    "description": "Tooltip: number of moves until gravity rotates.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gameMovesBadge": "MOVES",
+  "@gameMovesBadge": {
+    "description": "Tiny uppercase caption above the moves-left number in a small circle (very tight space, ~6 letters)."
+  },
+  "gamePraiseGreat": "Great!",
+  "@gamePraiseGreat": {
+    "description": "Big praise callout for a small cascade."
+  },
+  "gamePraiseAmazing": "Amazing!",
+  "@gamePraiseAmazing": {
+    "description": "Big praise callout for a bigger cascade."
+  },
+  "gamePraiseBrilliant": "Brilliant!",
+  "@gamePraiseBrilliant": {
+    "description": "Big praise callout for a large cascade."
+  },
+  "gamePraiseSpectacular": "Spectacular!",
+  "@gamePraiseSpectacular": {
+    "description": "Biggest praise callout (huge cascade or whole board cleared)."
+  },
+  "gameBoardLabel": "Game board",
+  "@gameBoardLabel": {
+    "description": "Screen-reader label of the puzzle board."
+  },
+  "gameGoalScore": "{n, plural, other{Reach {n} points}}",
+  "@gameGoalScore": {
+    "description": "Level goal.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gameGoalStains": "{n, plural, other{Clear {n} paint stains}}",
+  "@gameGoalStains": {
+    "description": "Level goal: clean paint stains under tiles.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gameGoalGlass": "{n, plural, other{Break {n} glass blocks}}",
+  "@gameGoalGlass": {
+    "description": "Level goal.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gameGoalCollect": "Collect {n} {color}",
+  "@gameGoalCollect": {
+    "description": "Level goal: collect tiles of a color; {color} is a color name such as 'Purple' (the tiles are implied).",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "color": {
+        "type": "String"
+      }
+    }
+  },
+  "gameGoalLocks": "{n, plural, other{Break {n} chains}}",
+  "@gameGoalLocks": {
+    "description": "Level goal: break chains locking tiles.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gameGoalInk": "Clear all the ink",
+  "@gameGoalInk": {
+    "description": "Level goal: remove all spreading ink."
+  },
+  "gameGoalDrop": "{n, plural, other{Bring {n} paint buckets to the exit}}",
+  "@gameGoalDrop": {
+    "description": "Level goal: move paint buckets to the board's exit edge.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "gameThousands": "{value}k",
+  "@gameThousands": {
+    "description": "Short number in thousands (e.g. 12.5k) in a tiny goal badge.",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "gameHoursMinutes": "{h}h {m}m",
+  "@gameHoursMinutes": {
+    "description": "Short duration, e.g. 1h 5m (tight space).",
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsMoveHints": "Move hints",
+  "settingsMoveHintsSub": "Show a possible move after 5 seconds",
+  "settingsTapActivate": "Tap to activate specials",
+  "settingsTapActivateSub": "Tap a special tile to fire it (uses a move)",
+  "@settingsTapActivateSub": {
+    "description": "Specials are the power-up tiles (Line Blaster, Paint Bomb, Prism)."
+  },
+  "settingsRemindersSub": "Full lives, daily gift and event reminders",
+  "settingsRemindersOff": "Notifications are turned off for Blend Burst. You can allow them in your phone settings.",
+  "settingsEditor": "Level editor",
+  "settingsEditorSub": "Build, play-test and export JSON levels",
+  "settingsAnalytics": "Analytics",
+  "settingsAnalyticsSub": "Win rates and recent events on this device",
+  "settingsPrivacyChoices": "Privacy choices",
+  "settingsPrivacyChoicesSub": "Change your ad consent",
+  "settingsPrivacyPolicy": "Privacy policy",
+  "settingsPrivacyPolicySub": "How the game handles your data",
+  "settingsReset": "Reset progress",
+  "settingsResetSub": "Start over from level 1",
+  "settingsResetTitle": "Reset?",
+  "settingsResetCloud": "All stars, coins and boosters will be lost, here and in your cloud save.",
+  "settingsResetLocal": "All stars, coins and boosters will be lost.",
+  "settingsResetOk": "Reset",
+  "@settingsResetOk": {
+    "description": "Button: confirm erasing all progress."
+  },
+  "settingsCredits": "Music and sounds are made for this game.",
+  "settingsAnalyticsYes": "yes",
+  "settingsAnalyticsNo": "no",
+  "settingsAnalyticsNotYet": "not yet",
+  "@settingsAnalyticsNotYet": {
+    "description": "Whether the player came back on day N: that day has not come yet."
+  },
+  "settingsAnalyticsKeyMetrics": "Key metrics",
+  "settingsAnalyticsRetention": "Back on day 1 / 7 / 30",
+  "@settingsAnalyticsRetention": {
+    "description": "Whether the player played again 1, 7 and 30 days after first playing."
+  },
+  "settingsAnalyticsLevelsPerSession": "Levels per session",
+  "settingsAnalyticsSessionsPerDay": "Sessions per day",
+  "settingsAnalyticsWinRate": "Win rate",
+  "settingsAnalyticsAttemptsPerWin": "Attempts per won level",
+  "settingsAnalyticsExtraMoves": "Extra moves bought on fail",
+  "settingsAnalyticsAdsPerDay": "Ads watched per day",
+  "settingsAnalyticsTutorialsSeen": "Tutorials seen",
+  "settingsAnalyticsPurchases": "Purchases",
+  "settingsAnalyticsHardest": "Hardest levels",
+  "settingsAnalyticsSessions": "Sessions: {sessions}   Win streak: {streak}",
+  "@settingsAnalyticsSessions": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "streak": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAnalyticsNoLevels": "No levels played yet.",
+  "settingsAnalyticsWins": "{wins}/{attempts} wins ({percent}%)",
+  "@settingsAnalyticsWins": {
+    "placeholders": {
+      "wins": {
+        "type": "int"
+      },
+      "attempts": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAnalyticsRecent": "Recent events",
+  "cloudLeaderboards": "Leaderboards",
+  "cloudAchievements": "Achievements",
+  "cloudLeaderboardsNotSetUp": "Leaderboards need Google Play Games, which is not set up for this version yet. They will appear in a later update.",
+  "cloudAchievementsNotSetUp": "Achievements need Google Play Games, which is not set up for this version yet. They will appear in a later update.",
+  "cloudJustNow": "just now",
+  "@cloudJustNow": {
+    "description": "Last cloud save time, shown after 'Saved'."
+  },
+  "cloudMinAgo": "{n} min ago",
+  "@cloudMinAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudHoursAgo": "{n} h ago",
+  "@cloudHoursAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudDaysAgo": "{n} d ago",
+  "@cloudDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cloudComingLater": "Cloud save and leaderboards are coming in a later update.",
+  "cloudSignInPitch": "Sign in to keep your progress safe in the cloud and compete on the leaderboards.",
+  "cloudSigningIn": "Signing in…",
+  "cloudSignedInAs": "Signed in as {name}",
+  "@cloudSignedInAs": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudSaving": "Saving…",
+  "cloudSavedAgo": "Saved {ago}",
+  "@cloudSavedAgo": {
+    "description": "Last cloud save; {ago} is e.g. 'just now' or '5 min ago'.",
+    "placeholders": {
+      "ago": {
+        "type": "String"
+      }
+    }
+  },
+  "cloudSignIn": "Sign in",
+  "cloudSaveNow": "Save now",
+  "cloudPlayer": "Player",
+  "@cloudPlayer": {
+    "description": "Default player name when Play Games gives none."
+  },
+  "cloudSignInFailed": "Could not sign in to Play Games.",
+  "cloudReachFailed": "Could not reach the cloud save. Try again later.",
+  "cloudReadFailed": "Could not read the cloud save. Try again later.",
+  "cloudUploadFailed": "Could not upload to the cloud save. Try again later.",
+  "cloudSyncFailed": "Cloud save failed. Try again later.",
+  "cloudSignInFirst": "Sign in to Play Games first.",
+  "cloudLeaderboardsFailed": "Could not open the leaderboards.",
+  "cloudAchievementsFailed": "Could not open the achievements.",
+  "cloudNotSetUp": "Google Play Games is not set up for this version yet.",
+  "storeTestTitle": "Test purchase",
+  "storeTestBody": "{subtitle}\n\nPrice in the stores: {price}.\nThis test build has no store connected: you will not be charged.",
+  "@storeTestBody": {
+    "description": "{subtitle} is the product description.",
+    "placeholders": {
+      "subtitle": {
+        "type": "String"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "storeTestConfirm": "Get it (free test)",
+  "storeUnavailable": "Store unavailable",
+  "storeUnavailableBody": "Google Play could not be reached. Check your connection and try again.",
+  "adsRewardedTitle": "Rewarded ad",
+  "adsBreakTitle": "Ad break",
+  "adsPlaceholderRewarded": "No ads SDK in this build: this placeholder stands in for a rewarded video.\n\nReward: {reward}",
+  "@adsPlaceholderRewarded": {
+    "placeholders": {
+      "reward": {
+        "type": "String"
+      }
+    }
+  },
+  "adsPlaceholderBreak": "No ads SDK in this build: this placeholder stands in for a short ad between levels. Any purchase removes ad breaks.",
+  "adsRewardIn": "Reward in {n}…",
+  "@adsRewardIn": {
+    "description": "Countdown in seconds.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "adsCloseIn": "Close in {n}…",
+  "@adsCloseIn": {
+    "description": "Countdown in seconds.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "adsClaimReward": "Claim reward",
+  "adsContinue": "Continue",
+  "adsSkip": "Skip",
+  "adsNoVideo": "No video right now",
+  "adsNoVideoBody": "There is no video to watch at the moment. Please try again in a little while.",
+  "rewardCoins": "{n, plural, =1{1 coin} other{{n} coins}}",
+  "@rewardCoins": {
+    "description": "Part of a reward list, e.g. '100 coins'.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardGold": "{n, plural, other{{n} gold}}",
+  "@rewardGold": {
+    "description": "Amount of gold (premium currency), e.g. '50 gold'. Also the subtitle of gold packs in the shop.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardLives": "{n, plural, =1{1 life} other{{n} lives}}",
+  "@rewardLives": {
+    "description": "Part of a reward list, e.g. '5 lives'.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardUnlimited": "{n}m unlimited lives",
+  "@rewardUnlimited": {
+    "description": "Part of a reward list: minutes of unlimited lives. 'm' = minutes.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "rewardBooster": "{n}x {booster}",
+  "@rewardBooster": {
+    "description": "Part of a reward list: count and booster name, e.g. '2x Brush'.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "booster": {
+        "type": "String",
+        "example": "Brush"
+      }
+    }
+  },
+  "rewardTitle": "Reward!",
+  "@rewardTitle": {
+    "description": "Title of the dialog showing what the player just received."
+  },
+  "productStarterTitle": "Starter Pack",
+  "productStarterSubtitle": "100 gold, 3 of every booster, 1 hour unlimited lives",
+  "productGold50Title": "Pouch of Gold",
+  "@productGold50Title": {
+    "description": "Smallest gold pack in the shop."
+  },
+  "productGold130Title": "Bag of Gold",
+  "productGold350Title": "Chest of Gold",
+  "productGold800Title": "Vault of Gold",
+  "@productGold800Title": {
+    "description": "Largest gold pack in the shop."
+  },
+  "productNoAdsTitle": "Remove Ads",
+  "productNoAdsSubtitle": "No more ad breaks between levels",
+  "productPassTitle": "Premium Pass",
+  "productPassSubtitle": "Unlocks the premium season track",
+  "productRefillTitle": "Lives Refill",
+  "productRefillSubtitle": "Refill all {n} lives",
+  "@productRefillSubtitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "productUnlimitedTitle": "Unlimited Lives",
+  "productUnl30Subtitle": "30 minutes of free play",
+  "productUnl60Subtitle": "1 hour of free play",
+  "productUnl180Subtitle": "3 hours of free play",
+  "productBoosterPackTitle": "Booster Bundle",
+  "productBoosterPackSubtitle": "2 of every in-level booster",
+  "productStartPackTitle": "Head Start Bundle",
+  "productStartPackSubtitle": "2 of every pre-level booster",
+  "productFreeBoosterTitle": "Free Booster",
+  "productFreeBoosterSubtitle": "Watch an ad, once a day",
+  "mapDaily": "Daily",
+  "@mapDaily": {
+    "description": "Short label under a small round button (daily gift). Keep very short."
+  },
+  "mapShop": "Shop",
+  "@mapShop": {
+    "description": "Short label under a small round button. Keep very short."
+  },
+  "mapEvent": "Event",
+  "@mapEvent": {
+    "description": "Short label under a small round button (weekly event). Keep very short."
+  },
+  "mapPass": "Pass",
+  "@mapPass": {
+    "description": "Short label under a small round button (season pass). Keep very short."
+  },
+  "mapRanks": "Ranks",
+  "@mapRanks": {
+    "description": "Short label under a small round button (leaderboards). Keep very short."
+  },
+  "mapEpisodeN": "EPISODE {n}",
+  "@mapEpisodeN": {
+    "description": "Small caption under the world name on the map, in capitals.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "mapHard": "HARD",
+  "@mapHard": {
+    "description": "Tiny badge on a hard level's map node, in capitals. Keep very short."
+  },
+  "mapLivesFull": "{lives} Full",
+  "@mapLivesFull": {
+    "description": "Lives counter at the top of the map when all lives are full, e.g. '5 Full'. Tight space.",
+    "placeholders": {
+      "lives": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHours": "{n}h",
+  "@timeHours": {
+    "description": "Compact duration: hours.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeMinutes": "{n}m",
+  "@timeMinutes": {
+    "description": "Compact duration: minutes.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "timeDaysHours": "{d}d {h}h",
+  "@timeDaysHours": {
+    "description": "Compact duration: days and hours, e.g. '2d 5h'.",
+    "placeholders": {
+      "d": {
+        "type": "int"
+      },
+      "h": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursMinutes": "{h}h {m}m",
+  "@timeHoursMinutes": {
+    "description": "Compact duration: hours and minutes, e.g. '4h 30m'.",
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyTitle": "Daily Gift",
+  "dailyDayN": "Day {n}",
+  "@dailyDayN": {
+    "description": "Day number in the 7-day login calendar. Tight space.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyComeBack": "Come back every day for bigger gifts!",
+  "dailyComeBackTomorrow": "Come back tomorrow for day {day}!",
+  "@dailyComeBackTomorrow": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyWatchAdDouble": "Watch ad: x2",
+  "@dailyWatchAdDouble": {
+    "description": "Button: watch a video ad to double the daily gift."
+  },
+  "dailyDoubleReward": "double daily reward",
+  "@dailyDoubleReward": {
+    "description": "What a rewarded video gives (shown in the ad screen)."
+  },
+  "shopBuyForGold": "{item} for {price} gold?",
+  "@shopBuyForGold": {
+    "description": "Purchase confirmation. item is the product's contents, e.g. 'Refill all 5 lives'.",
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "price": {
+        "type": "int"
+      }
+    }
+  },
+  "shopBuyForCoins": "{item} for {price} coins?",
+  "@shopBuyForCoins": {
+    "description": "Purchase confirmation. item is the product's contents.",
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "price": {
+        "type": "int"
+      }
+    }
+  },
+  "shopMoreGold": "Get more gold from the gold packs, events and the season pass.",
+  "shopSpecialOffer": "Special offer",
+  "shopLives": "Lives",
+  "@shopLives": {
+    "description": "Shop section heading."
+  },
+  "shopBoosters": "Boosters",
+  "@shopBoosters": {
+    "description": "Shop section heading."
+  },
+  "shopExtras": "Extras",
+  "@shopExtras": {
+    "description": "Shop section heading."
+  },
+  "shopTestBuild": "Test build: no store is connected, so purchases are free and only unlock items on this device.",
+  "shopOwned": "Owned",
+  "@shopOwned": {
+    "description": "Shown instead of a price for an item already bought. Tight space."
+  },
+  "eventTitle": "Paint Collector",
+  "@eventTitle": {
+    "description": "Name of the weekly collection event."
+  },
+  "eventCollect": "Collect {color} tiles!",
+  "@eventCollect": {
+    "placeholders": {
+      "color": {
+        "type": "String",
+        "example": "Purple"
+      }
+    }
+  },
+  "eventInfo": "Every {color} tile you clear in any level counts. Ends in {time}.",
+  "@eventInfo": {
+    "description": "color is a color name (lower case in English); time is a compact duration like '2d 5h'.",
+    "placeholders": {
+      "color": {
+        "type": "String",
+        "example": "purple"
+      },
+      "time": {
+        "type": "String",
+        "example": "2d 5h"
+      }
+    }
+  },
+  "eventTierTiles": "{n, plural, =1{1 tile} other{{n} tiles}}",
+  "@eventTierTiles": {
+    "description": "Event goal: number of tiles to collect. Narrow column.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "eventDone": "Done",
+  "@eventDone": {
+    "description": "Reward already claimed. Tight space."
+  },
+  "passTitle": "Paint Pass",
+  "@passTitle": {
+    "description": "Name of the season pass."
+  },
+  "passSeasonRewards": "Season Rewards",
+  "passInfo": "Win levels to earn points. Ends in {time}.",
+  "@passInfo": {
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "2d 5h"
+      }
+    }
+  },
+  "passComplete": "Complete!",
+  "passTierProgress": "Tier {tier}: {points} / {total}",
+  "@passTierProgress": {
+    "description": "Season pass progress bar label.",
+    "placeholders": {
+      "tier": {
+        "type": "int"
+      },
+      "points": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "passUnlockPremium": "Unlock Premium",
+  "@passUnlockPremium": {
+    "description": "Button: buy the premium track of the season pass."
+  },
+  "passPremiumUnlocked": "Premium unlocked!",
+  "passPremium": "Premium",
+  "@passPremium": {
+    "description": "Column heading: the premium reward track."
+  }
+}

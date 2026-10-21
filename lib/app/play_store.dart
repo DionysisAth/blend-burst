@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
+import '../l10n/l10n.dart';
 import '../screens/dialogs.dart';
 import 'app_state.dart';
 import 'economy.dart';
@@ -86,11 +87,10 @@ class PlayStore implements Store {
       if (context.mounted) {
         await confirm(
           context,
-          'Store unavailable',
-          'Google Play could not be reached. Check your connection and try '
-              'again.',
-          ok: 'OK',
-          cancel: 'Close',
+          tr.storeUnavailable,
+          tr.storeUnavailableBody,
+          ok: tr.ok,
+          cancel: tr.close,
         );
       }
       return false;

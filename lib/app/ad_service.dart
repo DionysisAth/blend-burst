@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
@@ -69,7 +70,7 @@ class _PlaceholderAdState extends State<_PlaceholderAd> {
   Widget build(BuildContext context) {
     final rewarded = widget.reward != null;
     return GamePanel(
-      title: rewarded ? 'Rewarded ad' : 'Ad break',
+      title: rewarded ? tr.adsRewardedTitle : tr.adsBreakTitle,
       ribbonColor: Palette.sky,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -78,10 +79,8 @@ class _PlaceholderAdState extends State<_PlaceholderAd> {
           const SizedBox(height: 10),
           Text(
             rewarded
-                ? 'No ads SDK in this build: this placeholder stands in for a '
-                      'rewarded video.\n\nReward: ${widget.reward}'
-                : 'No ads SDK in this build: this placeholder stands in for a '
-                      'short ad between levels. Any purchase removes ad breaks.',
+                ? tr.adsPlaceholderRewarded(widget.reward!)
+                : tr.adsPlaceholderBreak,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontWeight: FontWeight.w600,
@@ -92,8 +91,8 @@ class _PlaceholderAdState extends State<_PlaceholderAd> {
           const SizedBox(height: 14),
           CandyButton.label(
             _left > 0
-                ? (rewarded ? 'Reward in $_left…' : 'Close in $_left…')
-                : (rewarded ? 'Claim reward' : 'Continue'),
+                ? (rewarded ? tr.adsRewardIn(_left) : tr.adsCloseIn(_left))
+                : (rewarded ? tr.adsClaimReward : tr.adsContinue),
             key: const Key('ad-done'),
             colors: CandyColors.green,
             onTap: _left > 0 ? null : () => Navigator.of(context).pop(true),
@@ -101,7 +100,7 @@ class _PlaceholderAdState extends State<_PlaceholderAd> {
           if (rewarded) ...[
             const SizedBox(height: 8),
             CandyButton.label(
-              'Skip',
+              tr.adsSkip,
               key: const Key('ad-skip'),
               colors: CandyColors.gray,
               height: 40,

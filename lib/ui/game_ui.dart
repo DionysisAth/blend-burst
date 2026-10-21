@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
 import 'art_cache.dart';
 import 'icons.dart';
 import 'tile_art.dart';
@@ -46,6 +47,9 @@ class GameText extends StatelessWidget {
     final sw = strokeWidth ?? max(2.0, size * 0.16);
     final base = TextStyle(
       fontFamily: family,
+      fontFamilyFallback: [
+        family == 'Fredoka' ? 'FredokaFallback' : 'LilitaFallback',
+      ],
       fontSize: size,
       height: 1.1,
       letterSpacing: letterSpacing,
@@ -543,7 +547,7 @@ class GamePanel extends StatelessWidget {
               onTap: onClose,
               colors: CandyColors.red,
               size: 40,
-              label: 'Close',
+              label: tr.close,
             ),
           ),
       ],
@@ -677,6 +681,7 @@ class StatPill extends StatelessWidget {
                   softWrap: false,
                   style: const TextStyle(
                     fontFamily: 'Lilita',
+                    fontFamilyFallback: ['LilitaFallback'],
                     fontSize: 16,
                     color: Colors.white,
                     letterSpacing: 0.5,

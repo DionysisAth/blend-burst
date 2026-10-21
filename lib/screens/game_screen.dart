@@ -13,6 +13,7 @@ import '../core/models.dart';
 import '../core/session.dart';
 import '../game/board_view.dart';
 import '../game/game_controller.dart';
+import '../l10n/l10n.dart';
 import '../ui/art_cache.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
@@ -88,8 +89,8 @@ class GameScreenState extends State<GameScreen> {
       shareScreenshot(
         _shotKey,
         why == 'combo'
-            ? 'What a combo on level ${level.id} of Blend Burst!'
-            : 'I beat level ${level.id} of Blend Burst!',
+            ? tr.gameShareCombo(level.id)
+            : tr.gameShareWin(level.id),
       ),
     );
   }
@@ -247,18 +248,18 @@ class GameScreenState extends State<GameScreen> {
     if (!widget.testMode && app.boosterCount(type) <= 0) {
       final buy = await confirm(
         context,
-        'Get ${type.label}',
-        'Buy one ${type.label} for ${AppState.boosterCost} coins?',
-        ok: 'Buy',
+        tr.gameGetBooster(type.label),
+        tr.gameBuyBoosterQuestion(type.label, AppState.boosterCost),
+        ok: tr.buy,
       );
       if (!buy || !mounted) return;
       if (!app.buyBooster(type)) {
         await confirm(
           context,
-          'Not enough coins',
-          'Win levels to earn more coins!',
-          ok: 'OK',
-          cancel: 'Close',
+          tr.notEnoughCoins,
+          tr.winLevelsForCoins,
+          ok: tr.ok,
+          cancel: tr.close,
         );
         return;
       }
@@ -411,7 +412,10 @@ class GameScreenState extends State<GameScreen> {
           _restartHintTimer();
         }
       case 'ad':
-        final ok = await _scope.ads.showRewarded(context, reward: '+3 moves');
+        final ok = await _scope.ads.showRewarded(
+          context,
+          reward: tr.gamePlusMoves(3),
+        );
         if (!mounted) return;
         if (ok) {
           _adUsed = true;
@@ -535,7 +539,7 @@ class GameScreenState extends State<GameScreen> {
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeOutBack,
                             child: CandyButton.label(
-                              'Share!',
+                              tr.gameShareButton,
                               key: const Key('share-combo'),
                               colors: CandyColors.purple,
                               icon: GameIcons.gift,
@@ -574,7 +578,7 @@ class GameScreenState extends State<GameScreen> {
               key: const Key('pause'),
               onTap: _pause,
               size: 48,
-              label: 'Pause',
+              label: tr.gamePause,
             ),
           ),
           const SizedBox(width: 8),
@@ -609,8 +613,8 @@ class GameScreenState extends State<GameScreen> {
                             fit: BoxFit.scaleDown,
                             child: GameText(
                               widget.testMode
-                                  ? 'Test level'
-                                  : 'Level ${level.id}',
+                                  ? tr.gameTestLevel
+                                  : tr.levelN(level.id),
                               size: 16,
                               color: Palette.sun,
                             ),
@@ -776,7 +780,7 @@ class GameScreenState extends State<GameScreen> {
                         child: Text(
                           active == BoosterType.freeSwap &&
                                   freeSwapFirst != null
-                              ? 'Now tap the second tile.'
+                              ? tr.gameTapSecondTile
                               : active.help,
                           style: const TextStyle(
                             color: Colors.white,
@@ -838,8 +842,13 @@ class _GravityChip extends StatelessWidget {
     final n = shiftIn;
     return Tooltip(
       message: n == null
-          ? 'Gravity ${gravity.name}'
-          : 'Gravity turns in $n move${n == 1 ? '' : 's'}',
+          ? switch (gravity) {
+              Gravity.down => tr.gameGravityDown,
+              Gravity.up => tr.gameGravityUp,
+              Gravity.left => tr.gameGravityLeft,
+              Gravity.right => tr.gameGravityRight,
+            }
+          : tr.gameGravityTurnsIn(n),
       child: n == null
           ? arrow
           : Row(
@@ -886,8 +895,8 @@ class _MovesBadge extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text(
-              'MOVES',
+            Text(
+              tr.gameMovesBadge,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 10,

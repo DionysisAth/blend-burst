@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../l10n/l10n.dart';
 import '../screens/dialogs.dart';
 import 'ad_service.dart';
 
@@ -236,11 +237,10 @@ class AdMobAds implements AdService {
       if (context.mounted) {
         await confirm(
           context,
-          'No video right now',
-          'There is no video to watch at the moment. Please try again in a '
-              'little while.',
-          ok: 'OK',
-          cancel: 'Close',
+          tr.adsNoVideo,
+          tr.adsNoVideoBody,
+          ok: tr.ok,
+          cancel: tr.close,
         );
       }
       return false;

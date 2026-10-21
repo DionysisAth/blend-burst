@@ -8,6 +8,8 @@ import '../app/scope.dart';
 import '../core/bot.dart';
 import '../core/level.dart';
 import '../core/models.dart';
+import '../l10n/content.dart';
+import '../l10n/l10n.dart';
 import '../ui/tile_art.dart';
 import '../ui/widgets.dart';
 import 'game_screen.dart';
@@ -56,7 +58,7 @@ class _EditorScreenState extends State<EditorScreen> {
   int gravityEvery = 0;
   Gravity zoneDir = Gravity.right;
   int id = 100;
-  String name = 'Custom level';
+  String name = tr.editorCustomLevel;
   int moves = 20;
   List<TileColor> colors = [
     TileColor.red,
@@ -215,7 +217,7 @@ class _EditorScreenState extends State<EditorScreen> {
         text: const JsonEncoder.withIndent('  ').convert(l.toJson()),
       ),
     );
-    if (mounted) _toast('Level JSON copied to clipboard');
+    if (mounted) _toast(tr.editorJsonCopied);
   }
 
   Future<void> _importJson() async {
@@ -226,7 +228,7 @@ class _EditorScreenState extends State<EditorScreen> {
     final text = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Import level JSON'),
+        title: Text(tr.editorImportTitle),
         content: TextField(
           controller: controller,
           maxLines: 10,
@@ -235,11 +237,11 @@ class _EditorScreenState extends State<EditorScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(tr.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
-            child: const Text('Import'),
+            child: Text(tr.editorImport),
           ),
         ],
       ),
@@ -250,9 +252,9 @@ class _EditorScreenState extends State<EditorScreen> {
       _load(
         LevelDef.fromJson(Map<String, dynamic>.from(jsonDecode(text) as Map)),
       );
-      _toast('Level imported');
+      _toast(tr.editorImported);
     } catch (e) {
-      _toast('Invalid level: $e');
+      _toast(tr.editorInvalidLevel('$e'));
     }
   }
 
@@ -275,7 +277,7 @@ class _EditorScreenState extends State<EditorScreen> {
       final r = await evaluateInBackground(l);
       if (mounted) setState(() => botResult = r.toString());
     } catch (e) {
-      if (mounted) setState(() => botResult = 'Bot failed: $e');
+      if (mounted) setState(() => botResult = tr.editorBotFailed('$e'));
     } finally {
       if (mounted) setState(() => botRunning = false);
     }
@@ -287,32 +289,32 @@ class _EditorScreenState extends State<EditorScreen> {
     final rows = layout.length, cols = layout[0].length;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Level editor'),
+        title: Text(tr.editorTitle),
         actions: [
           PopupMenuButton<int>(
-            tooltip: 'Load level',
+            tooltip: tr.editorLoadLevel,
             icon: const Icon(Icons.folder_open),
             onSelected: (i) => _load(levels[i].copy()),
             itemBuilder: (_) => [
               for (var i = 0; i < levels.length; i++)
                 PopupMenuItem(
                   value: i,
-                  child: Text('${levels[i].id}. ${levels[i].name}'),
+                  child: Text('${levels[i].id}. ${levelName(levels[i])}'),
                 ),
             ],
           ),
           IconButton(
-            tooltip: 'Import JSON',
+            tooltip: tr.editorImportJson,
             icon: const Icon(Icons.content_paste),
             onPressed: _importJson,
           ),
           IconButton(
-            tooltip: 'Copy JSON',
+            tooltip: tr.editorCopyJson,
             icon: const Icon(Icons.copy),
             onPressed: _copyJson,
           ),
           IconButton(
-            tooltip: 'Play test',
+            tooltip: tr.editorPlayTest,
             icon: const Icon(Icons.play_arrow),
             onPressed: _playTest,
           ),
@@ -348,22 +350,22 @@ class _EditorScreenState extends State<EditorScreen> {
               for (final t in EditTool.values)
                 ChoiceChip(
                   label: Text(switch (t) {
-                    EditTool.playable => 'Cell',
-                    EditTool.hole => 'Hole',
-                    EditTool.stain => 'Stain',
-                    EditTool.glass1 => 'Glass 1',
-                    EditTool.glass2 => 'Glass 2',
-                    EditTool.glass3 => 'Glass 3',
-                    EditTool.switchTile => 'Gravity switch',
-                    EditTool.tile => 'Tile',
-                    EditTool.clearTile => 'Random tile',
-                    EditTool.lock1 => 'Chain',
-                    EditTool.lock2 => 'Double chain',
-                    EditTool.ink => 'Ink',
-                    EditTool.bucket => 'Bucket',
-                    EditTool.filter => 'Color filter',
-                    EditTool.zone => 'Gravity zone',
-                    EditTool.clearOverlay => 'Clear filter/zone',
+                    EditTool.playable => tr.editorToolCell,
+                    EditTool.hole => tr.editorToolHole,
+                    EditTool.stain => tr.editorToolStain,
+                    EditTool.glass1 => tr.editorToolGlass(1),
+                    EditTool.glass2 => tr.editorToolGlass(2),
+                    EditTool.glass3 => tr.editorToolGlass(3),
+                    EditTool.switchTile => tr.editorToolSwitch,
+                    EditTool.tile => tr.editorToolTile,
+                    EditTool.clearTile => tr.editorToolRandomTile,
+                    EditTool.lock1 => tr.editorToolChain,
+                    EditTool.lock2 => tr.editorToolDoubleChain,
+                    EditTool.ink => tr.editorToolInk,
+                    EditTool.bucket => tr.editorToolBucket,
+                    EditTool.filter => tr.editorToolFilter,
+                    EditTool.zone => tr.editorToolZone,
+                    EditTool.clearOverlay => tr.editorToolClearOverlay,
                   }),
                   selected: tool == t,
                   onSelected: (_) => setState(() => tool = t),
@@ -413,36 +415,48 @@ class _EditorScreenState extends State<EditorScreen> {
           TextFormField(
             initialValue: name,
             key: ValueKey('name-$id-$name'),
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(labelText: tr.editorName),
             onChanged: (v) => name = v,
           ),
-          _stepper('Rows', rows, 4, 10, (v) => _resize(v, cols)),
-          _stepper('Columns', cols, 4, 10, (v) => _resize(rows, v)),
-          _stepper('Moves', moves, 5, 60, (v) => setState(() => moves = v)),
-          _stepper('Level id', id, 1, 9999, (v) => setState(() => id = v)),
+          _stepper(tr.editorRows, rows, 4, 10, (v) => _resize(v, cols)),
+          _stepper(tr.editorColumns, cols, 4, 10, (v) => _resize(rows, v)),
           _stepper(
-            'Buckets in total',
+            tr.editorMoves,
+            moves,
+            5,
+            60,
+            (v) => setState(() => moves = v),
+          ),
+          _stepper(
+            tr.editorLevelId,
+            id,
+            1,
+            9999,
+            (v) => setState(() => id = v),
+          ),
+          _stepper(
+            tr.editorBucketsTotal,
             buckets,
             0,
             20,
             (v) => setState(() => buckets = v),
           ),
           _stepper(
-            'Buckets on board at once',
+            tr.editorBucketsOnBoard,
             bucketsOnBoard,
             1,
             4,
             (v) => setState(() => bucketsOnBoard = v),
           ),
           _stepper(
-            'Gravity turns every N moves (0 = off)',
+            tr.editorGravityEvery,
             gravityEvery,
             0,
             10,
             (v) => setState(() => gravityEvery = v),
           ),
           const SizedBox(height: 8),
-          const Text('Gravity'),
+          Text(tr.editorGravity),
           SegmentedButton<Gravity>(
             segments: const [
               ButtonSegment(
@@ -460,18 +474,18 @@ class _EditorScreenState extends State<EditorScreen> {
             onSelectionChanged: (s) => setState(() => gravity = s.first),
           ),
           SwitchListTile(
-            title: const Text('Blending allowed'),
+            title: Text(tr.editorBlending),
             value: blending,
             onChanged: (v) => setState(() => blending = v),
           ),
           SwitchListTile(
-            title: const Text('Hard level'),
+            title: Text(tr.editorHard),
             value: hard,
             onChanged: (v) => setState(() => hard = v),
           ),
           ListTile(
             title: Text(
-              'Gravity switch spawn chance: ${(switchChance * 100).toStringAsFixed(0)}%',
+              tr.editorSwitchChance((switchChance * 100).toStringAsFixed(0)),
             ),
             subtitle: Slider(
               value: switchChance,
@@ -480,7 +494,7 @@ class _EditorScreenState extends State<EditorScreen> {
               onChanged: (v) => setState(() => switchChance = v),
             ),
           ),
-          const Text('Colors'),
+          Text(tr.editorColors),
           Wrap(
             spacing: 4,
             children: [
@@ -502,10 +516,10 @@ class _EditorScreenState extends State<EditorScreen> {
           const Divider(),
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Goals',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                  tr.editorGoals,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
               TextButton.icon(
@@ -513,13 +527,13 @@ class _EditorScreenState extends State<EditorScreen> {
                   () => goals = [...goals, const Goal(GoalType.stains, 0)],
                 ),
                 icon: const Icon(Icons.add),
-                label: const Text('Add goal'),
+                label: Text(tr.editorAddGoal),
               ),
             ],
           ),
           for (var i = 0; i < goals.length; i++) _goalRow(i),
           const Divider(),
-          const Text('Star thresholds (score)'),
+          Text(tr.editorStarThresholds),
           Row(
             children: [
               for (var i = 0; i < 3; i++)
@@ -530,7 +544,9 @@ class _EditorScreenState extends State<EditorScreen> {
                       key: ValueKey('star-$i-${stars[i]}-$id'),
                       initialValue: '${stars[i]}',
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(labelText: '${i + 1} star'),
+                      decoration: InputDecoration(
+                        labelText: tr.editorStarN(i + 1),
+                      ),
                       onChanged: (v) => stars[i] = int.tryParse(v) ?? stars[i],
                     ),
                   ),
@@ -540,9 +556,7 @@ class _EditorScreenState extends State<EditorScreen> {
           TextFormField(
             key: ValueKey('tut-$id-$name'),
             initialValue: tutorial ?? '',
-            decoration: const InputDecoration(
-              labelText: 'Tutorial text (optional)',
-            ),
+            decoration: InputDecoration(labelText: tr.editorTutorial),
             onChanged: (v) => tutorial = v.trim().isEmpty ? null : v,
           ),
           const SizedBox(height: 12),
@@ -551,7 +565,7 @@ class _EditorScreenState extends State<EditorScreen> {
               FilledButton.icon(
                 onPressed: _playTest,
                 icon: const Icon(Icons.play_arrow),
-                label: const Text('Play test'),
+                label: Text(tr.editorPlayTest),
               ),
               const SizedBox(width: 8),
               OutlinedButton.icon(
@@ -563,7 +577,7 @@ class _EditorScreenState extends State<EditorScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.smart_toy),
-                label: const Text('Bot test (12 plays)'),
+                label: Text(tr.editorBotTest(12)),
               ),
             ],
           ),
@@ -587,7 +601,7 @@ class _EditorScreenState extends State<EditorScreen> {
   ) {
     return Row(
       children: [
-        Expanded(child: Text('$label: $value')),
+        Expanded(child: Text(tr.editorStepper(label, value))),
         IconButton(
           onPressed: value > min ? () => onChanged(value - 1) : null,
           icon: const Icon(Icons.remove_circle_outline),
@@ -609,7 +623,7 @@ class _EditorScreenState extends State<EditorScreen> {
           value: g.type,
           items: [
             for (final t in GoalType.values)
-              DropdownMenuItem(value: t, child: Text(t.name)),
+              DropdownMenuItem(value: t, child: Text(_goalTypeLabel(t))),
           ],
           onChanged: (t) {
             if (t == null) return;
@@ -642,8 +656,8 @@ class _EditorScreenState extends State<EditorScreen> {
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               labelText: g.type == GoalType.score || g.type == GoalType.collect
-                  ? 'Target'
-                  : 'Count (0 = all)',
+                  ? tr.editorTarget
+                  : tr.editorCount,
             ),
             onChanged: (v) {
               final n = int.tryParse(v);
@@ -661,6 +675,16 @@ class _EditorScreenState extends State<EditorScreen> {
     );
   }
 }
+
+String _goalTypeLabel(GoalType t) => switch (t) {
+  GoalType.score => tr.editorGoalScore,
+  GoalType.stains => tr.editorGoalStains,
+  GoalType.glass => tr.editorGoalGlass,
+  GoalType.collect => tr.editorGoalCollect,
+  GoalType.locks => tr.editorGoalLocks,
+  GoalType.ink => tr.editorGoalInk,
+  GoalType.drop => tr.editorGoalDrop,
+};
 
 class _EditorPainter extends CustomPainter {
   final List<List<String>> layout;

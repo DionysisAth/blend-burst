@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/level.dart';
 import '../core/models.dart';
 import '../core/session.dart';
+import '../l10n/l10n.dart';
 import 'art_cache.dart';
 import 'game_ui.dart';
 import 'icons.dart';
@@ -97,19 +98,19 @@ Widget goalIcon(Goal g, {double size = 28}) {
 String goalText(Goal g, int target) {
   switch (g.type) {
     case GoalType.score:
-      return 'Reach $target points';
+      return tr.gameGoalScore(target);
     case GoalType.stains:
-      return 'Clear $target paint stains';
+      return tr.gameGoalStains(target);
     case GoalType.glass:
-      return 'Break $target glass blocks';
+      return tr.gameGoalGlass(target);
     case GoalType.collect:
-      return 'Collect $target ${g.color!.label}';
+      return tr.gameGoalCollect(target, g.color!.label);
     case GoalType.locks:
-      return 'Break $target chains';
+      return tr.gameGoalLocks(target);
     case GoalType.ink:
-      return 'Clear all the ink';
+      return tr.gameGoalInk;
     case GoalType.drop:
-      return 'Bring $target paint buckets to the exit';
+      return tr.gameGoalDrop(target);
   }
 }
 
@@ -168,7 +169,7 @@ class GoalChip extends StatelessWidget {
   static String _short(int v) {
     if (v <= 0) return '0';
     if (v >= 10000) {
-      return '${(v / 1000).toStringAsFixed(v >= 100000 ? 0 : 1)}k';
+      return tr.gameThousands((v / 1000).toStringAsFixed(v >= 100000 ? 0 : 1));
     }
     return '$v';
   }
@@ -203,7 +204,7 @@ class StarRow extends StatelessWidget {
 }
 
 String formatDuration(Duration d) {
-  if (d.inHours > 0) return '${d.inHours}h ${d.inMinutes % 60}m';
+  if (d.inHours > 0) return tr.gameHoursMinutes(d.inHours, d.inMinutes % 60);
   final m = d.inMinutes;
   final s = d.inSeconds % 60;
   return '$m:${s.toString().padLeft(2, '0')}';

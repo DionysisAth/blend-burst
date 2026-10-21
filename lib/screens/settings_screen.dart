@@ -5,6 +5,7 @@ import '../app/admob.dart';
 import '../app/economy.dart';
 import '../app/metrics.dart';
 import '../app/scope.dart';
+import '../l10n/l10n.dart';
 import '../ui/game_ui.dart';
 import '../ui/icons.dart';
 import '../ui/tile_art.dart';
@@ -32,7 +33,7 @@ class MenuPage extends StatelessWidget {
                   children: [
                     RoundButton(
                       GameIcons.back,
-                      label: 'Back',
+                      label: tr.back,
                       size: 44,
                       colors: CandyColors.blue,
                       onTap: () => Navigator.of(context).maybePop(),
@@ -137,14 +138,38 @@ class SettingsScreen extends StatelessWidget {
       onTap: onTap,
     );
     return MenuPage(
-      title: 'Settings',
+      title: tr.settings,
       child: ListView(
         children: [
-          const _Card(
+          _Card(
             children: [
-              Padding(
+              const Padding(
                 padding: EdgeInsets.symmetric(vertical: 10),
                 child: SoundToggles(),
+              ),
+              ListTile(
+                key: const Key('settings-language'),
+                leading: Container(
+                  width: 44,
+                  height: 44,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [CandyColors.green.top, CandyColors.green.bottom],
+                    ),
+                    border: Border.all(color: Colors.white, width: 2.5),
+                  ),
+                  child: const GameIcon(GameIcons.map),
+                ),
+                title: Text(tr.language, style: _labelStyle),
+                subtitle: Text(
+                  d.language == null
+                      ? tr.languageSystem
+                      : Lang.names[d.language] ?? d.language!,
+                  style: _subStyle,
+                ),
+                onTap: () => showLanguagePicker(context),
               ),
             ],
           ),
@@ -157,20 +182,20 @@ class SettingsScreen extends StatelessWidget {
           _Card(
             children: [
               sw(
-                'Move hints',
-                'Show a possible move after 5 seconds',
+                tr.settingsMoveHints,
+                tr.settingsMoveHintsSub,
                 d.hints,
                 app.setHints,
               ),
               sw(
-                'Tap to activate specials',
-                'Tap a special tile to fire it (uses a move)',
+                tr.settingsTapActivate,
+                tr.settingsTapActivateSub,
                 d.tapActivate,
                 app.setTapActivate,
               ),
               sw(
-                'Reminders',
-                'Full lives, daily gift and event reminders',
+                tr.settingsReminders,
+                tr.settingsRemindersSub,
                 d.notifications,
                 (v) async {
                   if (!v) {
@@ -184,11 +209,10 @@ class SettingsScreen extends StatelessWidget {
                   } else if (context.mounted) {
                     await confirm(
                       context,
-                      'Reminders',
-                      'Notifications are turned off for Blend Burst. You can '
-                          'allow them in your phone settings.',
-                      ok: 'OK',
-                      cancel: 'Close',
+                      tr.settingsReminders,
+                      tr.settingsRemindersOff,
+                      ok: tr.ok,
+                      cancel: tr.close,
                     );
                   }
                 },
@@ -200,8 +224,8 @@ class SettingsScreen extends StatelessWidget {
               link(
                 GameIcons.splash,
                 CandyColors.green,
-                'Level editor',
-                'Build, play-test and export JSON levels',
+                tr.settingsEditor,
+                tr.settingsEditorSub,
                 () => Navigator.of(
                   context,
                 ).push(MaterialPageRoute(builder: (_) => const EditorScreen())),
@@ -209,8 +233,8 @@ class SettingsScreen extends StatelessWidget {
               link(
                 GameIcons.star,
                 CandyColors.yellow,
-                'Analytics',
-                'Win rates and recent events on this device',
+                tr.settingsAnalytics,
+                tr.settingsAnalyticsSub,
                 () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const AnalyticsScreen()),
                 ),
@@ -222,8 +246,8 @@ class SettingsScreen extends StatelessWidget {
                       ? link(
                           GameIcons.check,
                           CandyColors.blue,
-                          'Privacy choices',
-                          'Change your ad consent',
+                          tr.settingsPrivacyChoices,
+                          tr.settingsPrivacyChoicesSub,
                           ads.showPrivacyOptions,
                         )
                       : const SizedBox.shrink(),
@@ -231,8 +255,8 @@ class SettingsScreen extends StatelessWidget {
               link(
                 GameIcons.lock,
                 CandyColors.purple,
-                'Privacy policy',
-                'How the game handles your data',
+                tr.settingsPrivacyPolicy,
+                tr.settingsPrivacyPolicySub,
                 () async {
                   try {
                     await launchUrl(
@@ -245,18 +269,17 @@ class SettingsScreen extends StatelessWidget {
               link(
                 GameIcons.retry,
                 CandyColors.red,
-                'Reset progress',
-                'Start over from level 1',
+                tr.settingsReset,
+                tr.settingsResetSub,
                 () async {
                   final cloud = scope.cloud;
                   final ok = await confirm(
                     context,
-                    'Reset?',
+                    tr.settingsResetTitle,
                     cloud != null && cloud.signedIn
-                        ? 'All stars, coins and boosters will be lost, '
-                              'here and in your cloud save.'
-                        : 'All stars, coins and boosters will be lost.',
-                    ok: 'Reset',
+                        ? tr.settingsResetCloud
+                        : tr.settingsResetLocal,
+                    ok: tr.settingsResetOk,
                   );
                   if (!ok) return;
                   app.resetProgress();
@@ -265,12 +288,12 @@ class SettingsScreen extends StatelessWidget {
               ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.all(16),
+          Padding(
+            padding: const EdgeInsets.all(16),
             child: Text(
-              'Blend Burst by NWBN • nwbn.online\nMusic and sounds are made for this game.',
+              'Blend Burst by NWBN • nwbn.online\n${tr.settingsCredits}',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
@@ -293,9 +316,9 @@ class AnalyticsScreen extends StatelessWidget {
     final m = Metrics(d, dayNumber(DateTime.now()));
     String pct(double v) => '${(v * 100).toStringAsFixed(0)}%';
     String day(int n) => switch (m.retainedOnDay(n)) {
-      true => 'yes',
-      false => 'no',
-      null => 'not yet',
+      true => tr.settingsAnalyticsYes,
+      false => tr.settingsAnalyticsNo,
+      null => tr.settingsAnalyticsNotYet,
     };
     Widget row(String k, String v) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
@@ -311,30 +334,41 @@ class AnalyticsScreen extends StatelessWidget {
       ),
     );
     return MenuPage(
-      title: 'Analytics',
+      title: tr.settingsAnalytics,
       child: ListView(
         children: [
           _Card(
             children: [
-              const ListTile(title: Text('Key metrics', style: _labelStyle)),
+              ListTile(
+                title: Text(tr.settingsAnalyticsKeyMetrics, style: _labelStyle),
+              ),
               row(
-                'Back on day 1 / 7 / 30',
+                tr.settingsAnalyticsRetention,
                 '${day(1)} / ${day(7)} / ${day(30)}',
               ),
-              row('Levels per session', m.levelsPerSession.toStringAsFixed(1)),
-              row('Sessions per day', m.sessionsPerDay.toStringAsFixed(1)),
-              row('Win rate', pct(m.winRate)),
               row(
-                'Attempts per won level',
+                tr.settingsAnalyticsLevelsPerSession,
+                m.levelsPerSession.toStringAsFixed(1),
+              ),
+              row(
+                tr.settingsAnalyticsSessionsPerDay,
+                m.sessionsPerDay.toStringAsFixed(1),
+              ),
+              row(tr.settingsAnalyticsWinRate, pct(m.winRate)),
+              row(
+                tr.settingsAnalyticsAttemptsPerWin,
                 m.attemptsPerWonLevel.toStringAsFixed(1),
               ),
-              row('Extra moves bought on fail', pct(m.extraMovesRate)),
-              row('Ads watched per day', m.adsPerDay.toStringAsFixed(1)),
-              row('Tutorials seen', '${m.tutorialsSeen}'),
-              row('Purchases', '${m.purchases}'),
+              row(tr.settingsAnalyticsExtraMoves, pct(m.extraMovesRate)),
+              row(
+                tr.settingsAnalyticsAdsPerDay,
+                m.adsPerDay.toStringAsFixed(1),
+              ),
+              row(tr.settingsAnalyticsTutorialsSeen, '${m.tutorialsSeen}'),
+              row(tr.settingsAnalyticsPurchases, '${m.purchases}'),
               if (m.hardestLevels().isNotEmpty)
                 row(
-                  'Hardest levels',
+                  tr.settingsAnalyticsHardest,
                   m.hardestLevels().map((id) => '$id').join(', '),
                 ),
             ],
@@ -343,21 +377,25 @@ class AnalyticsScreen extends StatelessWidget {
             children: [
               ListTile(
                 title: Text(
-                  'Sessions: ${d.sessions}   Win streak: ${d.winStreak}',
+                  tr.settingsAnalyticsSessions(d.sessions, d.winStreak),
                   style: _labelStyle,
                 ),
               ),
               if (played.isEmpty)
-                const ListTile(
-                  title: Text('No levels played yet.', style: _subStyle),
+                ListTile(
+                  title: Text(tr.settingsAnalyticsNoLevels, style: _subStyle),
                 ),
               for (final id in played)
                 ListTile(
                   dense: true,
-                  title: Text('Level $id', style: _labelStyle),
+                  title: Text(tr.levelN(id), style: _labelStyle),
                   trailing: Text(
-                    '${d.wins[id] ?? 0}/${d.attempts[id]} wins '
-                    '(${(100 * (d.wins[id] ?? 0) / d.attempts[id]!).toStringAsFixed(0)}%)',
+                    tr.settingsAnalyticsWins(
+                      d.wins[id] ?? 0,
+                      d.attempts[id]!,
+                      (100 * (d.wins[id] ?? 0) / d.attempts[id]!)
+                          .toStringAsFixed(0),
+                    ),
                     style: _subStyle,
                   ),
                 ),
@@ -365,7 +403,9 @@ class AnalyticsScreen extends StatelessWidget {
           ),
           _Card(
             children: [
-              const ListTile(title: Text('Recent events', style: _labelStyle)),
+              ListTile(
+                title: Text(tr.settingsAnalyticsRecent, style: _labelStyle),
+              ),
               for (final e in d.events.reversed.take(60))
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -385,4 +425,83 @@ class AnalyticsScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Lets the player pick the game's language, or follow the phone's.
+Future<void> showLanguagePicker(BuildContext context) {
+  final app = AppScope.read(context).app;
+  final chosen = app.data.language;
+  final phone = Lang.names[Lang.resolve(null).languageCode]!;
+  return showGameDialog<void>(
+    context,
+    dismissible: true,
+    builder: (ctx) {
+      Widget option(String? code, String name, {String? sub}) {
+        final selected = code == chosen;
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Material(
+            color: selected ? const Color(0xFFE6F7EC) : const Color(0xFFFFFBF4),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(
+                color: selected ? Palette.mint : const Color(0xFFFFD9A8),
+                width: selected ? 3 : 2,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              key: Key('lang-${code ?? 'system'}'),
+              onTap: () {
+                UiSounds.click?.call();
+                Navigator.of(ctx).pop();
+                if (code != chosen) app.setLanguage(code);
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 10, 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(name, style: _labelStyle),
+                          if (sub != null) Text(sub, style: _subStyle),
+                        ],
+                      ),
+                    ),
+                    if (selected)
+                      const GameIcon(GameIcons.check, size: 28)
+                    else
+                      const SizedBox(width: 28, height: 28),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      final height = MediaQuery.sizeOf(ctx).height;
+      return GamePanel(
+        title: tr.language,
+        ribbonColor: Palette.mint,
+        onClose: () => Navigator.of(ctx).pop(),
+        padding: const EdgeInsets.fromLTRB(14, 44, 14, 14),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: (height * 0.62).clamp(220, 560),
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            padding: EdgeInsets.zero,
+            children: [
+              option(null, tr.languageSystem, sub: phone),
+              for (final c in Lang.codes) option(c, Lang.names[c]!),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

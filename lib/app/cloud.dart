@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:games_services/games_services.dart';
 
+import '../l10n/l10n.dart';
 import 'achievements.dart';
 import 'app_state.dart';
 import 'games_ids.dart';
@@ -131,7 +132,7 @@ class PlayGames implements GamesBackend {
     // The sign-in screen waits for the player, so allow plenty of time.
     await _guard(GamesServices.signIn, timeout: const Duration(minutes: 3));
     if (!await isSignedIn()) return null;
-    return await playerName() ?? 'Player';
+    return await playerName() ?? tr.cloudPlayer;
   }
 
   @override
@@ -290,7 +291,7 @@ class CloudSync extends ChangeNotifier {
     _set(CloudStatus.busy);
     final name = await backend.signIn();
     if (name == null) {
-      _set(CloudStatus.signedOut, msg: 'Could not sign in to Play Games.');
+      _set(CloudStatus.signedOut, msg: tr.cloudSignInFailed);
       return false;
     }
     player = name;
@@ -310,14 +311,14 @@ class CloudSync extends ChangeNotifier {
     try {
       final names = await backend.saveNames();
       if (names == null) {
-        message = 'Could not reach the cloud save. Try again later.';
+        message = tr.cloudReachFailed;
         return false;
       }
       if (names.contains(GamesConfig.saveName)) {
         final raw = await backend.load(GamesConfig.saveName);
         final cloud = raw == null ? null : SaveData.tryParse(raw);
         if (cloud == null) {
-          message = 'Could not read the cloud save. Try again later.';
+          message = tr.cloudReadFailed;
           return false;
         }
         final merged = SaveData.merge(app.data, cloud);
@@ -332,12 +333,12 @@ class CloudSync extends ChangeNotifier {
         lastSync = DateTime.now();
         message = null;
       } else {
-        message = 'Could not upload to the cloud save. Try again later.';
+        message = tr.cloudUploadFailed;
       }
       return ok;
     } catch (e) {
       debugPrint('Cloud sync failed: $e');
-      message = 'Cloud save failed. Try again later.';
+      message = tr.cloudSyncFailed;
       return false;
     } finally {
       _syncing = false;
@@ -402,10 +403,10 @@ class CloudSync extends ChangeNotifier {
   /// to show when they cannot be opened.
   Future<String?> openLeaderboards() async {
     if (!_available) return notSetUp;
-    if (!signedIn && !await signIn()) return 'Sign in to Play Games first.';
+    if (!signedIn && !await signIn()) return tr.cloudSignInFirst;
     unawaited(_postScores());
     if (!await backend.showLeaderboards()) {
-      return 'Could not open the leaderboards.';
+      return tr.cloudLeaderboardsFailed;
     }
     return null;
   }
@@ -414,16 +415,15 @@ class CloudSync extends ChangeNotifier {
   /// to show when they cannot be opened.
   Future<String?> openAchievements() async {
     if (!_available) return notSetUp;
-    if (!signedIn && !await signIn()) return 'Sign in to Play Games first.';
+    if (!signedIn && !await signIn()) return tr.cloudSignInFirst;
     unawaited(_postScores());
     if (!await backend.showAchievements()) {
-      return 'Could not open the achievements.';
+      return tr.cloudAchievementsFailed;
     }
     return null;
   }
 
-  static const notSetUp =
-      'Google Play Games is not set up for this version yet.';
+  static String get notSetUp => tr.cloudNotSetUp;
 
   @override
   void dispose() {

@@ -15,6 +15,7 @@ import 'app/notifications.dart';
 import 'app/play_store.dart';
 import 'app/scope.dart';
 import 'app/store.dart';
+import 'l10n/l10n.dart';
 import 'screens/map_screen.dart';
 import 'ui/game_ui.dart';
 import 'ui/logo.dart';
@@ -46,15 +47,12 @@ void installErrorHandlers() {
     return true;
   };
   if (kReleaseMode) {
-    ErrorWidget.builder = (details) => const Material(
-      color: Color(0xFFF3E5F5),
+    ErrorWidget.builder = (details) => Material(
+      color: const Color(0xFFF3E5F5),
       child: Center(
         child: Padding(
-          padding: EdgeInsets.all(12),
-          child: Text(
-            'Oops, something went wrong here.',
-            textAlign: TextAlign.center,
-          ),
+          padding: const EdgeInsets.all(12),
+          child: Text(tr.errorWidget, textAlign: TextAlign.center),
         ),
       ),
     );
@@ -69,6 +67,7 @@ ThemeData buildTheme() {
     ),
     useMaterial3: true,
     fontFamily: 'Fredoka',
+    fontFamilyFallback: const ['FredokaFallback'],
   );
   return base.copyWith(
     textTheme: base.textTheme.apply(
@@ -161,9 +160,26 @@ class _BlendBurstAppState extends State<BlendBurstApp>
     }
   }
 
+  String? _language;
+
+  /// Rebuilds with the new locale when a language is picked in Settings.
+  void _onAppChanged() {
+    final l = _app?.data.language;
+    if (l == _language) return;
+    _language = l;
+    if (mounted) setState(() {});
+  }
+
+  /// The phone's language changed (only matters when following it).
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _app?.removeListener(_onAppChanged);
     UiSounds.click = null;
     _cloud?.dispose();
     final store = _store;
@@ -200,6 +216,8 @@ class _BlendBurstAppState extends State<BlendBurstApp>
           (_inTests || !PlayStore.supported
               ? const TestStore()
               : PlayStore(app));
+      _language = app.data.language;
+      app.addListener(_onAppChanged);
       setState(() {
         _app = app;
         _levels = levels;
@@ -222,13 +240,20 @@ class _BlendBurstAppState extends State<BlendBurstApp>
   @override
   Widget build(BuildContext context) {
     final app = _app, levels = _levels;
+    final locale = Lang.resolve(app?.data.language);
+    MaterialApp material(Widget home) => MaterialApp(
+      title: 'Blend Burst',
+      debugShowCheckedModeBanner: false,
+      theme: buildTheme(),
+      locale: locale,
+      supportedLocales: [for (final c in Lang.codes) Locale(c)],
+      localizationsDelegates: AppStrings.localizationsDelegates,
+      builder: (context, child) =>
+          LanguageScope(locale: locale, child: child ?? const SizedBox()),
+      home: home,
+    );
     if (app == null || levels == null) {
-      return MaterialApp(
-        title: 'Blend Burst',
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(),
-        home: LoadingScreen(error: _error, onRetry: _load),
-      );
+      return material(LoadingScreen(error: _error, onRetry: _load));
     }
     return AppScope(
       app: app,
@@ -238,12 +263,7 @@ class _BlendBurstAppState extends State<BlendBurstApp>
       reminders: _notifier,
       cloud: _cloud,
       store: _store ?? const TestStore(),
-      child: MaterialApp(
-        title: 'Blend Burst',
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(),
-        home: const MapScreen(),
-      ),
+      child: material(const MapScreen()),
     );
   }
 }
@@ -283,9 +303,9 @@ class LoadingScreen extends StatelessWidget {
                     ),
                   )
                 else ...[
-                  const GameText('Could not load the game', size: 22),
+                  GameText(tr.loadFailed, size: 22),
                   const SizedBox(height: 16),
-                  CandyButton.label('Try again', onTap: onRetry, width: 220),
+                  CandyButton.label(tr.tryAgain, onTap: onRetry, width: 220),
                 ],
               ],
             ),

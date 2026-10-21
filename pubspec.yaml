@@ -30,6 +30,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -62,6 +65,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  generate: true
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -84,6 +88,14 @@ flutter:
           weight: 600
         - asset: assets/fonts/Fredoka-Bold.ttf
           weight: 700
+    # Greek, Cyrillic, Polish, Turkish, Vietnamese... letters that Lilita and
+    # Fredoka do not have (M PLUS Rounded 1c, subset).
+    - family: LilitaFallback
+      fonts:
+        - asset: assets/fonts/RoundedFallback-ExtraBold.ttf
+    - family: FredokaFallback
+      fonts:
+        - asset: assets/fonts/RoundedFallback-Bold.ttf
 
   # To add assets to your application, add an assets section, like this:
   # assets:

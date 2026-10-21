@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../l10n/l10n.dart';
+
 /// A reminder to show at a later time.
 class Reminder {
   final int id;
@@ -88,15 +90,15 @@ class LocalNotifier implements Notifier {
     }
   }
 
-  static const _details = NotificationDetails(
+  static NotificationDetails get _details => NotificationDetails(
     android: AndroidNotificationDetails(
       'reminders',
-      'Reminders',
-      channelDescription: 'Full lives and event reminders',
+      tr.settingsReminders,
+      channelDescription: tr.notificationChannelHelp,
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
     ),
-    iOS: DarwinNotificationDetails(),
+    iOS: const DarwinNotificationDetails(),
   );
 
   @override

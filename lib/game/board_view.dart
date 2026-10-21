@@ -9,6 +9,7 @@ import '../app/audio.dart';
 import '../core/board.dart';
 import '../core/models.dart';
 import '../ui/art_cache.dart';
+import '../l10n/l10n.dart';
 import '../ui/tile_art.dart';
 import 'game_controller.dart';
 import 'sprites.dart';
@@ -297,12 +298,20 @@ class BoardViewState extends State<BoardView>
     }
   }
 
-  void _callout(String text, List<Color> colors) {
+  /// Praise for a cascade of [level] 1..4 (4 is "Spectacular!").
+  void _callout(int level, List<Color> colors) {
+    final words = [
+      '',
+      tr.gamePraiseGreat,
+      tr.gamePraiseAmazing,
+      tr.gamePraiseBrilliant,
+      tr.gamePraiseSpectacular,
+    ];
     callouts
       ..clear()
-      ..add(_Callout(text, colors));
+      ..add(_Callout(words[level], colors));
     widget.audio?.sfx(Sfx.praise);
-    if (text == 'Spectacular!') widget.onSpectacular?.call();
+    if (level == 4) widget.onSpectacular?.call();
   }
 
   void _onStepStart(Step step, BoardSnapshot before) {
@@ -441,20 +450,10 @@ class BoardViewState extends State<BoardView>
                   ? 3
                   : (step.cascade >= 4 ? 2 : (step.cascade >= 3 ? 1 : 0)));
         if (step.effects.any((e) => e.kind == EffectKind.board)) {
-          _callout('Spectacular!', const [
-            Color(0xFFFFF07A),
-            Color(0xFFFF8A1F),
-          ]);
+          _callout(4, const [Color(0xFFFFF07A), Color(0xFFFF8A1F)]);
           _calloutLevel = 4;
         } else if (level > _calloutLevel) {
           _calloutLevel = level;
-          const words = [
-            '',
-            'Great!',
-            'Amazing!',
-            'Brilliant!',
-            'Spectacular!',
-          ];
           const palettes = [
             [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
             [Color(0xFF9CFF8A), Color(0xFF22B84C)],
@@ -462,7 +461,7 @@ class BoardViewState extends State<BoardView>
             [Color(0xFFFFB3E0), Color(0xFFE8368F)],
             [Color(0xFFFFF07A), Color(0xFFFF8A1F)],
           ];
-          _callout(words[level], palettes[level]);
+          _callout(level, palettes[level]);
         }
       case StepKind.blend:
         final to = step.to;
@@ -610,7 +609,7 @@ class BoardViewState extends State<BoardView>
           onPanCancel: _cancelDrag,
           onTapUp: _onTapUp,
           child: Semantics(
-            label: 'Game board',
+            label: tr.gameBoardLabel,
             container: true,
             child: RepaintBoundary(
               child: CustomPaint(
@@ -1208,6 +1207,7 @@ class _BoardPainter extends CustomPainter {
         text: text,
         style: TextStyle(
           fontFamily: 'Lilita',
+          fontFamilyFallback: const ['LilitaFallback'],
           fontSize: size,
           foreground: paint,
           height: 1.0,
