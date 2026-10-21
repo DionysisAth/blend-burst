@@ -1,3 +1,4 @@
+import 'package:blend_burst/app/economy.dart';
 import 'package:blend_burst/app/scope.dart';
 import 'package:blend_burst/core/models.dart';
 import 'package:blend_burst/l10n/l10n.dart';

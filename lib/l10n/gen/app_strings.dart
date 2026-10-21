@@ -5,7 +5,15 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_strings_de.dart';
 import 'app_strings_en.dart';
+import 'app_strings_es.dart';
+import 'app_strings_fr.dart';
+import 'app_strings_id.dart';
+import 'app_strings_ja.dart';
+import 'app_strings_ko.dart';
+import 'app_strings_nl.dart';
+import 'app_strings_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,7 +100,17 @@ abstract class AppStrings {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
+    Locale('en'),
+    Locale('es'),
+    Locale('fr'),
+    Locale('id'),
+    Locale('ja'),
+    Locale('ko'),
+    Locale('nl'),
+    Locale('zh'),
+  ];
 
   /// Button: confirm / dismiss a message.
   ///
@@ -2996,8 +3014,17 @@ class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'de',
+    'en',
+    'es',
+    'fr',
+    'id',
+    'ja',
+    'ko',
+    'nl',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppStringsDelegate old) => false;
@@ -3006,8 +3033,24 @@ class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
 AppStrings lookupAppStrings(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'de':
+      return AppStringsDe();
     case 'en':
       return AppStringsEn();
+    case 'es':
+      return AppStringsEs();
+    case 'fr':
+      return AppStringsFr();
+    case 'id':
+      return AppStringsId();
+    case 'ja':
+      return AppStringsJa();
+    case 'ko':
+      return AppStringsKo();
+    case 'nl':
+      return AppStringsNl();
+    case 'zh':
+      return AppStringsZh();
   }
 
   throw FlutterError(

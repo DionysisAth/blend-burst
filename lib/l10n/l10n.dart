@@ -16,8 +16,14 @@ export 'gen/app_strings.dart';
 AppStrings get tr => Lang.current;
 
 class Lang {
-  /// Languages the game speaks, in the order Settings lists them.
-  static const codes = [
+  /// Languages the game speaks (those with an app_<code>.arb), in the
+  /// order Settings lists them.
+  static final codes = [
+    for (final c in _order)
+      if (AppStrings.supportedLocales.any((l) => l.languageCode == c)) c,
+  ];
+
+  static const _order = [
     'en',
     'el',
     'es',
