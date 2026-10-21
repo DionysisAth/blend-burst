@@ -138,11 +138,15 @@ void main() {
       await shot('pause');
       await tap(find.byKey(const Key('pause-resume')));
       // Out of moves.
-      g.session.movesLeft = 0;
+      g.session.movesLeft = 1;
       g.setState(() {});
       await run(tester, 300);
       g.playHintMove();
-      await run(tester, 3000);
+      for (var i = 0; i < 300; i++) {
+        if (find.byKey(const Key('give-up')).evaluate().isNotEmpty) break;
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+      await run(tester, 600);
       await shot('out_of_moves');
       await tap(find.byKey(const Key('give-up')), 1200);
       await shot('failed');
@@ -159,7 +163,7 @@ void main() {
       }
       await tap(find.byKey(const Key('lives')));
       await shot('lives');
-      await tap(find.text(tr.ok));
+      await tap(find.bySemanticsLabel(tr.close));
       await tap(find.byKey(const Key('settings')));
       await shot('settings');
       await tap(find.byKey(const Key('settings-language')));
