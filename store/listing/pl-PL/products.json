@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Pakiet startowy",
+    "description": "100 złota, po 3 z każdego wzmacniacza i 1 godzina nieskończonych żyć. Jeden na gracza."
+  },
+  "gold50": {
+    "title": "Sakiewka złota",
+    "description": "50 złota"
+  },
+  "gold130": {
+    "title": "Worek złota",
+    "description": "130 złota"
+  },
+  "gold350": {
+    "title": "Skrzynia złota",
+    "description": "350 złota"
+  },
+  "gold800": {
+    "title": "Skarbiec złota",
+    "description": "800 złota"
+  },
+  "noads": {
+    "title": "Bez reklam",
+    "description": "Koniec z przerwami na reklamy między poziomami."
+  },
+  "pass": {
+    "title": "Karnet Premium",
+    "description": "Odblokowuje ścieżkę premium bieżącego sezonu."
+  }
+}

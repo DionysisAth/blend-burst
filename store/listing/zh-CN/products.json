@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "新手礼包",
+    "description": "100金块、每种道具各3个、1小时无限生命。每位玩家限购一次。"
+  },
+  "gold50": {
+    "title": "一小袋金块",
+    "description": "50金块"
+  },
+  "gold130": {
+    "title": "一袋金块",
+    "description": "130金块"
+  },
+  "gold350": {
+    "title": "一箱金块",
+    "description": "350金块"
+  },
+  "gold800": {
+    "title": "一库金块",
+    "description": "800金块"
+  },
+  "noads": {
+    "title": "移除广告",
+    "description": "关卡之间不再有插播广告。"
+  },
+  "pass": {
+    "title": "高级通行证",
+    "description": "解锁当前赛季的高级奖励线。"
+  }
+}

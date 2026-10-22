@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Pack de Inicio",
+    "description": "100 de oro, 3 de cada potenciador y 1 hora de vidas ilimitadas. Uno por jugador."
+  },
+  "gold50": {
+    "title": "Saquito de Oro",
+    "description": "50 de oro"
+  },
+  "gold130": {
+    "title": "Bolsa de Oro",
+    "description": "130 de oro"
+  },
+  "gold350": {
+    "title": "Cofre de Oro",
+    "description": "350 de oro"
+  },
+  "gold800": {
+    "title": "Bóveda de Oro",
+    "description": "800 de oro"
+  },
+  "noads": {
+    "title": "Sin Anuncios",
+    "description": "Se acabaron las pausas publicitarias entre niveles."
+  },
+  "pass": {
+    "title": "Pase Premium",
+    "description": "Desbloquea la ruta premium de la temporada actual."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Starterpaket",
+    "description": "100 Gold, 3 von jedem Booster und 1 Stunde unendlich Leben. Einmal pro Spieler."
+  },
+  "gold50": {
+    "title": "Goldbeutel",
+    "description": "50 Gold"
+  },
+  "gold130": {
+    "title": "Goldsack",
+    "description": "130 Gold"
+  },
+  "gold350": {
+    "title": "Goldtruhe",
+    "description": "350 Gold"
+  },
+  "gold800": {
+    "title": "Goldtresor",
+    "description": "800 Gold"
+  },
+  "noads": {
+    "title": "Werbung entfernen",
+    "description": "Keine Werbepausen mehr zwischen den Leveln."
+  },
+  "pass": {
+    "title": "Premium-Pass",
+    "description": "Schaltet die Premium-Leiste der aktuellen Saison frei."
+  }
+}

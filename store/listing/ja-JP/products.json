@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "スターターパック",
+    "description": "100ゴールド、全ブースター各3個、ライフ無制限1時間。おひとり様1回限り。"
+  },
+  "gold50": {
+    "title": "ゴールドの小袋",
+    "description": "50ゴールド"
+  },
+  "gold130": {
+    "title": "ゴールドの袋",
+    "description": "130ゴールド"
+  },
+  "gold350": {
+    "title": "ゴールドの宝箱",
+    "description": "350ゴールド"
+  },
+  "gold800": {
+    "title": "ゴールドの金庫",
+    "description": "800ゴールド"
+  },
+  "noads": {
+    "title": "広告を削除",
+    "description": "レベル間の広告が表示されなくなります。"
+  },
+  "pass": {
+    "title": "プレミアムパス",
+    "description": "現在のシーズンのプレミアムトラックを解放します。"
+  }
+}

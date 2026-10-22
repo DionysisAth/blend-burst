@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Pacchetto iniziale",
+    "description": "100 oro, 3 di ogni potenziamento e 1 ora di vite infinite. Uno per giocatore."
+  },
+  "gold50": {
+    "title": "Borsellino d'oro",
+    "description": "50 oro"
+  },
+  "gold130": {
+    "title": "Sacchetto d'oro",
+    "description": "130 oro"
+  },
+  "gold350": {
+    "title": "Forziere d'oro",
+    "description": "350 oro"
+  },
+  "gold800": {
+    "title": "Caveau d'oro",
+    "description": "800 oro"
+  },
+  "noads": {
+    "title": "Rimuovi pubblicità",
+    "description": "Niente più pause pubblicitarie tra i livelli."
+  },
+  "pass": {
+    "title": "Pass Premium",
+    "description": "Sblocca il percorso premium della stagione in corso."
+  }
+}

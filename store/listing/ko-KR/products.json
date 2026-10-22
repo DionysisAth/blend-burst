@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "스타터 팩",
+    "description": "100골드, 모든 부스터 3개씩, 무제한 하트 1시간. 플레이어당 1회 한정."
+  },
+  "gold50": {
+    "title": "골드 주머니",
+    "description": "50골드"
+  },
+  "gold130": {
+    "title": "골드 자루",
+    "description": "130골드"
+  },
+  "gold350": {
+    "title": "골드 상자",
+    "description": "350골드"
+  },
+  "gold800": {
+    "title": "골드 금고",
+    "description": "800골드"
+  },
+  "noads": {
+    "title": "광고 제거",
+    "description": "레벨 사이 광고가 더는 없어요."
+  },
+  "pass": {
+    "title": "프리미엄 패스",
+    "description": "현재 시즌의 프리미엄 트랙을 잠금 해제해요."
+  }
+}

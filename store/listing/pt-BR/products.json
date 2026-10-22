@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Pacote Inicial",
+    "description": "100 de ouro, 3 de cada reforço e 1 hora de vidas infinitas. Apenas um por jogador."
+  },
+  "gold50": {
+    "title": "Saquinho de Ouro",
+    "description": "50 de ouro"
+  },
+  "gold130": {
+    "title": "Saco de Ouro",
+    "description": "130 de ouro"
+  },
+  "gold350": {
+    "title": "Baú de Ouro",
+    "description": "350 de ouro"
+  },
+  "gold800": {
+    "title": "Cofre de Ouro",
+    "description": "800 de ouro"
+  },
+  "noads": {
+    "title": "Remover Anúncios",
+    "description": "Chega de intervalos com anúncios entre as fases."
+  },
+  "pass": {
+    "title": "Passe Premium",
+    "description": "Desbloqueia a trilha premium da temporada atual."
+  }
+}

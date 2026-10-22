@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Paket Pemula",
+    "description": "100 emas, 3 dari setiap booster, dan 1 jam nyawa tanpa batas. Satu per pemain."
+  },
+  "gold50": {
+    "title": "Kantong Emas",
+    "description": "50 emas"
+  },
+  "gold130": {
+    "title": "Tas Emas",
+    "description": "130 emas"
+  },
+  "gold350": {
+    "title": "Peti Emas",
+    "description": "350 emas"
+  },
+  "gold800": {
+    "title": "Brankas Emas",
+    "description": "800 emas"
+  },
+  "noads": {
+    "title": "Hapus Iklan",
+    "description": "Tidak ada lagi jeda iklan di antara level."
+  },
+  "pass": {
+    "title": "Pass Premium",
+    "description": "Membuka jalur premium untuk musim yang sedang berjalan."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Pack de départ",
+    "description": "100 or, 3 de chaque bonus et 1 heure de vies illimitées. Un seul par joueur."
+  },
+  "gold50": {
+    "title": "Bourse d’or",
+    "description": "50 or"
+  },
+  "gold130": {
+    "title": "Sac d’or",
+    "description": "130 or"
+  },
+  "gold350": {
+    "title": "Coffre d’or",
+    "description": "350 or"
+  },
+  "gold800": {
+    "title": "Trésor d’or",
+    "description": "800 or"
+  },
+  "noads": {
+    "title": "Sans pubs",
+    "description": "Plus de pauses pub entre les niveaux."
+  },
+  "pass": {
+    "title": "Pass Premium",
+    "description": "Débloque la piste premium de la saison en cours."
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Starterspakket",
+    "description": "100 goud, 3 van elke booster en 1 uur onbeperkt levens. Eén per speler."
+  },
+  "gold50": {
+    "title": "Buidel Goud",
+    "description": "50 goud"
+  },
+  "gold130": {
+    "title": "Zak Goud",
+    "description": "130 goud"
+  },
+  "gold350": {
+    "title": "Kist Goud",
+    "description": "350 goud"
+  },
+  "gold800": {
+    "title": "Kluis Goud",
+    "description": "800 goud"
+  },
+  "noads": {
+    "title": "Geen reclame",
+    "description": "Geen reclameonderbrekingen meer tussen levels."
+  },
+  "pass": {
+    "title": "Premiumpas",
+    "description": "Ontgrendelt het premiumspoor van het huidige seizoen."
+  }
+}
