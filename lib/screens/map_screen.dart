@@ -306,10 +306,14 @@ class _MapScreenState extends State<MapScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Ribbon(
-              episodeName(e),
-              color: Palette.episodeRibbon(e.index),
-              fontSize: 28,
+            // Clear of the side buttons; long names shrink to fit.
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: w - 136),
+              child: Ribbon(
+                episodeName(e),
+                color: Palette.episodeRibbon(e.index),
+                fontSize: 28,
+              ),
             ),
             Transform.translate(
               offset: const Offset(0, -4),
@@ -553,11 +557,15 @@ class _SideButton extends StatelessWidget {
             ),
             Transform.translate(
               offset: const Offset(0, -3),
-              child: GameText(
-                label,
-                size: 13,
-                family: 'Fredoka',
-                strokeWidth: 3,
+              // One line; long translations shrink a little.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: GameText(
+                  label,
+                  size: 13,
+                  family: 'Fredoka',
+                  strokeWidth: 3,
+                ),
               ),
             ),
           ],

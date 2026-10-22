@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/widgets.dart';
 
 import '../core/models.dart';
@@ -68,7 +66,8 @@ class Lang {
   /// otherwise English.
   static Locale resolve(String? chosen, [List<Locale>? phone]) {
     if (chosen != null && codes.contains(chosen)) return Locale(chosen);
-    for (final l in phone ?? ui.PlatformDispatcher.instance.locales) {
+    for (final l
+        in phone ?? WidgetsBinding.instance.platformDispatcher.locales) {
       if (codes.contains(l.languageCode)) return Locale(l.languageCode);
     }
     return const Locale('en');

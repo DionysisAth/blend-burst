@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:blend_burst/app/economy.dart';
 import 'package:blend_burst/app/scope.dart';
 import 'package:blend_burst/core/models.dart';
@@ -37,6 +39,15 @@ AppStrings strings(String code) => lookupAppStrings(Locale(code));
 
 void main() {
   tearDown(() => Lang.use(const Locale('en')));
+
+  test('every translation file is compiled in and listed', () {
+    final files = Directory('lib/l10n')
+        .listSync()
+        .map((f) => RegExp(r'app_(\w+)\.arb$').firstMatch(f.path)?.group(1))
+        .whereType<String>()
+        .toSet();
+    expect(Lang.codes.toSet(), files);
+  });
 
   test('every language has every text', () {
     for (final code in Lang.codes) {
@@ -84,7 +95,7 @@ void main() {
     await run(tester, 800);
     final el = strings('el');
     expect(find.text(el.settings), findsWidgets);
-    final app = AppScope.read(tester.element(find.byType(MapScreen))).app;
+    final app = AppScope.read(tester.element(find.byType(MaterialApp))).app;
     expect(app.data.language, 'el');
     // Back on the map, the side buttons and the world name are Greek too.
     await tester.tap(find.bySemanticsLabel(el.back));

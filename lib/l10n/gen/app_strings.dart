@@ -6,13 +6,19 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_strings_de.dart';
+import 'app_strings_el.dart';
 import 'app_strings_en.dart';
 import 'app_strings_es.dart';
 import 'app_strings_fr.dart';
 import 'app_strings_id.dart';
+import 'app_strings_it.dart';
 import 'app_strings_ja.dart';
 import 'app_strings_ko.dart';
 import 'app_strings_nl.dart';
+import 'app_strings_pl.dart';
+import 'app_strings_pt.dart';
+import 'app_strings_ru.dart';
+import 'app_strings_tr.dart';
 import 'app_strings_zh.dart';
 
 // ignore_for_file: type=lint
@@ -102,13 +108,19 @@ abstract class AppStrings {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('de'),
+    Locale('el'),
     Locale('en'),
     Locale('es'),
     Locale('fr'),
     Locale('id'),
+    Locale('it'),
     Locale('ja'),
     Locale('ko'),
     Locale('nl'),
+    Locale('pl'),
+    Locale('pt'),
+    Locale('ru'),
+    Locale('tr'),
     Locale('zh'),
   ];
 
@@ -3016,13 +3028,19 @@ class _AppStringsDelegate extends LocalizationsDelegate<AppStrings> {
   @override
   bool isSupported(Locale locale) => <String>[
     'de',
+    'el',
     'en',
     'es',
     'fr',
     'id',
+    'it',
     'ja',
     'ko',
     'nl',
+    'pl',
+    'pt',
+    'ru',
+    'tr',
     'zh',
   ].contains(locale.languageCode);
 
@@ -3035,6 +3053,8 @@ AppStrings lookupAppStrings(Locale locale) {
   switch (locale.languageCode) {
     case 'de':
       return AppStringsDe();
+    case 'el':
+      return AppStringsEl();
     case 'en':
       return AppStringsEn();
     case 'es':
@@ -3043,12 +3063,22 @@ AppStrings lookupAppStrings(Locale locale) {
       return AppStringsFr();
     case 'id':
       return AppStringsId();
+    case 'it':
+      return AppStringsIt();
     case 'ja':
       return AppStringsJa();
     case 'ko':
       return AppStringsKo();
     case 'nl':
       return AppStringsNl();
+    case 'pl':
+      return AppStringsPl();
+    case 'pt':
+      return AppStringsPt();
+    case 'ru':
+      return AppStringsRu();
+    case 'tr':
+      return AppStringsTr();
     case 'zh':
       return AppStringsZh();
   }
