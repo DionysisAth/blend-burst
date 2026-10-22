@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Başlangıç Paketi",
+    "description": "100 altın, her güçlendiriciden 3 adet ve 1 saat sınırsız can. Oyuncu başına bir kez."
+  },
+  "gold50": {
+    "title": "Altın Kesesi",
+    "description": "50 altın"
+  },
+  "gold130": {
+    "title": "Altın Torbası",
+    "description": "130 altın"
+  },
+  "gold350": {
+    "title": "Altın Sandığı",
+    "description": "350 altın"
+  },
+  "gold800": {
+    "title": "Altın Hazinesi",
+    "description": "800 altın"
+  },
+  "noads": {
+    "title": "Reklamları Kaldır",
+    "description": "Seviyeler arasında artık reklam arası yok."
+  },
+  "pass": {
+    "title": "Premium Bilet",
+    "description": "Mevcut sezonun premium yolunu açar."
+  }
+}
