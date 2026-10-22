@@ -1,23 +1,44 @@
 """Creates or updates the in-app products in the Play Console from the
 shop's real-money items (lib/app/economy.dart). Prices are in US dollars;
-Google Play converts them for other countries.
+Google Play converts them for other countries. Names and descriptions come
+from store/listing/<language>/products.json.
 
   python3 tool/play/products.py
 """
+import json
+import os
 import sys
 
 from play_api import API, PACKAGE, ApiError, call
 
+# id, price (USD cents)
 PRODUCTS = [
-    # id, title, description, price (USD cents)
-    ('starter', 'Starter Pack', '100 gold, 3 of every booster and 1 hour of unlimited lives. One per player.', 99),
-    ('gold50', 'Pouch of Gold', '50 gold', 99),
-    ('gold130', 'Bag of Gold', '130 gold', 199),
-    ('gold350', 'Chest of Gold', '350 gold', 499),
-    ('gold800', 'Vault of Gold', '800 gold', 999),
-    ('noads', 'Remove Ads', 'No more ad breaks between levels.', 299),
-    ('pass', 'Premium Pass', 'Unlocks the premium track of the current season.', 499),
+    ('starter', 99),
+    ('gold50', 99),
+    ('gold130', 199),
+    ('gold350', 499),
+    ('gold800', 999),
+    ('noads', 299),
+    ('pass', 499),
 ]
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ALSO = {'es-419': ['es-ES', 'es-US']}
+
+
+def listings(sku):
+    """[{languageCode, title, description}] for every translated language."""
+    d = os.path.join(ROOT, 'store/listing')
+    out = []
+    for lang in sorted(os.listdir(d)):
+        p = os.path.join(d, lang, 'products.json')
+        if not os.path.isfile(p):
+            continue
+        item = json.load(open(p, encoding='utf-8'))[sku]
+        for code in [lang] + ALSO.get(lang, []):
+            out.append({'languageCode': code, 'title': item['title'],
+                        'description': item['description']})
+    return out
 
 
 def money(cents):
@@ -25,7 +46,7 @@ def money(cents):
             'nanos': (cents % 100) * 10_000_000}
 
 
-def upsert(sku, title, desc, cents):
+def upsert(sku, cents):
     conv = call('POST', f'{API}/pricing:convertRegionPrices',
                 {'price': money(cents)})
     version = conv['regionVersion']['version']
@@ -49,7 +70,7 @@ def upsert(sku, title, desc, cents):
     body = {
         'packageName': PACKAGE,
         'productId': sku,
-        'listings': [{'languageCode': 'en-US', 'title': title, 'description': desc}],
+        'listings': listings(sku),
         'purchaseOptions': [option],
     }
     call('PATCH', f'{API}/onetimeproducts/{sku}'
@@ -62,9 +83,9 @@ def upsert(sku, title, desc, cents):
 
 
 def main():
-    for sku, title, desc, cents in PRODUCTS:
+    for sku, cents in PRODUCTS:
         try:
-            upsert(sku, title, desc, cents)
+            upsert(sku, cents)
             print(f'{sku}: active at ${cents / 100:.2f}')
         except ApiError as e:
             print(f'{sku}: {e}', file=sys.stderr)

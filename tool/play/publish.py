@@ -7,9 +7,29 @@
 inProgress with --fraction for a staged rollout.
 """
 import argparse
+import os
 import sys
 
 from play_api import Edit, call
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ALSO = {'es-419': ['es-ES', 'es-US']}
+
+
+def release_notes(english):
+    """Notes in every language with a store/listing/<lang>/whatsnew.txt;
+    [english] (if given) replaces the English one."""
+    d = os.path.join(ROOT, 'store/listing')
+    notes = {}
+    for lang in sorted(os.listdir(d)):
+        p = os.path.join(d, lang, 'whatsnew.txt')
+        if os.path.isfile(p):
+            text = open(p, encoding='utf-8').read().strip()
+            for code in [lang] + ALSO.get(lang, []):
+                notes[code] = text
+    if english:
+        notes['en-US'] = english
+    return [{'language': k, 'text': v[:500]} for k, v in notes.items()]
 
 
 def main():
@@ -18,7 +38,8 @@ def main():
     ap.add_argument('--track', default='internal')
     ap.add_argument('--status', default='completed')
     ap.add_argument('--fraction', type=float)
-    ap.add_argument('--notes', default='Bug fixes and improvements.')
+    ap.add_argument('--notes', default='',
+                    help='English notes; default: store/listing/*/whatsnew.txt')
     ap.add_argument('--name')
     a = ap.parse_args()
 
@@ -32,7 +53,7 @@ def main():
         release = {
             'versionCodes': [str(code)],
             'status': a.status,
-            'releaseNotes': [{'language': 'en-US', 'text': a.notes}],
+            'releaseNotes': release_notes(a.notes),
         }
         if a.name:
             release['name'] = a.name

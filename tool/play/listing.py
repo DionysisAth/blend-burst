@@ -1,7 +1,9 @@
-"""Uploads the store listing: texts, contact details, icon, feature graphic
-and phone screenshots (from store/). Run from the repo root:
+"""Uploads the store listing: texts in every language under store/listing/,
+contact details, and the icon, feature graphic and phone screenshots (from
+store/, shared by all languages). Run from the repo root:
 
-  python3 tool/play/listing.py
+  python3 tool/play/listing.py               # texts and images
+  python3 tool/play/listing.py --texts-only
 """
 import glob
 import os
@@ -15,9 +17,19 @@ CONTACT_EMAIL = 'chris96skan@gmail.com'
 WEBSITE = 'https://www.nwbn.online'
 
 
-def read(name):
-    with open(os.path.join(ROOT, 'store/listing', LANG, name)) as f:
+# One Spanish translation serves Latin America, Spain and the US.
+ALSO = {'es-419': ['es-ES', 'es-US']}
+
+
+def read(name, lang=LANG):
+    with open(os.path.join(ROOT, 'store/listing', lang, name), encoding='utf-8') as f:
         return f.read().strip()
+
+
+def languages():
+    d = os.path.join(ROOT, 'store/listing')
+    return sorted(l for l in os.listdir(d)
+                  if os.path.isfile(os.path.join(d, l, 'full.txt')))
 
 
 def images(edit, kind, paths):
@@ -37,13 +49,20 @@ def main():
             'contactEmail': CONTACT_EMAIL,
             'contactWebsite': WEBSITE,
         })
-        call('PUT', f'{edit.url}/listings/{LANG}', {
-            'language': LANG,
-            'title': read('title.txt'),
-            'shortDescription': read('short.txt'),
-            'fullDescription': read('full.txt'),
-        })
+        for lang in languages():
+            texts = {
+                'title': read('title.txt', lang),
+                'shortDescription': read('short.txt', lang),
+                'fullDescription': read('full.txt', lang),
+            }
+            for code in [lang] + ALSO.get(lang, []):
+                call('PUT', f'{edit.url}/listings/{code}', {'language': code, **texts})
+                print(f'  texts: {code}')
         print('Texts and contact details set')
+        if '--texts-only' in sys.argv:
+            edit.commit()
+            print('Store listing committed')
+            return
         images(edit, 'icon', [os.path.join(ROOT, 'store/icon-512-alpha.png')])
         images(edit, 'featureGraphic', [os.path.join(ROOT, 'store/feature.png')])
         images(edit, 'phoneScreenshots',

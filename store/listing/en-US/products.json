@@ -1,0 +1,30 @@
+{
+  "starter": {
+    "title": "Starter Pack",
+    "description": "100 gold, 3 of every booster and 1 hour of unlimited lives. One per player."
+  },
+  "gold50": {
+    "title": "Pouch of Gold",
+    "description": "50 gold"
+  },
+  "gold130": {
+    "title": "Bag of Gold",
+    "description": "130 gold"
+  },
+  "gold350": {
+    "title": "Chest of Gold",
+    "description": "350 gold"
+  },
+  "gold800": {
+    "title": "Vault of Gold",
+    "description": "800 gold"
+  },
+  "noads": {
+    "title": "Remove Ads",
+    "description": "No more ad breaks between levels."
+  },
+  "pass": {
+    "title": "Premium Pass",
+    "description": "Unlocks the premium track of the current season."
+  }
+}

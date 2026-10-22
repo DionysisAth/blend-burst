@@ -19,8 +19,8 @@ on:
         description: 'completed (roll out) or draft (finish in the Play Console)'
         default: completed
       notes:
-        description: 'What is new (shown on Google Play)'
-        default: 'Bug fixes and improvements.'
+        description: 'What is new, in English (empty: the whatsnew.txt files in store/listing, every language)'
+        default: ''
 
 permissions:
   contents: write
