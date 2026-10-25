@@ -918,7 +918,11 @@ class AppState extends ChangeNotifier {
 
   // ----------------------------------------------------------- analytics
 
+  /// Also receives every event (Firebase Analytics in the app).
+  static void Function(String name, Map<String, dynamic> params)? onEvent;
+
   void log(String name, [Map<String, dynamic> params = const {}]) {
+    onEvent?.call(name, params);
     data.counters[name] = (data.counters[name] ?? 0) + 1;
     data.events.add({
       'e': name,

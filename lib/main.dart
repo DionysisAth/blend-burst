@@ -10,6 +10,7 @@ import 'app/admob.dart';
 import 'app/app_state.dart';
 import 'app/audio.dart';
 import 'app/cloud.dart';
+import 'app/firebase.dart';
 import 'app/level_repository.dart';
 import 'app/notifications.dart';
 import 'app/play_store.dart';
@@ -24,6 +25,11 @@ import 'ui/tile_art.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   installErrorHandlers();
+  if (!_inTests) {
+    // Analytics and crash reports; the game never waits for them.
+    AppState.onEvent = GameFirebase.log;
+    unawaited(GameFirebase.start());
+  }
   // Portrait only; ignore failures (e.g. on platforms without orientation).
   unawaited(
     SystemChrome.setPreferredOrientations([

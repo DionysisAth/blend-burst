@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "874690013011",
+    "project_id": "blend-burst-60022",
+    "storage_bucket": "blend-burst-60022.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:874690013011:android:9a9ba5893b2bb6943b63a6",
+        "android_client_info": {
+          "package_name": "com.nwbn.blendburst"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbBdtuCqKRn8C5s0LgtsA7x8Bj5lOSWCE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

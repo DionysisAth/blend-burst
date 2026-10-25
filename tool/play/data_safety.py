@@ -4,7 +4,8 @@
 
 TEMPLATE.csv is the form exported from Play Console -> App content ->
 Data safety -> Export to CSV. The answers below describe what the game and
-its SDKs (AdMob, Play Games Services, Play Billing) do; keep them in sync
+its SDKs (AdMob, Firebase Analytics and Crashlytics, Play Games Services,
+Play Billing) do; keep them in sync
 with the privacy policy. Writes store/data-safety/data_safety.csv.
 """
 import csv
@@ -30,6 +31,10 @@ DATA = {
     'PSL_PERFORMANCE_DIAGNOSTICS': (True, True, True,
                                     ['PSL_ANALYTICS', 'PSL_FRAUD_PREVENTION_SECURITY'],
                                     ['PSL_ANALYTICS', 'PSL_FRAUD_PREVENTION_SECURITY']),
+    # Firebase Crashlytics (crash reports; Firebase Analytics adds nothing
+    # new: app interactions, diagnostics and an app instance ID are above).
+    'PSL_CRASH_LOGS': (True, False, True,
+                       ['PSL_ANALYTICS', 'PSL_APP_FUNCTIONALITY'], []),
     # Optional Google Play Games sign-in: player ID, cloud save, scores.
     'PSL_USER_ACCOUNT': (True, False, False, ['PSL_APP_FUNCTIONALITY'], []),
     'PSL_OTHER_APP_ACTIVITY': (True, False, False, ['PSL_APP_FUNCTIONALITY'], []),
@@ -43,6 +48,7 @@ TYPE_GROUP = {
     'PSL_USER_INTERACTION': 'PSL_DATA_TYPES_APP_ACTIVITY',
     'PSL_OTHER_APP_ACTIVITY': 'PSL_DATA_TYPES_APP_ACTIVITY',
     'PSL_PERFORMANCE_DIAGNOSTICS': 'PSL_DATA_TYPES_APP_PERFORMANCE',
+    'PSL_CRASH_LOGS': 'PSL_DATA_TYPES_APP_PERFORMANCE',
     'PSL_USER_ACCOUNT': 'PSL_DATA_TYPES_PERSONAL',
     'PSL_PURCHASE_HISTORY': 'PSL_DATA_TYPES_FINANCIAL',
 }

@@ -16,6 +16,14 @@
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
             android:value="false" />
+        <!-- Firebase stays off until the game turns it on: only the Google
+             Play build sends analytics and crash reports (lib/app/firebase.dart).
+             Analytics is never used for ads. -->
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_storage" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_user_data" android:value="false" />
+        <meta-data android:name="google_analytics_default_allow_ad_personalization_signals" android:value="false" />
         <!-- AdMob app ID (the ad unit IDs are in lib/app/admob.dart). The
              ads SDK stops the app at launch if this is missing. -->
         <meta-data
