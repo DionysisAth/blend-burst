@@ -26,6 +26,12 @@ def read(name, lang=LANG):
         return f.read().strip()
 
 
+def video():
+    """The YouTube trailer (store/listing/video.txt), shown in every language."""
+    p = os.path.join(ROOT, 'store/listing/video.txt')
+    return open(p).read().strip() if os.path.isfile(p) else ''
+
+
 def languages():
     d = os.path.join(ROOT, 'store/listing')
     return sorted(l for l in os.listdir(d)
@@ -54,6 +60,7 @@ def main():
                 'title': read('title.txt', lang),
                 'shortDescription': read('short.txt', lang),
                 'fullDescription': read('full.txt', lang),
+                'video': video(),
             }
             for code in [lang] + ALSO.get(lang, []):
                 call('PUT', f'{edit.url}/listings/{code}', {'language': code, **texts})
