@@ -1,2 +1,1 @@
-Blend Burst spricht jetzt 15 Sprachen! Das Spiel startet in der Sprache deines Handys – oder du wählst eine unter Einstellungen → Sprache.
-Außerdem: kleine Fehlerbehebungen und Verbesserungen.
+Stabilitätsverbesserungen und Fehlerbehebungen. Das Spiel meldet jetzt Abstürze, damit wir Probleme schneller beheben können.

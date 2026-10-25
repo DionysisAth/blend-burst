@@ -1,2 +1,1 @@
-Blend Burst kini hadir dalam 15 bahasa! Game akan dimulai dalam bahasa ponselmu, atau pilih sendiri di Pengaturan → Bahasa.
-Selain itu: perbaikan kecil dan berbagai peningkatan.
+Peningkatan stabilitas dan perbaikan bug. Game kini melaporkan crash agar kami bisa memperbaiki masalah lebih cepat.

@@ -1,2 +1,1 @@
-Blend Burst artık 15 dil konuşuyor! Oyun telefonunun dilinde başlar ya da Ayarlar → Dil bölümünden istediğin dili seçebilirsin.
-Ayrıca: küçük düzeltmeler ve iyileştirmeler.
+Kararlılık iyileştirmeleri ve hata düzeltmeleri. Oyun artık çökmeleri bildiriyor, böylece sorunları daha hızlı giderebiliyoruz.

@@ -1,2 +1,1 @@
-Blend Burst spreekt nu 15 talen! De game start in de taal van je telefoon, of kies er zelf een via Instellingen → Taal.
-Verder: kleine verbeteringen en bugfixes.
+Stabiliteitsverbeteringen en bugfixes. Het spel meldt nu crashes, zodat we problemen sneller kunnen oplossen.

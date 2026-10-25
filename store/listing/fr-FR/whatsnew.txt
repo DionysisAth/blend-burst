@@ -1,2 +1,1 @@
-Blend Burst parle désormais 15 langues ! Le jeu démarre dans la langue de ton téléphone, ou choisis-en une dans Réglages → Langue.
-Et aussi : petites corrections et améliorations.
+Améliorations de la stabilité et corrections de bugs. Le jeu signale désormais les plantages pour que nous puissions corriger les problèmes plus vite.
